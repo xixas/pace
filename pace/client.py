@@ -72,6 +72,11 @@ def urllib_transport(method: str, url: str, headers: dict, body: dict | None, ti
     req = urllib.request.Request(
         url, data, {**headers, "Content-Type": "application/json", "Accept": "application/json"}, method=method
     )
+    return urllib_send(req, timeout)
+
+
+def urllib_send(req: urllib.request.Request, timeout: float = 20) -> tuple[int, dict]:
+    """(status, JSON body) for any reply, HTTP errors included. Network failures raise OSError."""
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             return resp.status, json.loads(resp.read() or b"{}")
