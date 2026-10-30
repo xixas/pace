@@ -34,6 +34,7 @@ class Verdict:
     today_left: float | None = None  # minutes still to bill today; None once the day is over
     need: float | None = None  # minutes per working day to reach the target
     lop_need: float | None = None  # minutes per working day to stay clear of LOP
+    target: float | None = None  # the week's target in minutes; None on a week of leave
 
 
 def lop_count(total: float, d: float) -> float:
@@ -83,6 +84,7 @@ def week_verdict(work: Sequence[float], entries: Sequence[Entry], day: int, hour
         return Verdict(
             ("DONE" if logged >= target else "BILL" if eff >= target else f"LOP {n:g}d" if n > 0 else "SHORT (pay safe)") + tag,
             logged,
+            target=target,
         )
 
     after_eod = hour >= EOD
@@ -123,7 +125,7 @@ def week_verdict(work: Sequence[float], entries: Sequence[Entry], day: int, hour
     if label.startswith("PAY RISK") and short_days:
         label += " · " + ", ".join(short_days)
     label += tag
-    return Verdict(label, logged, today_left, need, lop_need)
+    return Verdict(label, logged, today_left, need, lop_need, target)
 
 
 def hours(minutes: float, trim: bool = False) -> str:

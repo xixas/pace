@@ -105,3 +105,8 @@ def test_hours_display_rounds_half_up():
     assert hours(267) == "4.5"  # 4.45 h
     assert hours(477) == "8.0"  # 7.95 h
     assert hours(480, trim=True) == "8"
+
+
+def test_verdict_carries_the_week_target():
+    assert week_verdict(W5, [], 0, 9).target == 2550  # 42.5 h
+    assert week_verdict([1, 1, 1, 0.5, 1, 0, 0], [], 0, 9).target == 2460  # half-day week: pay line 41 h wins over 38.25 h
