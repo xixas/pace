@@ -113,3 +113,26 @@ def test_redeem_trades_the_code_and_verifier_for_the_access_token():
             },
         )
     ]
+
+
+def test_sign_in_flow_runs_browser_redirect_redeem_and_hrms_exchange():
+    from pace.signin import Config, sign_in_flow
+
+    cfg = Config(base_url="https://hrms.example/api", tenant="T", client_id="C", api_client_id="H")
+    seen = {}
+
+    def microsoft(url):  # the browser + Microsoft: check the request, then redirect back with a code
+        q = {k: v[0] for k, v in urllib.parse.parse_qs(url.split("?")[1]).items()}
+        seen["challenge"] = q["code_challenge"]
+        browser_returns({"code": "C0DE", "state": q["state"]})(q["redirect_uri"])
+
+    def post_form(url, form):
+        seen["verifier_ok"] = challenge(form["code_verifier"]) == seen["challenge"]
+        return 200, {"access_token": "ENTRA-JWT"}
+
+    class Hrms:
+        def sign_in(self, token):
+            seen["hrms_token"] = token
+
+    sign_in_flow(cfg, Hrms(), open_uri=microsoft, post_form=post_form, timeout=5)
+    assert seen["verifier_ok"] and seen["hrms_token"] == "ENTRA-JWT"

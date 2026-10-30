@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import secrets
 import threading
 import urllib.parse
 import urllib.request
+from dataclasses import dataclass
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 from pace.client import urllib_send
@@ -103,3 +105,25 @@ class Loopback:
     def __exit__(self, *_):
         self.server.shutdown()
         self.server.server_close()
+
+
+@dataclass(frozen=True)
+class Config:
+    base_url: str  # hrms-api, e.g. https://<host>/api
+    tenant: str  # Osmosys Entra tenant id: hrms-api checks the token's tid against it
+    client_id: str  # the "Pace" public-client registration (decision 2)
+    api_client_id: str  # hrms-api's MS_SSO_CLIENT_ID: the token's audience
+
+    @property
+    def scope(self) -> str:
+        return f"api://{self.api_client_id}/access_as_user"
+
+
+def sign_in_flow(cfg: Config, hrms, open_uri, post_form=urllib_post_form, timeout: float = 300) -> None:
+    """Browser sign-in (A3-A5), then swap the Entra token for an HRMS session saved by hrms.sign_in."""
+    verifier, state = secrets.token_urlsafe(48), secrets.token_urlsafe(16)
+    with Loopback() as lb:
+        ids = {"tenant": cfg.tenant, "client_id": cfg.client_id, "scope": cfg.scope, "redirect": lb.redirect}
+        open_uri(authorize_url(**ids, verifier=verifier, state=state))
+        code = lb.wait(state, timeout)
+    hrms.sign_in(redeem(**ids, code=code, verifier=verifier, post_form=post_form))

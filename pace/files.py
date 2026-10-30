@@ -16,6 +16,10 @@ def state_dir() -> Path:
     return xdg("STATE", ".local/state")
 
 
+def config_dir() -> Path:
+    return xdg("CONFIG", ".config")
+
+
 def data_dir() -> Path:
     return xdg("DATA", ".local/share")
 

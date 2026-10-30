@@ -11,6 +11,10 @@ requires-python = ">=3.11"
 dependencies = []
 authors = [{ name = "Vikas Kyatannawar" }]
 
+[project.scripts]
+pace = "pace.cli:main"
+paced = "pace.cli:paced"
+
 [tool.setuptools.packages.find]
 include = ["pace*"]
 
