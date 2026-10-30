@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pace"
+version = "0.0.0"
+description = "Your PineStem billed hours against targets and the loss-of-pay line, on the GNOME panel"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+dependencies = []
+authors = [{ name = "Vikas Kyatannawar" }]
+
+[tool.setuptools.packages.find]
+include = ["pace*"]
+
+[tool.ruff]
+line-length = 130
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

@@ -1,0 +1,610 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pace design</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daisyui@5.5.19/daisyui.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daisyui@5.5.19/themes.css">
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.2.4/dist/index.global.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :where(.grid, .flex) > * { min-width: 0; }
+  :where(p, li, td, th, .badge) { overflow-wrap: anywhere; }
+  :where(svg) { max-width: 100%; height: auto; }
+  body { background: #f6f5f2; color: #1f2328; }
+  .mono { font-family: ui-monospace, "JetBrains Mono", monospace; }
+  .sec { scroll-margin-top: 72px; }
+  .caption { font-size: .8rem; color: #57606a; margin-top: .5rem; }
+
+  /* ---------- shared mock tokens ---------- */
+  .ok { color: #1a7f37; } .warn { color: #b25e00; } .hot { color: #c62828; }
+  .bar { height: 8px; border-radius: 99px; background: #0000001a; position: relative; overflow: visible; }
+  .bar > i { position: absolute; inset: 0 auto 0 0; border-radius: 99px; }
+  .bar > b { position: absolute; top: -3px; width: 2px; height: 14px; background: #1f2328; opacity: .55; }
+  .fill-ok { background: #2ea043; } .fill-warn { background: #d4a72c; } .fill-hot { background: #e5534b; }
+
+  /* ---------- GNOME / Adwaita ---------- */
+  .gn-desk { background: linear-gradient(135deg,#3d3846,#241f31); border-radius: 14px; padding: 0 0 18px; overflow: hidden; font-family: Cantarell, "Inter", system-ui, sans-serif; }
+  .gn-top { height: 30px; background: #000; color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; font-size: 13px; font-weight: 600; }
+  .gn-pill { padding: 2px 10px; border-radius: 99px; background: #ffffff26; display: inline-flex; gap: 6px; align-items: center; }
+  .gn-menu { background: #2e2e32; color: #fff; border-radius: 14px; width: 340px; max-width: 100%; margin: 8px 12px 0 auto; padding: 14px; box-shadow: 0 10px 30px #0008; font-size: 13px; }
+  .gn-menu .row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .gn-menu .bar { background: #ffffff22; } .gn-menu .bar > b { background: #fff; }
+  .gn-menu hr { border: 0; border-top: 1px solid #ffffff1f; margin: 10px 0; }
+  .gn-menu .item { padding: 6px 8px; border-radius: 8px; } .gn-menu .item:hover { background: #ffffff14; }
+  .gn-banner { background: #2e2e32; color: #fff; border-radius: 14px; width: 380px; max-width: 100%; margin: 10px auto 0; padding: 12px 14px; display: flex; gap: 10px; box-shadow: 0 10px 30px #0008; font-size: 13px; }
+  .gn-banner .ic { width: 34px; height: 34px; border-radius: 9px; background: #e5534b; display: grid; place-items: center; font-weight: 800; flex: none; }
+
+  /* ---------- KDE / Breeze ---------- */
+  .kde-desk { background: linear-gradient(160deg,#1d99f3 0%,#0c4f8a 100%); border-radius: 14px; overflow: hidden; font-family: "Noto Sans", system-ui, sans-serif; display: flex; flex-direction: column; justify-content: flex-end; min-height: 330px; }
+  .kde-pop { background: #fcfcfc; color: #232629; width: 330px; max-width: 100%; margin: 0 10px 6px auto; border-radius: 8px; border: 1px solid #bdc3c7; padding: 12px; font-size: 13px; box-shadow: 0 6px 20px #0006; }
+  .kde-pop h4 { font-weight: 600; margin-bottom: 6px; }
+  .kde-panel { height: 40px; background: #eff0f1ee; display: flex; align-items: center; justify-content: flex-end; gap: 10px; padding: 0 10px; font-size: 12px; color: #232629; }
+  .tray-ic { width: 26px; height: 26px; }
+
+  /* ---------- COSMIC ---------- */
+  .cos-desk { background: linear-gradient(135deg,#2b2d42,#5a3e6b); border-radius: 14px; overflow: hidden; font-family: "Fira Sans","Open Sans", system-ui, sans-serif; min-height: 330px; }
+  .cos-top { height: 34px; background: #1b1b1d; color: #e8e8e8; display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding: 0 12px; font-size: 12px; }
+  .cos-pop { background: #27272b; color: #eee; width: 320px; max-width: 100%; margin: 8px 10px 0 auto; border-radius: 16px; padding: 14px; font-size: 13px; box-shadow: 0 10px 30px #0008; }
+  .cos-pop .bar { background: #ffffff22; } .cos-pop .bar > b { background: #fff; }
+
+  /* ---------- Windows 11 ---------- */
+  .win-desk { background: radial-gradient(circle at 30% 20%,#7aa7e8,#20407a 70%); border-radius: 14px; overflow: hidden; font-family: "Segoe UI Variable","Segoe UI", system-ui, sans-serif; min-height: 360px; display: flex; flex-direction: column; justify-content: flex-end; }
+  .win-fly { background: #f3f3f3f2; color: #1b1b1b; width: 340px; max-width: 100%; margin: 0 12px 10px auto; border-radius: 10px; border: 1px solid #0000001a; padding: 14px; font-size: 13px; box-shadow: 0 12px 32px #0006; }
+  .win-toast { background: #f3f3f3f2; color: #1b1b1b; width: 340px; max-width: 100%; margin: 0 12px 10px auto; border-radius: 10px; padding: 12px; font-size: 13px; box-shadow: 0 12px 32px #0006; }
+  .win-bar { height: 44px; background: #eeeeeef2; display: flex; align-items: center; justify-content: flex-end; gap: 10px; padding: 0 12px; font-size: 11px; color: #1b1b1b; }
+
+  /* ---------- macOS ---------- */
+  .mac-desk { background: linear-gradient(160deg,#f4a261,#e76f51 40%,#264653); border-radius: 14px; overflow: hidden; font-family: -apple-system, "SF Pro Text", "Inter", system-ui, sans-serif; min-height: 330px; }
+  .mac-top { height: 26px; background: #ffffffb8; backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: flex-end; gap: 14px; padding: 0 12px; font-size: 13px; color: #111; }
+  .mac-pop { background: #f6f6f6f2; color: #111; width: 320px; max-width: 100%; margin: 6px 10px 0 auto; border-radius: 10px; padding: 12px; font-size: 13px; box-shadow: 0 10px 30px #0005; border: 1px solid #0000001f; }
+
+  /* ---------- Pace app window (Adwaita-like, libadwaita look) ---------- */
+  .adw { background: #fafafa; border: 1px solid #0000001f; border-radius: 12px; overflow: hidden; font-family: Cantarell, "Inter", system-ui, sans-serif; box-shadow: 0 10px 30px #0000002a; color: #1f1f1f; }
+  .adw-head { height: 46px; background: #ebebeb; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; font-weight: 700; font-size: 14px; border-bottom: 1px solid #0000001a; }
+  .adw-tabs { display: flex; gap: 4px; background: #0000000f; padding: 3px; border-radius: 9px; font-size: 12px; font-weight: 600; }
+  .adw-tabs span { padding: 4px 12px; border-radius: 7px; } .adw-tabs .on { background: #fff; box-shadow: 0 1px 2px #0002; }
+  .adw-body { padding: 16px; }
+  .adw-card { background: #fff; border-radius: 12px; border: 1px solid #0000001a; padding: 14px; }
+  .adw-btn { background: #3584e4; color: #fff; border-radius: 8px; padding: 8px 16px; font-weight: 700; font-size: 13px; display: inline-flex; gap: 8px; align-items: center; }
+  .adw-btn.flat { background: #0000000f; color: #1f1f1f; }
+  .adw-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 12px; border-bottom: 1px solid #00000012; font-size: 13px; }
+  .adw-row:last-child { border-bottom: 0; }
+  .sw { width: 38px; height: 22px; border-radius: 99px; background: #3584e4; position: relative; flex: none; }
+  .sw::after { content: ""; position: absolute; width: 18px; height: 18px; border-radius: 50%; background: #fff; top: 2px; right: 2px; }
+  .sw.off { background: #0000002a; } .sw.off::after { right: auto; left: 2px; }
+  .chip { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+  .chip.ok { background: #2ea04322; } .chip.warn { background: #d4a72c33; } .chip.hot { background: #e5534b22; } .chip.mute { background: #0000000f; color: #57606a; }
+  .day { border-radius: 10px; padding: 8px; text-align: center; font-size: 12px; border: 1px solid #0000001a; background: #fff; }
+  .day .h { font-size: 18px; font-weight: 800; }
+  .day.off { background: repeating-linear-gradient(45deg,#f2f2f2,#f2f2f2 6px,#e9e9e9 6px,#e9e9e9 12px); color: #6e7781; }
+  .day.today { outline: 2px solid #3584e4; }
+
+  /* ---------- mini widget ---------- */
+  .mini { width: 230px; background: #ffffffee; border-radius: 14px; padding: 10px 12px; box-shadow: 0 8px 24px #0004; font-family: Cantarell, "Inter", system-ui, sans-serif; font-size: 12px; color: #1f1f1f; border: 1px solid #0000001a; }
+</style>
+</head>
+<body>
+
+<div class="navbar bg-base-100 border-b border-base-300 sticky top-0 z-10 px-4">
+  <div class="navbar-start gap-3"><span class="text-xl font-bold">Pace</span><span class="badge badge-soft badge-primary">design · draft 1</span></div>
+  <div class="navbar-end hidden md:flex gap-1 text-sm">
+    <a class="btn btn-ghost btn-sm" href="#flow">Flow</a>
+    <a class="btn btn-ghost btn-sm" href="#arch">Architecture</a>
+    <a class="btn btn-ghost btn-sm" href="#math">Pace math</a>
+    <a class="btn btn-ghost btn-sm" href="#screens">Screens</a>
+    <a class="btn btn-ghost btn-sm" href="#build">Build</a>
+    <a class="btn btn-ghost btn-sm" href="#decide">Decisions</a>
+  </div>
+</div>
+
+<main class="mx-auto max-w-6xl p-4 lg:p-8 space-y-14">
+
+<!-- ================= GOAL ================= -->
+<section class="space-y-4">
+  <h1 class="text-3xl lg:text-4xl font-bold">Always know if your billed hours are on pace</h1>
+  <p class="text-lg max-w-3xl">A small desktop app that shows each person their week (billed hours against the 8.5&nbsp;h/day target and the loss-of-pay line) and their month (per-project targets like <b>Tweelin 140&nbsp;h</b>) in the panel at all times. It reads hours from PineStem and leave and holidays from DhiHRMS, and nudges them before a shortfall is still fixable.</p>
+  <div class="grid md:grid-cols-3 gap-4">
+    <div class="card card-border bg-base-100"><div class="card-body p-5">
+      <div class="text-sm opacity-70">Today</div>
+      <p>The <span class="mono">pinestem-billing-report</span> skill gives an on-demand check for Vikas only. It ignores leave and holidays and hard-codes 42.5&nbsp;h.</p>
+    </div></div>
+    <div class="card card-border bg-base-100"><div class="card-body p-5">
+      <div class="text-sm opacity-70">Target</div>
+      <p>Anyone installs one app and <b>signs in once with Microsoft</b>. From then on the panel always shows <span class="mono">30.1 / 42.5 h</span> with a colour, and a notification arrives when pace slips.</p>
+    </div></div>
+    <div class="card card-border bg-base-100"><div class="card-body p-5">
+      <div class="text-sm opacity-70">Done when</div>
+      <p>A KDE user, a Windows user and Vikas on GNOME each see week and month numbers that match PineStem to 0.01&nbsp;h, with leave applied, within 0.3&nbsp;s of login.</p>
+    </div></div>
+  </div>
+</section>
+
+<!-- ================= FLOW ================= -->
+<section id="flow" class="sec space-y-4">
+  <h2 class="text-2xl font-bold">What a user actually does</h2>
+  <p class="max-w-3xl">Setup takes three clicks and needs no passwords, tokens or config files. Everything after that is passive: the number sits in the panel and the app speaks up only when it matters.</p>
+  <svg viewBox="0 0 1100 230" class="w-full" role="img" aria-labelledby="flowT">
+    <title id="flowT">User flow from install to daily use</title>
+    <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="#57606a"/></marker></defs>
+    <g font-family="system-ui" font-size="14" text-anchor="middle">
+      <g id="f1"><title>Install</title><rect x="10" y="40" width="150" height="80" rx="14" fill="#fff" stroke="#d0d7de"/><text x="85" y="72" font-weight="700">1 · Install</text><text x="85" y="94" fill="#57606a" font-size="12">.rpm .deb .msi .dmg</text><text x="85" y="110" fill="#57606a" font-size="12">auto-starts at login</text></g>
+      <g id="f2"><title>Sign in</title><rect x="200" y="40" width="160" height="80" rx="14" fill="#ddf4ff" stroke="#54aeff"/><text x="280" y="72" font-weight="700">2 · Sign in</text><text x="280" y="94" fill="#57606a" font-size="12">Microsoft, in browser</text><text x="280" y="110" fill="#57606a" font-size="12">one click, SSO</text></g>
+      <g id="f3"><title>Confirm targets</title><rect x="400" y="40" width="160" height="80" rx="14" fill="#fff" stroke="#d0d7de"/><text x="480" y="72" font-weight="700">3 · Targets</text><text x="480" y="94" fill="#57606a" font-size="12">pre-filled by lead/org</text><text x="480" y="110" fill="#57606a" font-size="12">accept or adjust</text></g>
+      <g id="f4"><title>Always visible</title><rect x="600" y="30" width="180" height="100" rx="14" fill="#dafbe1" stroke="#4ac26b"/><text x="690" y="66" font-weight="700">4 · Always visible</text><text x="690" y="88" fill="#57606a" font-size="12">panel number + colour</text><text x="690" y="104" fill="#57606a" font-size="12">mini widget (optional)</text><text x="690" y="120" fill="#57606a" font-size="12">refresh every 15 min</text></g>
+      <g id="f5"><title>Nudge</title><rect x="820" y="10" width="130" height="64" rx="14" fill="#fff8c5" stroke="#d4a72c"/><text x="885" y="38" font-weight="700">Nudge</text><text x="885" y="58" fill="#57606a" font-size="12">pace slipping</text></g>
+      <g id="f6"><title>Dashboard</title><rect x="820" y="96" width="130" height="64" rx="14" fill="#fff" stroke="#d0d7de"/><text x="885" y="124" font-weight="700">Dashboard</text><text x="885" y="144" fill="#57606a" font-size="12">click for detail</text></g>
+      <g id="f7"><title>Fix in PineStem</title><rect x="985" y="50" width="105" height="64" rx="14" fill="#fff" stroke="#d0d7de"/><text x="1037" y="78" font-weight="700">Bill</text><text x="1037" y="98" fill="#57606a" font-size="12">opens PineStem</text></g>
+      <path d="M160 80H196" stroke="#57606a" stroke-width="2" marker-end="url(#ar)"/>
+      <path d="M360 80H396" stroke="#57606a" stroke-width="2" marker-end="url(#ar)"/>
+      <path d="M560 80H596" stroke="#57606a" stroke-width="2" marker-end="url(#ar)"/>
+      <path d="M780 65L816 45" stroke="#57606a" stroke-width="2" marker-end="url(#ar)"/>
+      <path d="M780 95L816 122" stroke="#57606a" stroke-width="2" marker-end="url(#ar)"/>
+      <path d="M950 42L983 70" stroke="#57606a" stroke-width="2" marker-end="url(#ar)"/>
+      <path d="M950 128L983 100" stroke="#57606a" stroke-width="2" marker-end="url(#ar)"/>
+      <path d="M1037 114 C1037 210, 690 210, 690 134" stroke="#4ac26b" stroke-width="2" stroke-dasharray="5 4" fill="none" marker-end="url(#ar)"/>
+      <text x="860" y="205" fill="#1a7f37" font-size="12">next refresh picks up the new hours</text>
+    </g>
+  </svg>
+  <div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
+    <table class="table table-sm">
+      <thead><tr><th>Person</th><th>Effort</th><th>When</th></tr></thead>
+      <tbody>
+        <tr><td>Employee</td><td>Install, one Microsoft sign-in, confirm targets (~1 min)</td><td>Once</td></tr>
+        <tr><td>Lead</td><td>Set per-person project targets in hrms-portal (or hand out a preset file in phase 1)</td><td>Per month, or on a change</td></tr>
+        <tr><td>Admin</td><td>Create the "Pace" Entra app registration (public client, <span class="mono">access_as_user</span>)</td><td>Once</td></tr>
+        <tr><td>hrms-api</td><td>Two new read endpoints (below). No new PineStem credentials, because it already has org-level ones.</td><td>Once</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ================= ARCH ================= -->
+<section id="arch" class="sec space-y-4">
+  <h2 class="text-2xl font-bold">Architecture: DhiHRMS is the only door</h2>
+  <p class="max-w-3xl">hrms-api already calls PineStem with org-level credentials and maps each employee to a PineStem user (<span class="mono">common/pinestem/pinestem.client.ts:185</span> <span class="mono">getEmployeeDetailedBilling</span> → <span class="mono">FilterBillingDetails_New</span>). It also owns the leave, holiday and comp-off calendar (<span class="mono">common/calendar/working-calendar.ts</span>). So the app talks only to hrms-api, signs in with Microsoft, and never sees a PineStem password.</p>
+  <svg viewBox="0 0 1100 330" class="w-full" role="img" aria-labelledby="archT">
+    <title id="archT">Architecture</title>
+    <defs><marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="#57606a"/></marker></defs>
+    <g font-family="system-ui" font-size="13">
+      <g id="a-app"><title>Pace app</title>
+        <rect x="10" y="20" width="400" height="290" rx="16" fill="#fff" stroke="#54aeff" stroke-width="2"/>
+        <text x="30" y="48" font-size="16" font-weight="700">Pace app · Tauri v2 (Rust core)</text>
+        <rect x="30" y="64" width="170" height="44" rx="10" fill="#ddf4ff"/><text x="115" y="91" text-anchor="middle">hrms client + keyring</text>
+        <rect x="220" y="64" width="170" height="44" rx="10" fill="#ddf4ff"/><text x="305" y="91" text-anchor="middle">pace engine (pure)</text>
+        <rect x="30" y="122" width="360" height="40" rx="10" fill="#f6f8fa"/><text x="210" y="147" text-anchor="middle">status.json cache · ~/.local/state/pace/</text>
+        <text x="30" y="190" fill="#57606a">Skins (lazy; no webview while idle)</text>
+        <rect x="30" y="200" width="110" height="40" rx="10" fill="#dafbe1"/><text x="85" y="225" text-anchor="middle">tray icon</text>
+        <rect x="150" y="200" width="110" height="40" rx="10" fill="#dafbe1"/><text x="205" y="225" text-anchor="middle">mini widget</text>
+        <rect x="270" y="200" width="120" height="40" rx="10" fill="#dafbe1"/><text x="330" y="225" text-anchor="middle">dashboard</text>
+        <rect x="30" y="252" width="360" height="40" rx="10" fill="#fff8c5"/><text x="210" y="277" text-anchor="middle">notifications (native: libnotify / toast / UNUserNotif.)</text>
+      </g>
+      <g id="a-gx"><title>GNOME extension</title>
+        <rect x="10" y="-0" width="0" height="0"/>
+      </g>
+      <g id="a-hrms"><title>hrms-api</title>
+        <rect x="560" y="60" width="300" height="200" rx="16" fill="#fff" stroke="#d0d7de" stroke-width="2"/>
+        <text x="580" y="88" font-size="16" font-weight="700">hrms-api (DhiHRMS)</text>
+        <text x="580" y="114" class="mono" fill="#cf222e">NEW GET /billing-report/my-hours/</text>
+        <text x="580" y="134" class="mono" fill="#cf222e">NEW GET /calendar/my-days/</text>
+        <text x="580" y="154" class="mono" fill="#cf222e">NEW GET /pace/my-targets/</text>
+        <text x="580" y="178" class="mono" fill="#57606a">GET /billing-report/config/ (LOP 9 / 5)</text>
+        <text x="580" y="198" class="mono" fill="#57606a">POST /auth/microsoft/ · /auth/refresh/</text>
+        <text x="580" y="226" fill="#57606a">5-min server cache per employee</text>
+      </g>
+      <g id="a-ps"><title>PineStem</title><rect x="930" y="60" width="160" height="80" rx="14" fill="#f6f8fa" stroke="#d0d7de"/><text x="1010" y="95" text-anchor="middle" font-weight="700">PineStem</text><text x="1010" y="116" text-anchor="middle" fill="#57606a" font-size="12">org creds, server-side</text></g>
+      <g id="a-entra"><title>Microsoft Entra</title><rect x="930" y="180" width="160" height="80" rx="14" fill="#f6f8fa" stroke="#d0d7de"/><text x="1010" y="215" text-anchor="middle" font-weight="700">Microsoft Entra</text><text x="1010" y="236" text-anchor="middle" fill="#57606a" font-size="12">"Pace" public client</text></g>
+      <path d="M410 120H556" stroke="#57606a" stroke-width="2" marker-end="url(#ar2)"/><text x="420" y="112" fill="#57606a" font-size="12">≤ 3 GETs / 15 min</text>
+      <path d="M860 100H926" stroke="#57606a" stroke-width="2" marker-end="url(#ar2)"/>
+      <path d="M410 290 C700 330, 950 320, 1005 264" stroke="#57606a" stroke-width="2" fill="none" stroke-dasharray="5 4" marker-end="url(#ar2)"/><text x="600" y="318" fill="#57606a" font-size="12">PKCE sign-in via system browser (loopback)</text>
+    </g>
+  </svg>
+  <div class="grid md:grid-cols-3 gap-4">
+    <div class="card card-border bg-base-100"><div class="card-body p-5 text-sm">
+      <h3 class="font-bold">New: <span class="mono">my-hours</span></h3>
+      <p><span class="mono">?from=2026-10-01&amp;to=2026-10-31</span> returns one row per day per project, <span class="mono">{date, project_code, project_name, billable_min, non_billable_min}</span>. It is built on the existing <span class="mono">getEmployeeDetailedBilling</span>, with single-day aggregation done server-side to avoid the unstable <span class="mono">ORDER BY Date</span> paging trap.</p>
+    </div></div>
+    <div class="card card-border bg-base-100"><div class="card-body p-5 text-sm">
+      <h3 class="font-bold">New: <span class="mono">my-days</span></h3>
+      <p>The output of <span class="mono">working-calendar.ts</span> for a date range: off days, holidays, <b>opted-in</b> RH only, approved leave with half-days, comp-off and joining date. This fixes the my-lop gaps (it counts pending leave, counts RH it shouldn't, and leaves crossing weeks get double-counted).</p>
+    </div></div>
+    <div class="card card-border bg-base-100"><div class="card-body p-5 text-sm">
+      <h3 class="font-bold">New: <span class="mono">my-targets</span></h3>
+      <p>Returns per-employee daily floor/ideal and per-project monthly hours, as set by the lead in hrms-portal. Org defaults come from <span class="mono">lms_pdr_metric_config</span> (8.5&nbsp;h) and the LOP config (9&nbsp;h / 5&nbsp;h). Phase 1 can skip it and use local settings.</p>
+    </div></div>
+  </div>
+  <div class="grid md:grid-cols-2 gap-4">
+    <div class="alert alert-soft alert-info text-sm"><span><b>GNOME extension</b> (<span class="mono">pace@osmosys</span>, GTK/Adwaita look, cloned from <span class="mono">claude-usage@vikas</span>) reads <span class="mono">status.json</span> only. It makes no network calls and needs no second login. The app runs headless underneath it.</span></div>
+    <div class="alert alert-soft alert-warning text-sm"><span><b>Why not have the app log in to PineStem directly?</b> It would mean 20 passwords in keyrings and a password re-sent every 120&nbsp;min, because there's no refresh endpoint (12 audit rows per user per day). PineStem SSO needs a public-client registration that doesn't exist yet. hrms-api already solved this.</span></div>
+  </div>
+</section>
+
+<!-- ================= MATH ================= -->
+<section id="math" class="sec space-y-4">
+  <h2 class="text-2xl font-bold">Pace math: three lines, not one</h2>
+  <p class="max-w-3xl">The week bar carries three markers, because the company actually uses three numbers. The <b>LOP line</b> is the hard one: hrms-api counts worked days as <span class="mono">floor(total/9) + (remainder ≥ 5 ? 1 : 0)</span> (<span class="mono">modules/billing-report/lop-calculator.ts:36-48</span>). So a full 5-day week is LOP-safe at <b>41&nbsp;h</b>, not 42.5. Thresholds come from <span class="mono">/billing-report/config/</span> and are never hard-coded.</p>
+  <div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
+    <table class="table table-sm">
+      <thead><tr><th>Line</th><th>Formula (d = working days after leave/holidays)</th><th>5-day week</th><th>4-day week</th><th>Source</th></tr></thead>
+      <tbody>
+        <tr><td><span class="chip hot">LOP line</span></td><td class="mono">9·(d−1) + 5</td><td>41.0 h</td><td>32.0 h</td><td>billing-report config</td></tr>
+        <tr><td><span class="chip warn">Target (min avg)</span></td><td class="mono">8.5·d</td><td>42.5 h</td><td>34.0 h</td><td>billing-behaviour config / lead</td></tr>
+        <tr><td><span class="chip ok">Expected</span></td><td class="mono">9·d</td><td>45.0 h</td><td>36.0 h</td><td>lead / person (can be more)</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="grid md:grid-cols-2 gap-4">
+    <div class="card card-border bg-base-100"><div class="card-body p-5 text-sm space-y-2">
+      <h3 class="font-bold">Week verdict (continuous, no gaps)</h3>
+      <p><span class="mono">need = (target − logged_before_today) ÷ remaining_days_incl_today</span></p>
+      <ul class="list-disc ml-5 space-y-1">
+        <li><span class="chip ok">AHEAD</span> logged ≥ expected-to-date</li>
+        <li><span class="chip ok">ON TRACK</span> need ≤ 9.0 h/day</li>
+        <li><span class="chip warn">TIGHT</span> 9.0 &lt; need ≤ 10.5 h/day</li>
+        <li><span class="chip hot">AT RISK</span> need &gt; 10.5, or the LOP line is unreachable at 10.5 h/day</li>
+        <li><span class="chip hot">SHORT</span> week over and under target (shows LOP days if under the LOP line)</li>
+      </ul>
+      <p class="opacity-70">Today's partial hours count toward logged but aren't treated as a shortfall until 23:59, because billing is often entered later.</p>
+    </div></div>
+    <div class="card card-border bg-base-100"><div class="card-body p-5 text-sm space-y-2">
+      <h3 class="font-bold">Month per project</h3>
+      <p><span class="mono">eff_target = target × avail_days ÷ month_working_days</span> (proration toggle, on by default)</p>
+      <p><span class="mono">expected_to_date = eff_target × elapsed ÷ avail_days</span></p>
+      <p><span class="mono">need/day = (eff_target − billed) ÷ remaining avail_days</span></p>
+      <p>Billable minutes only, so non-billable doesn't count toward a client target. Same verdict bands, scaled by that project's share of the day.</p>
+      <p class="opacity-70">Example, Oct 2026: 22 weekdays − 2 holidays (illustrative) = 20. With one leave that's 19, so Tweelin 140 → <b>133 h</b>.</p>
+    </div></div>
+  </div>
+</section>
+
+<!-- ================= SCREENS ================= -->
+<section id="screens" class="sec space-y-6">
+  <h2 class="text-2xl font-bold">Screens</h2>
+  <p class="max-w-3xl">All mocks use one example: <b>Thursday 29 Oct 2026, 14:10</b>. Mon–Wed billed 9.2 + 8.4 + 9.0, today 3.5 so far, and the week is on track. October Tweelin is 112.5 of an effective 133&nbsp;h, so the month is behind. Each desktop gets its native idiom. The same Rust core feeds all of them.</p>
+
+  <!-- 1 Sign in -->
+  <h3 class="text-xl font-bold pt-2">1 · First run: sign in</h3>
+  <div class="grid lg:grid-cols-2 gap-6 items-start">
+    <div class="adw">
+      <div class="adw-head"><span></span><span>Welcome to Pace</span><span class="opacity-50">✕</span></div>
+      <div class="adw-body text-center space-y-4 py-10">
+        <svg viewBox="0 0 64 64" width="72" class="mx-auto"><circle cx="32" cy="32" r="26" fill="none" stroke="#0000001a" stroke-width="8"/><circle cx="32" cy="32" r="26" fill="none" stroke="#2ea043" stroke-width="8" stroke-dasharray="115 163" transform="rotate(-90 32 32)" stroke-linecap="round"/></svg>
+        <div class="text-xl font-bold">Know your pace before Friday</div>
+        <p class="text-sm opacity-70 max-w-xs mx-auto">Pace reads your billed hours, leave and holidays from DhiHRMS. Sign in with your Osmosys Microsoft account.</p>
+        <div><span class="adw-btn">⊞ Sign in with Microsoft</span></div>
+        <p class="text-xs opacity-60">Opens your browser · no passwords stored in Pace</p>
+      </div>
+    </div>
+    <div class="adw">
+      <div class="adw-head"><span></span><span>Welcome to Pace</span><span class="opacity-50">✕</span></div>
+      <div class="adw-body space-y-3">
+        <div class="adw-card space-y-1">
+          <div class="font-bold">✓ Signed in as Vikas K</div>
+          <div class="text-sm opacity-70">vikas.k@osmosys.co · DhiHRMS employee linked</div>
+        </div>
+        <div class="adw-card p-0">
+          <div class="adw-row"><span>PineStem account</span><span class="chip ok">mapped · ID 2370</span></div>
+          <div class="adw-row"><span>Holidays 2026</span><span class="chip ok">14 loaded</span></div>
+          <div class="adw-row"><span>Leave this month</span><span class="chip ok">1 day (9 Oct)</span></div>
+        </div>
+        <div class="text-right"><span class="adw-btn">Next: targets →</span></div>
+        <div class="alert alert-soft alert-warning text-xs"><span><b>If there's no PineStem mapping:</b> "Your DhiHRMS profile isn't linked to PineStem yet. Ask HR to link it." Pace keeps going with leave and holidays only.</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2 Targets -->
+  <h3 class="text-xl font-bold pt-2">2 · Targets</h3>
+  <div class="grid lg:grid-cols-[1.3fr_1fr] gap-6 items-start">
+    <div class="adw">
+      <div class="adw-head"><span class="opacity-50">←</span><span>Your targets</span><span></span></div>
+      <div class="adw-body space-y-4">
+        <div>
+          <div class="text-xs font-bold opacity-60 mb-1 uppercase">Daily</div>
+          <div class="adw-card p-0">
+            <div class="adw-row"><span>Minimum average<br><span class="text-xs opacity-60">Weekly average must stay above this</span></span><span class="flex items-center gap-2"><span class="chip mute">set by org</span><b>8.5 h</b></span></div>
+            <div class="adw-row"><span>Expected<br><span class="text-xs opacity-60">What a good day looks like</span></span><span class="flex items-center gap-2"><span class="chip mute">set by lead</span><b>9.0 h</b></span></div>
+            <div class="adw-row"><span>Loss-of-pay line<br><span class="text-xs opacity-60">From HR: 9 h = a day, 5 h leftover = +1 day</span></span><span class="chip mute">read-only · 41 h / 5-day wk</span></div>
+          </div>
+        </div>
+        <div>
+          <div class="text-xs font-bold opacity-60 mb-1 uppercase">Monthly by project (billable)</div>
+          <div class="adw-card p-0">
+            <div class="adw-row"><span>Tweelin <span class="mono text-xs opacity-60">TWE</span></span><span class="flex items-center gap-2"><span class="chip mute">set by lead</span><b>140 h</b></span></div>
+            <div class="adw-row"><span>R&amp;D <span class="mono text-xs opacity-60">RES</span></span><span class="flex items-center gap-2"><span class="opacity-60 text-xs">no target · tracked</span><b>—</b></span></div>
+            <div class="adw-row"><span class="text-[#3584e4] font-bold">+ Add personal target</span><span></span></div>
+          </div>
+        </div>
+        <div class="adw-card p-0">
+          <div class="adw-row"><span>Prorate monthly targets for leave &amp; holidays</span><span class="sw"></span></div>
+          <div class="adw-row"><span>Count non-billable toward the daily average</span><span class="sw"></span></div>
+        </div>
+        <div class="text-right"><span class="adw-btn">Done</span></div>
+      </div>
+    </div>
+    <div class="space-y-3 text-sm">
+      <p><b>Lead-set values are locked</b> (chip "set by lead"). A person can add <i>personal</i> targets above them, such as "I want 150&nbsp;h on Tweelin", but can't lower them.</p>
+      <p>Phase 1, before <span class="mono">my-targets</span> exists: everything is editable locally, and a lead can share a <span class="mono">.pace-targets.json</span> preset that imports into this screen.</p>
+      <p>Each project's code comes from <span class="mono">my-hours</span>, so the "+ Add" picker lists only projects the person has actually billed to or is a member of.</p>
+    </div>
+  </div>
+
+  <!-- 3 GNOME -->
+  <h3 class="text-xl font-bold pt-2">3 · GNOME: panel extension (Vikas)</h3>
+  <div class="grid lg:grid-cols-[1.4fr_1fr] gap-6 items-start">
+    <div class="gn-desk">
+      <div class="gn-top"><span>Activities</span><span>Thu 29 Oct 14:10</span><span class="flex gap-2 items-center"><span class="gn-pill"><span class="ok" style="color:#57e389">●</span> 30.1 / 42.5 h</span><span>🔊 🔋</span></span></div>
+      <div class="gn-menu">
+        <div class="row"><b style="font-size:15px">Week · On track</b><span style="color:#57e389">needs 8.0 h/day</span></div>
+        <div style="margin:8px 0 4px" class="bar"><i class="fill-ok" style="width:67%"></i><b style="left:91%"></b><b style="left:94.4%"></b></div>
+        <div class="row" style="opacity:.7;font-size:12px"><span>30.1 h · 3.5 today</span><span>LOP 41 · target 42.5 · expected 45</span></div>
+        <hr>
+        <div class="row"><b>October</b><span style="opacity:.7">2 working days left</span></div>
+        <div style="margin-top:8px" class="row"><span>Tweelin</span><span style="color:#ff7b72">112.5 / 133 h · behind 6.5</span></div>
+        <div style="margin:6px 0" class="bar"><i class="fill-hot" style="width:84.6%"></i><b style="left:89.5%"></b></div>
+        <div class="row" style="font-size:12px;opacity:.75"><span>needs 10.3 h/day on Tweelin</span><span></span></div>
+        <div style="margin-top:8px" class="row"><span>R&amp;D</span><span style="opacity:.7">18.4 h · no target</span></div>
+        <hr>
+        <div class="row" style="font-size:12px"><span>Mon 9.2 · Tue 8.4 · Wed 9.0 · <b>Thu 3.5</b> · Fri –</span></div>
+        <hr>
+        <div class="item">Open dashboard</div>
+        <div class="item">Open PineStem</div>
+        <div class="item" style="opacity:.6;font-size:12px">Updated 4 min ago · Refresh</div>
+      </div>
+      <div class="gn-banner"><div class="ic">!</div><div><b>Tweelin is behind for October</b><div style="opacity:.8">112.5 of 133 h. 10.3 h/day needed on Thu–Fri.</div><div style="margin-top:6px;font-weight:700;color:#99c1f1">Open PineStem · Snooze today</div></div></div>
+    </div>
+    <div class="space-y-3 text-sm">
+      <p>The panel label is always visible. The dot is green, amber or red from the <i>worst</i> verdict (week or any project), so a red dot here means "something needs you" even when the week is fine.</p>
+      <p>The bars carry tick marks for the LOP and target lines, using the same <span class="mono">bar()</span> / <span class="mono">levelOf()</span> helpers as <span class="mono">claude-usage@vikas/limits.js</span>.</p>
+      <p>The label format is configurable: <span class="mono">30.1 / 42.5 h</span>, <span class="mono">71%</span>, <span class="mono">−6.5 h TWE</span>, or icon only.</p>
+      <p>Stock GNOME without the AppIndicator extension still works for anyone who installs this extension. With neither, the mini widget and notifications are the fallback.</p>
+    </div>
+  </div>
+
+  <!-- 4 KDE + COSMIC -->
+  <h3 class="text-xl font-bold pt-2">4 · KDE Plasma and COSMIC: tray icon (StatusNotifierItem)</h3>
+  <div class="grid lg:grid-cols-2 gap-6 items-start">
+    <div class="kde-desk">
+      <div class="kde-pop">
+        <h4>Pace — Week on track</h4>
+        <div class="bar" style="background:#0000001a"><i class="fill-ok" style="width:67%"></i><b style="left:91%"></b><b style="left:94.4%"></b></div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;opacity:.7;margin:4px 0 10px"><span>30.1 / 42.5 h</span><span>needs 8.0 h/day</span></div>
+        <div style="display:flex;justify-content:space-between"><span>Tweelin · Oct</span><span class="hot">112.5 / 133 h</span></div>
+        <div class="bar" style="background:#0000001a;margin:4px 0 10px"><i class="fill-hot" style="width:84.6%"></i></div>
+        <div style="display:flex;gap:6px;font-size:12px"><span style="border:1px solid #bdc3c7;border-radius:4px;padding:3px 8px">Dashboard</span><span style="border:1px solid #bdc3c7;border-radius:4px;padding:3px 8px">Mini widget</span><span style="border:1px solid #bdc3c7;border-radius:4px;padding:3px 8px">Refresh</span></div>
+      </div>
+      <div class="kde-panel">
+        <svg class="tray-ic" viewBox="0 0 32 32"><title>Pace tray icon: ring + number</title><circle cx="16" cy="16" r="13" fill="none" stroke="#0000002a" stroke-width="4"/><circle cx="16" cy="16" r="13" fill="none" stroke="#e5534b" stroke-width="4" stroke-dasharray="58 82" transform="rotate(-90 16 16)"/><text x="16" y="20" text-anchor="middle" font-size="11" font-weight="800" fill="#232629">30</text></svg>
+        <span>🔊</span><span>📶</span><span>14:10</span>
+      </div>
+    </div>
+    <div class="cos-desk">
+      <div class="cos-top"><span style="display:inline-flex;align-items:center;gap:6px"><svg class="tray-ic" viewBox="0 0 32 32" style="width:20px;height:20px"><circle cx="16" cy="16" r="13" fill="none" stroke="#ffffff33" stroke-width="4"/><circle cx="16" cy="16" r="13" fill="none" stroke="#e5534b" stroke-width="4" stroke-dasharray="58 82" transform="rotate(-90 16 16)"/><text x="16" y="20" text-anchor="middle" font-size="11" font-weight="800" fill="#fff">30</text></svg></span><span>Thu 29 Oct 14:10</span></div>
+      <div class="cos-pop">
+        <div style="font-weight:700;margin-bottom:8px">Week · On track</div>
+        <div class="bar"><i class="fill-ok" style="width:67%"></i><b style="left:91%"></b><b style="left:94.4%"></b></div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;opacity:.7;margin:4px 0 10px"><span>30.1 / 42.5 h</span><span>needs 8.0 h/day</span></div>
+        <div style="display:flex;justify-content:space-between"><span>Tweelin · Oct</span><span style="color:#ff7b72">behind 6.5 h</span></div>
+        <div class="bar" style="margin:4px 0 10px"><i class="fill-hot" style="width:84.6%"></i></div>
+        <div style="opacity:.7;font-size:12px">Open dashboard · Refresh</div>
+      </div>
+    </div>
+  </div>
+  <p class="text-sm max-w-3xl">KDE and COSMIC display the tray icon's menu, but text labels next to tray icons aren't reliable. So <b>the number is drawn into the icon itself</b>: the ring's colour is the worst verdict and the digits are this week's hours. The popup shown here is the tray menu on KDE. On COSMIC (unverified whether it supports click events) the menu is identical and "Dashboard" opens the window. Both need a VM check before release.</p>
+
+  <!-- 5 Windows + macOS -->
+  <h3 class="text-xl font-bold pt-2">5 · Windows and macOS</h3>
+  <div class="grid lg:grid-cols-2 gap-6 items-start">
+    <div class="win-desk">
+      <div class="win-toast"><div style="display:flex;gap:8px;align-items:center;font-size:11px;opacity:.7;margin-bottom:4px"><span>Pace</span><span>Fri 16:00</span></div><b>Friday check: 4.9 h left to reach 42.5</b><div style="opacity:.8">Bill today's work before you log off.</div><div style="display:flex;gap:6px;margin-top:8px"><span style="flex:1;text-align:center;background:#0000000d;border-radius:6px;padding:5px">Open PineStem</span><span style="flex:1;text-align:center;background:#0000000d;border-radius:6px;padding:5px">Dismiss</span></div></div>
+      <div class="win-fly">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px"><b>Pace</b><span class="ok">● On track</span></div>
+        <div class="bar"><i class="fill-ok" style="width:67%"></i><b style="left:91%"></b><b style="left:94.4%"></b></div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;opacity:.7;margin:4px 0 10px"><span>30.1 / 42.5 h</span><span>needs 8.0 h/day</span></div>
+        <div style="display:flex;justify-content:space-between"><span>Tweelin · Oct</span><span class="hot">112.5 / 133 h</span></div>
+        <div class="bar" style="margin:4px 0"><i class="fill-hot" style="width:84.6%"></i></div>
+      </div>
+      <div class="win-bar"><span>^</span><svg class="tray-ic" viewBox="0 0 32 32" style="width:20px;height:20px"><circle cx="16" cy="16" r="13" fill="none" stroke="#0000002a" stroke-width="4"/><circle cx="16" cy="16" r="13" fill="none" stroke="#e5534b" stroke-width="4" stroke-dasharray="58 82" transform="rotate(-90 16 16)"/><text x="16" y="20" text-anchor="middle" font-size="11" font-weight="800">30</text></svg><span>ENG</span><span>14:10<br>29-10-2026</span></div>
+    </div>
+    <div class="mac-desk">
+      <div class="mac-top"><span style="font-weight:600">◔ 30.1/42.5h</span><span>⌁</span><span>Thu 29 Oct 14:10</span></div>
+      <div class="mac-pop">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px"><b>Week on track</b><span style="opacity:.6">4 min ago</span></div>
+        <div class="bar"><i class="fill-ok" style="width:67%"></i><b style="left:91%"></b><b style="left:94.4%"></b></div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;opacity:.7;margin:4px 0 10px"><span>needs 8.0 h/day</span><span>LOP line 41 h</span></div>
+        <div style="display:flex;justify-content:space-between"><span>Tweelin · Oct</span><span class="hot">−6.5 h</span></div>
+        <div class="bar" style="margin:4px 0 10px"><i class="fill-hot" style="width:84.6%"></i></div>
+        <div style="border-top:1px solid #0000001a;padding-top:6px;opacity:.8">Open Dashboard… &nbsp;⌘D<br>Show Mini Widget<br>Quit Pace</div>
+      </div>
+    </div>
+  </div>
+  <p class="text-sm max-w-3xl">On macOS the menu bar shows a <b>text title</b> beside the icon, which tray APIs support there. Windows shows only the icon in the tray, so the drawn number does the work. The first macOS build is unsigned, so the first launch needs right-click → Open.</p>
+
+  <!-- 6 Mini widget -->
+  <h3 class="text-xl font-bold pt-2">6 · Mini widget (every OS)</h3>
+  <div class="grid lg:grid-cols-[auto_1fr] gap-6 items-center">
+    <div class="p-6 rounded-2xl" style="background:linear-gradient(135deg,#9bb5d6,#5c7fa8)">
+      <div class="mini">
+        <div style="display:flex;justify-content:space-between;align-items:center"><b>Week</b><span class="chip ok">on track</span></div>
+        <div class="bar" style="margin:6px 0 2px"><i class="fill-ok" style="width:67%"></i><b style="left:91%"></b><b style="left:94.4%"></b></div>
+        <div style="display:flex;justify-content:space-between;opacity:.7"><span>30.1 / 42.5</span><span>8.0/day</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px"><b>Tweelin</b><span class="chip hot">−6.5 h</span></div>
+        <div class="bar" style="margin:6px 0 2px"><i class="fill-hot" style="width:84.6%"></i></div>
+        <div style="display:flex;justify-content:space-between;opacity:.7"><span>112.5 / 133</span><span>10.3/day</span></div>
+      </div>
+    </div>
+    <div class="text-sm space-y-2 max-w-xl">
+      <p>A 230&nbsp;px frameless window you can drag anywhere. It remembers its position and opens at login if enabled, which makes it the "see it all the time" surface on desktops whose tray hides labels.</p>
+      <p><b>Limit:</b> keep-on-top is a no-op on GNOME and KDE Wayland, which have no protocol for it. The widget sits on the desktop like a sticky note, and KDE users can pin it with a window rule. On Windows, macOS and X11 it can float on top.</p>
+      <p>It's a webview, so it loads only while shown and stays under 25&nbsp;MB.</p>
+    </div>
+  </div>
+
+  <!-- 7 Dashboard -->
+  <h3 class="text-xl font-bold pt-2">7 · Dashboard window</h3>
+  <div class="adw">
+    <div class="adw-head"><span class="opacity-60 text-sm">⟳ 4 min ago</span><div class="adw-tabs"><span class="on">Week</span><span>Month</span><span>Calendar</span></div><span class="opacity-60">⚙</span></div>
+    <div class="adw-body space-y-4">
+      <div class="grid md:grid-cols-4 gap-3">
+        <div class="adw-card"><div class="text-xs opacity-60">This week</div><div class="text-2xl font-bold">30.1 h</div><div class="text-xs ok">On track · 8.0 h/day needed (Thu–Fri)</div></div>
+        <div class="adw-card"><div class="text-xs opacity-60">Average / working day</div><div class="text-2xl font-bold">8.87 h</div><div class="text-xs opacity-60">Mon–Wed · target 8.5</div></div>
+        <div class="adw-card"><div class="text-xs opacity-60">LOP line</div><div class="text-2xl font-bold">10.9 h <span class="text-sm font-normal opacity-60">to go</span></div><div class="text-xs opacity-60">41 h · 0 LOP days so far</div></div>
+        <div class="adw-card"><div class="text-xs opacity-60">Projected Friday</div><div class="text-2xl font-bold">44.3 h</div><div class="text-xs opacity-60">at your 8.87 avg</div></div>
+      </div>
+      <div class="grid grid-cols-5 gap-2">
+        <div class="day"><div class="opacity-60">Mon 26</div><div class="h">9.2</div><div class="ok">TWE 7.0 · RES 2.2</div></div>
+        <div class="day"><div class="opacity-60">Tue 27</div><div class="h">8.4</div><div class="warn">TWE 6.5 · RES 1.9</div></div>
+        <div class="day"><div class="opacity-60">Wed 28</div><div class="h">9.0</div><div class="ok">TWE 7.5 · RES 1.5</div></div>
+        <div class="day today"><div class="opacity-60">Thu 29 · today</div><div class="h">3.5</div><div class="opacity-60">so far</div></div>
+        <div class="day"><div class="opacity-60">Fri 30</div><div class="h opacity-30">—</div><div class="opacity-60">plan ≈ 8.0</div></div>
+      </div>
+      <div class="grid md:grid-cols-2 gap-3">
+        <div class="adw-card space-y-2">
+          <div class="font-bold">October by project</div>
+          <div class="flex justify-between text-sm"><span>Tweelin <span class="chip hot">behind 6.5 h</span></span><span>112.5 / 133 h</span></div>
+          <div class="bar"><i class="fill-hot" style="width:84.6%"></i><b style="left:89.5%"></b></div>
+          <div class="text-xs opacity-60">Target 140 prorated: 19 of 20 working days (leave 9 Oct). Expected by today 119.0. Needs 10.3 h/day for 2 days.</div>
+          <div class="flex justify-between text-sm pt-2"><span>R&amp;D</span><span>18.4 h · no target</span></div>
+        </div>
+        <div class="adw-card space-y-2">
+          <div class="font-bold">Coming up</div>
+          <div class="text-sm">Next DhiHRMS holiday on a weekday → that week has 4 working days, so the target drops to 34.0 h and the LOP line to 32 h</div>
+          <div class="text-sm">Nov targets: Tweelin 140, prorated once November leave and holidays are known</div>
+          <div class="text-sm opacity-60">Leave and holidays come from DhiHRMS. Opted-in RH only.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8 Settings + states -->
+  <h3 class="text-xl font-bold pt-2">8 · Notifications, settings and failure states</h3>
+  <div class="grid lg:grid-cols-2 gap-6 items-start">
+    <div class="adw">
+      <div class="adw-head"><span class="opacity-50">←</span><span>Settings</span><span></span></div>
+      <div class="adw-body space-y-3">
+        <div class="text-xs font-bold opacity-60 uppercase">Notify me when</div>
+        <div class="adw-card p-0">
+          <div class="adw-row"><span>Friday 16:00: week below target</span><span class="sw"></span></div>
+          <div class="adw-row"><span>Daily 18:30: today under 8.5 h (skipped on leave)</span><span class="sw"></span></div>
+          <div class="adw-row"><span>A project falls &gt; 4 h behind</span><span class="sw"></span></div>
+          <div class="adw-row"><span>A past working day has 0 h billed</span><span class="sw"></span></div>
+          <div class="adw-row"><span>Monday 10:00: last week's summary</span><span class="sw off"></span></div>
+        </div>
+        <div class="text-xs font-bold opacity-60 uppercase">Display</div>
+        <div class="adw-card p-0">
+          <div class="adw-row"><span>Panel text</span><span class="mono text-xs">30.1 / 42.5 h ▾</span></div>
+          <div class="adw-row"><span>Show mini widget at login</span><span class="sw off"></span></div>
+          <div class="adw-row"><span>Refresh every</span><span class="mono text-xs">15 min ▾</span></div>
+          <div class="adw-row"><span>Start at login</span><span class="sw"></span></div>
+        </div>
+        <div class="adw-card p-0">
+          <div class="adw-row"><span>Account · vikas.k@osmosys.co</span><span class="text-[#c01c28] text-xs font-bold">Sign out</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="space-y-3">
+      <div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
+        <table class="table table-sm">
+          <thead><tr><th>State</th><th>What the user sees</th></tr></thead>
+          <tbody>
+            <tr><td>Offline / hrms-api down</td><td>Last numbers stay, grey dot, "as of 09:40". No notification spam. Retries with backoff.</td></tr>
+            <tr><td>Session expired</td><td>Amber dot, one notification "Sign in again", which opens the browser. The numbers stay visible.</td></tr>
+            <tr><td>No PineStem mapping</td><td>The week shows "—" with "Ask HR to link your PineStem account". Leave and holidays still shown.</td></tr>
+            <tr><td>PineStem org creds rejected (server)</td><td>"Hours unavailable, DhiHRMS can't reach PineStem". Shown only once per day.</td></tr>
+            <tr><td>On leave all week</td><td>The label reads "On leave". No nudges.</td></tr>
+            <tr><td>New version</td><td>Quiet in-app update (Tauri updater). On Linux distro packages, defer to the package manager.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="alert alert-soft alert-info text-sm"><span>Notifications use the native system on each OS (libnotify, Windows toast, macOS UserNotifications). They're actionable: <b>Open PineStem</b> deep-links to the task list, and <b>Snooze today</b> mutes that rule until midnight.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= BUILD ================= -->
+<section id="build" class="sec space-y-4">
+  <h2 class="text-2xl font-bold">Stack, speed budget and build order</h2>
+  <div class="grid md:grid-cols-2 gap-4">
+    <div class="card card-border bg-base-100"><div class="card-body p-5 text-sm space-y-1">
+      <h3 class="font-bold">Stack</h3>
+      <p><b>Tauri v2</b> (pin <span class="mono">2.12.4</span>; 2.12.5 is 5 days old) for one Rust core and native tray, notifications, autostart and updater on all four platforms, using the system webview (no bundled Chromium).</p>
+      <p><b>Rust core</b>: <span class="mono">reqwest</span>, <span class="mono">serde</span>, <span class="mono">chrono</span>, <span class="mono">keyring</span> (v4.2.0 is from 2026-08-29, so it's old enough). <b>UI</b>: Svelte + plain CSS styled to look like libadwaita, built with pnpm.</p>
+      <p><b>GNOME extension</b>: GJS ESM for Shell 48–50, forked from <span class="mono">claude-usage@vikas</span>.</p>
+      <p><b>Packages</b>: GitHub/GitLab CI builds .deb, .rpm, AppImage, .msi and .dmg. Flathub later.</p>
+    </div></div>
+    <div class="card card-border bg-base-100"><div class="card-body p-5 text-sm space-y-1">
+      <h3 class="font-bold">Speed budget (hard requirements)</h3>
+      <ul class="list-disc ml-5 space-y-1">
+        <li>Idle means tray only, with <b>no webview loaded</b>. Windows are created on click and destroyed on close.</li>
+        <li>From cold start to a number in the tray in <b>&lt; 300 ms</b> (cached <span class="mono">status.json</span>), with the refresh after that.</li>
+        <li>Idle RAM <b>&lt; 40 MB</b>. CPU ≈ 0 between polls, with one timer and no sidecar.</li>
+        <li>At most <b>3 GETs per poll</b>. The calendar and targets are cached per day.</li>
+        <li>UI bundle &lt; 200 KB. The GNOME extension makes zero network calls.</li>
+        <li>NVIDIA + WebKitGTK: set <span class="mono">WEBKIT_DISABLE_DMABUF_RENDERER=1</span> to avoid blank windows.</li>
+      </ul>
+    </div></div>
+  </div>
+  <ul class="steps steps-vertical lg:steps-horizontal w-full text-xs">
+    <li class="step step-primary">hrms-api: my-hours + my-days</li>
+    <li class="step step-primary">Pace engine + tests</li>
+    <li class="step">Sign-in + tray + status.json</li>
+    <li class="step">Notifications + autostart</li>
+    <li class="step">Dashboard + targets</li>
+    <li class="step">GNOME extension</li>
+    <li class="step">Mini widget</li>
+    <li class="step">CI bundles + 2 colleagues</li>
+    <li class="step">my-targets + portal UI</li>
+  </ul>
+  <div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
+    <table class="table table-sm">
+      <thead><tr><th>Slice</th><th>Done when</th></tr></thead>
+      <tbody>
+        <tr><td>hrms-api endpoints (TDD, in hrms-api's repo, via its own session)</td><td>For a fixed week, <span class="mono">my-hours</span> totals equal the <span class="mono">pinestem-billing-report</span> skill's totals. <span class="mono">my-days</span> returns 0.5 for a half-day and excludes non-opted RH.</td></tr>
+        <tr><td>Engine</td><td><span class="mono">cargo test</span> passes for a holiday week, half-day, cross-week leave, month-end proration, zero-hour day, week already over, and the LOP line (41 h for 5 days, 32 h for 4).</td></tr>
+        <tr><td>Tray + sign-in</td><td>On Nobara the tray shows a number within 300 ms of login, and the RAM measured with <span class="mono">ps</span> is under 40 MB.</td></tr>
+        <tr><td>Cross-desktop</td><td>KDE and COSMIC VMs plus a Windows VM: icon visible, sign-in completes, numbers match the GNOME machine.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ================= DECISIONS ================= -->
+<section id="decide" class="sec space-y-4">
+  <h2 class="text-2xl font-bold">Decisions</h2>
+  <p class="max-w-3xl">Each row has a recommendation. <b>Row 3 is the one I'd defend least</b>, because leads setting targets in the portal adds hrms-portal work. Pick per row and press <b>Queue answers</b>, or just say "go".</p>
+  <form data-lavish-question="decisions" class="space-y-3" onsubmit="event.preventDefault(); const fd=new FormData(event.currentTarget); const a={}; for (const [k,v] of fd.entries()) a[k]=v; window.lavish && window.lavish.queuePrompt('Pace design decisions: '+JSON.stringify(a), {tag:'choice', text:'Decisions: '+Object.values(a).join(' · '), element:event.currentTarget, data:a});">
+    <div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
+      <table class="table table-sm">
+        <thead><tr><th>#</th><th>Decision</th><th>Choice</th><th>The fact that decides it</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Where the app gets hours</td>
+            <td><label class="flex gap-2"><input type="radio" class="radio radio-xs" name="data" value="hrms-api endpoints" checked> hrms-api endpoints (rec.)</label><label class="flex gap-2"><input type="radio" class="radio radio-xs" name="data" value="direct PineStem login"> App logs in to PineStem</label></td>
+            <td>hrms-api already holds org PineStem creds + the user mapping (<span class="mono">pinestem.client.ts:185</span>). Direct login means storing 20 passwords and re-sending each one every 120 min.</td></tr>
+          <tr><td>2</td><td>Entra registration</td>
+            <td><label class="flex gap-2"><input type="radio" class="radio radio-xs" name="entra" value="new Pace registration" checked> New "Pace" public client (rec.)</label><label class="flex gap-2"><input type="radio" class="radio radio-xs" name="entra" value="reuse dhihrms-mcp"> Reuse dhihrms-mcp's</label></td>
+            <td>hrms-api checks only <span class="mono">aud</span> + <span class="mono">access_as_user</span>, not the client (<span class="mono">microsoft-sso.service.ts:64-71</span>). A separate app gets its own consent screen, logs and revocation.</td></tr>
+          <tr><td>3</td><td>Who owns targets</td>
+            <td><label class="flex gap-2"><input type="radio" class="radio radio-xs" name="targets" value="lead in hrms-portal, local in phase 1" checked> Lead sets in hrms-portal; local + preset in phase 1 (rec.)</label><label class="flex gap-2"><input type="radio" class="radio radio-xs" name="targets" value="local only"> Local settings only</label></td>
+            <td>"Different people have different requirements" is a lead's call. Local-only means trusting each person to type their own target.</td></tr>
+          <tr><td>4</td><td>App framework</td>
+            <td><label class="flex gap-2"><input type="radio" class="radio radio-xs" name="stack" value="Tauri 2.12.4" checked> Tauri v2 (rec.)</label><label class="flex gap-2"><input type="radio" class="radio radio-xs" name="stack" value="GTK app Linux-only"> Native GTK4 (Linux only)</label></td>
+            <td>Windows and macOS users are in scope. GTK on Windows/macOS is second-class, while Tauri is one codebase with native tray/notify on all four.</td></tr>
+          <tr><td>5</td><td>Repo home</td>
+            <td><label class="flex gap-2"><input type="radio" class="radio radio-xs" name="repo" value="Osmosys GitLab" checked> Osmosys GitLab, internal (rec.)</label><label class="flex gap-2"><input type="radio" class="radio radio-xs" name="repo" value="personal GitHub"> Personal GitHub (xixas)</label></td>
+            <td>It depends on new hrms-api endpoints and company identity, so it's a company tool, not OSS.</td></tr>
+          <tr><td>6</td><td>Name</td>
+            <td><input class="input input-xs w-36" name="name" value="Pace"></td>
+            <td>Short, verb-like, reads well in a tray tooltip.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <button class="btn btn-primary btn-sm" type="submit">Queue answers</button>
+  </form>
+  <div class="alert alert-soft alert-warning text-sm"><span><b>Before slice 1:</b> the hrms-api endpoints are a new feature in Vishnu's repo. The hrms-api session is waiting for your go and will build them TDD there. The "Pace" Entra registration needs an Azure admin.</span></div>
+</section>
+
+<footer class="text-xs opacity-60 pb-10">Sources: <span class="mono">hrms-api</span> v7.34.0 (via its session), <span class="mono">dhihrms-mcp/src/api/types.gen.ts:7532,7689,7729</span>, <span class="mono">osmosys-pinestem-mcp/src/auth/password.ts:153-170</span>, <span class="mono">claude-usage@vikas/extension.js</span>, Microsoft Entra reply-URL docs (loopback port ignored), crates.io (tauri 2.12.5 = 2026-10-21, keyring 4.2.0 = 2026-08-29). Unverified until a VM test: COSMIC tray click behaviour and SNI label support.</footer>
+</main>
+</body>
+</html>

@@ -1,0 +1,186 @@
+<div class="navbar bg-base-100 border-b border-base-300 sticky top-0 z-10 px-4">
+  <div class="navbar-start gap-3"><span class="text-xl font-bold">Pace</span><span class="badge badge-soft badge-primary">design · draft 2 · Linux</span></div>
+  <div class="navbar-end hidden md:flex gap-1 text-sm">
+    <a class="btn btn-ghost btn-sm" href="#changed">What changed</a>
+    <a class="btn btn-ghost btn-sm" href="#arch">Architecture</a>
+    <a class="btn btn-ghost btn-sm" href="#math">Pace rules</a>
+    <a class="btn btn-ghost btn-sm" href="#screens">Mockups</a>
+    <a class="btn btn-ghost btn-sm" href="#build">Build</a>
+    <a class="btn btn-ghost btn-sm" href="#risks">Risks</a>
+    <a class="btn btn-ghost btn-sm" href="#decide">Decisions</a>
+  </div>
+</div>
+
+<main class="mx-auto max-w-6xl p-4 lg:p-8 space-y-14">
+
+<section class="space-y-4">
+  <h1 class="text-3xl lg:text-4xl font-bold">Always know if your billed hours are on pace</h1>
+  <p class="text-lg max-w-3xl">A small <b>Linux</b> app that always shows the person their week (billed hours against the 8.5&nbsp;h/day target and the <b>loss-of-pay line</b>) and their month (per-project targets like <b>Tweelin 140&nbsp;h</b>) in the panel. It reads hours from PineStem and leave and holidays from DhiHRMS, all through hrms-api. It nudges them while a shortfall is still fixable.</p>
+  <div class="grid md:grid-cols-3 gap-4">
+    <div class="card card-border bg-base-100"><div class="card-body p-5">
+      <div class="text-sm opacity-70">Today</div>
+      <p>The <span class="mono">pinestem-billing-report</span> skill runs on demand, for Vikas only. It ignores leave and holidays and hard-codes 42.5&nbsp;h.</p>
+    </div></div>
+    <div class="card card-border bg-base-100"><div class="card-body p-5">
+      <div class="text-sm opacity-70">Target</div>
+      <p>A Linux user installs one package and <b>signs in once with Microsoft</b>. From then on the panel shows <span class="mono">30.1 / 42.5 h</span> in a colour that means what HR means, and a nudge arrives before pay is at risk.</p>
+    </div></div>
+    <div class="card card-border bg-base-100"><div class="card-body p-5">
+      <div class="text-sm opacity-70">Done when</div>
+      <p>Vikas on GNOME and one colleague on KDE see week and month numbers that match the HR billing report to 0.01&nbsp;h, with leave applied. <b>Pace never shows green in a week HR docks pay.</b></p>
+    </div></div>
+  </div>
+</section>
+
+<section id="changed" class="sec space-y-4">
+  <h2 class="text-2xl font-bold">What changed since draft 1</h2>
+  <p class="max-w-3xl">Draft 2 is Linux-only, and Fable reviewed it in two ways. A <b>pre-mortem</b> (assume Pace failed in three months and ask why) checked the design. Four rounds of <b>timeline simulation</b> replayed 18 realistic weeks poll by poll and judged each verdict from the employee's side. Every finding below is either fixed in this draft or listed under Risks.</p>
+  <div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
+    <table class="table table-sm">
+      <thead><tr><th>Change</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td><b>Linux only</b>: GNOME, KDE Plasma 6, COSMIC, XFCE/Cinnamon. No Windows or macOS mockups.</td><td>The first users are all on Linux.</td></tr>
+        <tr><td><b>Toolkit: Python + GTK4 + libadwaita</b>, the same stack as Lifeboat (Tauri is the alternative, see decision 4)</td><td>Real GNOME widgets, not HTML imitating them. It reuses Lifeboat's sign-in, Broadway screenshot tests (windows rendered to PNG with no display) and RPM pipeline.</td></tr>
+        <tr><td><b>Week verdict rewritten</b> (rules v4)</td><td>Draft 1 showed <b>AHEAD at 40&nbsp;h on Friday evening</b>, and HR then docked a day. It also showed red all week to people who bill the next morning.</td></tr>
+        <tr><td><b>Half-day leave</b>: the target becomes 41&nbsp;h, not 38.25</td><td>HR counts whole days (<span class="mono">lop-calculator.ts:36-48</span>), so 4.5 working days still need 41&nbsp;h for zero loss of pay.</td></tr>
+        <tr><td><b>Pay always counts billable + non-billable.</b> The "count non-billable" toggle is gone.</td><td>That is what HR sums (<span class="mono">billing-report.xlsx.ts:316-318</span>). The toggle could have raised a false loss-of-pay alarm.</td></tr>
+        <tr><td>LOP confirmed <b>weekly</b>, not monthly</td><td><span class="mono">countWorkingDays</span> assumes a Mon–Fri window (<span class="mono">lop-calculator.ts:14-22</span>).</td></tr>
+        <tr><td><b>Mockups for every screen and state</b> (sections A, B, C)</td><td>The pre-mortem found 20+ states that had no screen.</td></tr>
+        <tr><td>Project target proration is <b>the lead's choice per target</b></td><td>"Tweelin 140" may be a client commitment, and prorating it to 133 would hide a real 7&nbsp;h gap.</td></tr>
+        <tr><td><b>Tray (KDE, COSMIC, XFCE)</b>: left-click opens the mini widget, right-click shows a text menu. The <b>panel dot shows the week verdict only</b>.</td><td>A tray icon only gets "activate" plus a text menu; it can't show a drawn popup. A project's lag colours its own row instead of turning the whole panel amber.</td></tr>
+        <tr><td><b>Refresh bypasses the server cache</b> (rate-limited)</td><td>A 5-minute server cache plus a 15-minute poll meant numbers could be 20 minutes stale right after billing, and people would decide "it's wrong".</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="arch" class="sec space-y-4">
+  <h2 class="text-2xl font-bold">Architecture: a quiet daemon, windows on demand</h2>
+  <p class="max-w-3xl">hrms-api is still the only door. It already calls PineStem with org credentials and maps each employee (<span class="mono">common/pinestem/pinestem.client.ts:185</span>), and it owns the leave and holiday calendar (<span class="mono">common/calendar/working-calendar.ts</span>). On the desktop, Pace splits into a small <b>headless daemon</b> (always running, no GTK loaded) and a <b>GTK4 UI process</b> that starts only when you open a window. That keeps the idle footprint low without needing a webview.</p>
+  <figure class="card card-border bg-base-100 p-4" role="img" aria-labelledby="archT">
+    <svg viewBox="0 0 1100 380" class="w-full" font-family="Inter, system-ui, sans-serif" font-size="13">
+      <title id="archT">Pace architecture on Linux</title>
+      <defs><marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="#57606a"/></marker></defs>
+      <rect x="10" y="10" width="560" height="360" rx="16" fill="#f6f8fa" stroke="#d0d7de"/>
+      <text x="26" y="36" font-weight="700">Your Linux session</text>
+      <rect x="30" y="54" width="250" height="150" rx="12" fill="#ddf4ff" stroke="#54aeff"/>
+      <text x="44" y="78" font-weight="700">paced · daemon (Python, Gio only)</text>
+      <text x="44" y="100" fill="#57606a" font-size="12">• poll hrms-api every 15 min</text>
+      <text x="44" y="118" fill="#57606a" font-size="12">• pace engine (pure, tested)</text>
+      <text x="44" y="136" fill="#57606a" font-size="12">• writes status.json</text>
+      <text x="44" y="154" fill="#57606a" font-size="12">• tray icon (StatusNotifierItem, D-Bus)</text>
+      <text x="44" y="172" fill="#57606a" font-size="12">• notifications (org.freedesktop.Notifications)</text>
+      <text x="44" y="190" fill="#57606a" font-size="12">• token in Secret Service (libsecret)</text>
+      <rect x="30" y="226" width="250" height="124" rx="12" fill="#fff" stroke="#d0d7de"/>
+      <text x="44" y="250" font-weight="700">pace · GTK4 + libadwaita UI</text>
+      <text x="44" y="272" fill="#57606a" font-size="12">started on click, exits on close</text>
+      <text x="44" y="290" fill="#57606a" font-size="12">sign-in · targets · dashboard</text>
+      <text x="44" y="308" fill="#57606a" font-size="12">settings · mini widget</text>
+      <text x="44" y="326" fill="#57606a" font-size="12">reads status.json, asks paced via D-Bus</text>
+      <rect x="310" y="54" width="240" height="70" rx="12" fill="#fff8c5" stroke="#d4a72c"/>
+      <text x="324" y="80" font-weight="700">~/.local/state/pace/status.json</text>
+      <text x="324" y="102" fill="#57606a" font-size="12">verdict, numbers, as-of, schema v1</text>
+      <rect x="310" y="146" width="240" height="90" rx="12" fill="#dafbe1" stroke="#4ac26b"/>
+      <text x="324" y="172" font-weight="700">GNOME: pace@osmosys extension</text>
+      <text x="324" y="194" fill="#57606a" font-size="12">top-bar label + menu, reads</text>
+      <text x="324" y="212" fill="#57606a" font-size="12">status.json, zero network calls</text>
+      <rect x="310" y="258" width="240" height="92" rx="12" fill="#fff" stroke="#d0d7de"/>
+      <text x="324" y="284" font-weight="700">KDE · COSMIC · XFCE · Cinnamon</text>
+      <text x="324" y="306" fill="#57606a" font-size="12">tray icon from paced, number</text>
+      <text x="324" y="324" fill="#57606a" font-size="12">drawn into the icon</text>
+      <line x1="280" y1="100" x2="308" y2="90" stroke="#57606a" marker-end="url(#ar3)"/>
+      <line x1="430" y1="124" x2="430" y2="144" stroke="#57606a" marker-end="url(#ar3)"/>
+      <line x1="280" y1="170" x2="308" y2="290" stroke="#57606a" marker-end="url(#ar3)"/>
+      <rect x="640" y="40" width="250" height="230" rx="16" fill="#fff" stroke="#d0d7de"/>
+      <text x="656" y="66" font-weight="700">hrms-api (DhiHRMS)</text>
+      <text x="656" y="92" fill="#1a7f37" font-size="12">NEW GET /billing-report/my-hours/</text>
+      <text x="656" y="112" fill="#1a7f37" font-size="12">NEW GET /calendar/my-days/</text>
+      <text x="656" y="132" fill="#57606a" font-size="12">later GET /pace/my-targets/</text>
+      <text x="656" y="152" fill="#57606a" font-size="12">GET /billing-report/config/ (9 / 5)</text>
+      <text x="656" y="172" fill="#57606a" font-size="12">POST /auth/microsoft/ · /auth/refresh/</text>
+      <text x="656" y="192" fill="#57606a" font-size="12">60 s cache · ?fresh=1 (1/min)</text>
+      <rect x="930" y="60" width="160" height="70" rx="14" fill="#f6f8fa" stroke="#d0d7de"/>
+      <text x="1010" y="92" text-anchor="middle" font-weight="700">PineStem</text>
+      <text x="1010" y="112" text-anchor="middle" fill="#57606a" font-size="12">org creds, server-side</text>
+      <rect x="930" y="190" width="160" height="70" rx="14" fill="#f6f8fa" stroke="#d0d7de"/>
+      <text x="1010" y="222" text-anchor="middle" font-weight="700">Microsoft Entra</text>
+      <text x="1010" y="242" text-anchor="middle" fill="#57606a" font-size="12">"Pace" public client</text>
+      <line x1="280" y1="80" x2="638" y2="90" stroke="#57606a" marker-end="url(#ar3)"/>
+      <text x="420" y="40" fill="#57606a" font-size="12">≤ 3 GETs / 15 min</text>
+      <line x1="890" y1="95" x2="928" y2="95" stroke="#57606a" marker-end="url(#ar3)"/>
+      <line x1="280" y1="300" x2="928" y2="230" stroke="#57606a" stroke-dasharray="5 4" marker-end="url(#ar3)"/>
+      <text x="640" y="300" fill="#57606a" font-size="12">sign-in: system browser, PKCE, loopback 127.0.0.1</text>
+    </svg>
+  </figure>
+  <div class="grid md:grid-cols-3 gap-4 text-sm">
+    <div class="card card-border bg-base-100"><div class="card-body p-4">
+      <b>New: my-hours</b>
+      <p><span class="mono">?from=2026-10-26&amp;to=2026-11-01</span> returns one row per day per project: <span class="mono">{date, project_code, project_name, billable_min, non_billable_min}</span>. It is built on <span class="mono">getEmployeeDetailedBilling</span> and aggregated by day on the server.</p>
+    </div></div>
+    <div class="card card-border bg-base-100"><div class="card-body p-4">
+      <b>New: my-days</b>
+      <p>The output of <span class="mono">working-calendar.ts</span> for a range: off days, holidays, opted-in restricted holidays only, approved leave with <b>half-days as 0.5</b>, comp-off and joining date. It mirrors what <span class="mono">leaveCounts</span> feeds the LOP report.</p>
+    </div></div>
+    <div class="card card-border bg-base-100"><div class="card-body p-4">
+      <b>Speed and memory budget</b>
+      <p>Number in the panel <b>&lt; 300 ms</b> after login (cached <span class="mono">status.json</span>). <span class="mono">paced</span> idles <b>&lt; 35 MB</b> with no GTK loaded. A UI window runs about 60–80 MB while open and frees it on close. CPU stays near 0 between polls.</p>
+    </div></div>
+  </div>
+</section>
+
+<section id="math" class="sec space-y-4">
+  <h2 class="text-2xl font-bold">Pace rules v4: pay first, then target</h2>
+  <p class="max-w-3xl">The week has two separate questions. <b>Will HR dock pay?</b> HR counts <span class="mono">floor(total/9) + (remainder ≥ 5)</span> days against working days, weekly, on billable + non-billable hours. <b>Will I hit 8.5&nbsp;h/day?</b> The colour answers the pay question first. Late billing is treated as "not billed yet" rather than a shortfall, and the last working day always shows the hard gap.</p>
+  <div class="grid lg:grid-cols-2 gap-4">
+    <div class="card card-border bg-base-100"><div class="card-body p-5 text-sm space-y-2">
+      <b>Inputs</b>
+      <p class="mono text-xs leading-6">d = working days after leave/holidays (0.5 steps)<br>lop = 9·(⌈d⌉−1) + 5 &nbsp;&nbsp;// 41 h for 5 or 4.5 days<br>target = max(8.5·d, lop)<br>pending = 8.5 for each zero-hour working day, from its 20:00<br>&nbsp;&nbsp;until 12:00 next working day (Fri → Mon 12:00)<br>eff = logged + pending<br>need/day = (target − eff_before_today) ÷ days left incl. today<br>&nbsp;&nbsp;// steady all day; today's own progress shows as "x h left today"<br>after 20:00 today counts as past</p>
+    </div></div>
+    <div class="card card-border bg-base-100"><div class="card-body p-5 text-sm space-y-2">
+      <b>Verdict, first match wins</b>
+      <table class="table table-xs">
+        <tbody>
+          <tr><td class="ok font-bold">DONE</td><td>logged ≥ target</td></tr>
+          <tr><td class="font-bold" style="color:#1c71d8">BILL</td><td>only "not billed yet" days stand between you and DONE</td></tr>
+          <tr><td class="hot font-bold">PAY RISK</td><td>lop out of reach at 10.5&nbsp;h/day, or the day is over under it. Names the short days.</td></tr>
+          <tr><td class="warn font-bold">SHORT</td><td>no days left, at or above lop: pay safe</td></tr>
+          <tr><td class="warn font-bold">BEHIND</td><td>need/day &gt; 10.5, pay still reachable</td></tr>
+          <tr><td class="warn font-bold">TIGHT</td><td>9.0 &lt; need/day ≤ 10.5</td></tr>
+          <tr><td class="ok font-bold">AHEAD</td><td>≥ 9&nbsp;h per past day; never on the last working day</td></tr>
+          <tr><td class="ok font-bold">ON TRACK</td><td>otherwise</td></tr>
+        </tbody>
+      </table>
+      <p>On the last working day under the LOP line, the label adds <span class="mono">· pay needs N h</span>. After the week ends: <b>DONE</b>, <b>SHORT (pay safe)</b> or <b>LOP n days</b>, computed exactly as HR does.</p>
+    </div></div>
+  </div>
+  <p class="max-w-3xl">The simulation (<span class="mono">sim4.js</span>, 18 weeks × 4 polls a day) produced these verdicts at the moments that used to go wrong:</p>
+  <div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
+    <table class="table table-sm">
+      <thead><tr><th>Week</th><th>Fri 18:30</th><th>Saturday</th><th>Draft 1 said</th></tr></thead>
+      <tbody>
+        <tr><td>9, 9, 9, 9, 4 (1&nbsp;h under the line)</td><td class="ok">ON TRACK · <b class="hot">pay needs 1.0 h</b></td><td class="hot">LOP 1 day</td><td>AHEAD while losing a day</td></tr>
+        <tr><td>Bills each day next morning</td><td class="ok">ON TRACK · pay needs 7.0 h</td><td class="ok">DONE</td><td>no flips, but blind to the gap</td></tr>
+        <tr><td>Batch-bills everything Friday 17:00</td><td class="ok">DONE</td><td class="ok">DONE</td><td>AT RISK Tue–Fri for nothing</td></tr>
+        <tr><td>Half-day leave Thu, 8.5 every day</td><td class="hot">PAY RISK · pay needs 2.5 h</td><td class="hot">LOP 0.5 day</td><td>DONE at 38.5&nbsp;h</td></tr>
+        <tr><td>Exactly 41: 9, 9, 9, 9, 5</td><td class="ok">ON TRACK</td><td class="warn">SHORT (pay safe)</td><td>SHORT, no pay context</td></tr>
+        <tr><td>Thu 3.5 entered, rest of Thu never</td><td class="hot">PAY RISK · pay needs 2.4 h · Thu 3.5 h</td><td class="hot">LOP 1 day</td><td>no pointer to the fixable day</td></tr>
+        <tr><td>Monday 0&nbsp;h (sick, no leave applied)</td><td class="hot">PAY RISK · pay needs 3.0 h · Mon 0 h</td><td class="hot">LOP 1 day</td><td>red, with no hint to apply leave</td></tr>
+        <tr><td>Holiday Monday, 8&nbsp;h × 4</td><td class="warn">TIGHT</td><td class="warn">SHORT (pay safe)</td><td>TIGHT, stale all Friday</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="grid md:grid-cols-2 gap-4 text-sm">
+    <div class="card card-border bg-base-100"><div class="card-body p-4">
+      <b>Month, per project</b>
+      <p>Billable minutes only. The lead sets each target as <b>fixed</b> (a client commitment, the default) or <b>prorated</b>: <span class="mono">eff_target = target × avail_days ÷ month_working_days</span>. Then <span class="mono">need/day = (eff_target − billed) ÷ remaining avail_days</span>, with the same bands scaled by that project's share of the day.</p>
+    </div></div>
+    <div class="card card-border bg-base-100"><div class="card-body p-4">
+      <b>Still open (hrms-api owner)</b>
+      <p>Do Saturday billings count in HR's weekly window? The window comes from the caller's <span class="mono">fromDate/toDate</span> (<span class="mono">billing-report.xlsx.ts:78-79</span>). <b>Until that's answered, Pace ignores weekend billings for pay</b>, so it can only under-promise. Simulated week 10 (8&nbsp;h × 5, then 3&nbsp;h Saturday) shows LOP 1 day, not DONE. Is a half-day leave 0.5 in <span class="mono">leave.total</span>?</p>
+    </div></div>
+  </div>
+</section>
+
+<section id="screens" class="sec space-y-10">
+  <h2 class="text-2xl font-bold">Mockups: every screen and state</h2>
+  <p class="max-w-3xl">All mocks use one example unless a state needs other numbers: <b>Thursday 29 Oct 2026, 14:10</b>. Mon–Wed billed 9.2 + 8.4 + 9.0, today 3.5 so far: 30.1 of 42.5&nbsp;h, needs 8.0&nbsp;h/day, on track. October Tweelin is 112.5 of 133&nbsp;h (prorated), behind 6.5&nbsp;h. App windows are drawn as libadwaita; panels match each desktop.</p>

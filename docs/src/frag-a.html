@@ -1,0 +1,312 @@
+<style>
+  .fa-wrap { display: grid; gap: 1.5rem; }
+  .fa-wrap h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: .5rem; }
+  .fa-sp { text-align: center; padding: 22px 18px 20px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .fa-sp .t { font-size: 20px; font-weight: 800; line-height: 1.2; }
+  .fa-sp .d { font-size: 13px; opacity: .7; max-width: 300px; }
+  .fa-sp.sm { padding: 16px 14px; gap: 6px; } .fa-sp.sm .t { font-size: 16px; }
+  .fa-ico { width: 56px; height: 56px; border-radius: 50%; background: #0000000d; display: grid; place-items: center; font-size: 26px; color: #77767b; font-weight: 800; }
+  .fa-ico.warn { color: #b25e00; background: #d4a72c26; } .fa-ico.hot { color: #e01b24; background: #e01b2414; }
+  .fa-pill { display: inline-flex; align-items: center; gap: 6px; background: #3584e4; color: #fff; border-radius: 99px; padding: 8px 20px; font-weight: 700; font-size: 13px; }
+  .fa-pill.flat { background: #0000000f; color: #1f1f1f; } .fa-pill.dng { background: #e01b24; }
+  .fa-link { color: #1c71d8; font-size: 13px; font-weight: 600; text-decoration: underline; }
+  .fa-sub { font-size: 11px; opacity: .6; }
+  .fa-spin { width: 28px; height: 28px; border-radius: 50%; border: 3px solid #0000001a; border-top-color: #3584e4; animation: fa-rot 1s linear infinite; }
+  @keyframes fa-rot { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .fa-spin { animation: none; } }
+  .fa-term { background: #1e1e1e; color: #e6e6e6; border-radius: 8px; padding: 10px 12px; font-family: ui-monospace, "JetBrains Mono", monospace; font-size: 11.5px; line-height: 1.6; overflow-wrap: anywhere; }
+  .fa-term .p { color: #57e389; }
+  .fa-cardh { font-weight: 800; font-size: 14px; margin-bottom: 6px; }
+  .fa-scrim { background: #00000066; padding: 22px 14px; display: grid; place-items: center; border-radius: 0 0 12px 12px; }
+  .fa-dlg { background: #fff; border-radius: 16px; width: 100%; max-width: 340px; box-shadow: 0 8px 28px #0006; overflow: hidden; font-family: Cantarell, "Inter", system-ui, sans-serif; color: #1f1f1f; }
+  .fa-dlg .b { padding: 18px 18px 14px; text-align: center; } .fa-dlg .b .t { font-size: 17px; font-weight: 800; margin-bottom: 6px; } .fa-dlg .b p { font-size: 13px; opacity: .8; }
+  .fa-dlg .f { display: flex; border-top: 1px solid #0000001a; } .fa-dlg .f span { flex: 1; text-align: center; padding: 11px 6px; font-weight: 700; font-size: 13px; } .fa-dlg .f span + span { border-left: 1px solid #0000001a; }
+  .fa-dlg .f .s { color: #1c71d8; } .fa-dlg .f .d { color: #e01b24; }
+  .fa-dlg.sys { text-align: left; } .fa-dlg.sys .b { text-align: left; }
+  .fa-banner { background: #3584e4; color: #fff; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 12px; font-size: 13px; font-weight: 600; }
+  .fa-banner.w { background: #f6d32d; color: #3d3846; }
+  .fa-banner .bt { background: #ffffff33; border-radius: 8px; padding: 4px 12px; font-weight: 700; flex: none; } .fa-banner.w .bt { background: #00000020; }
+  .fa-tile { border-radius: 12px; background: #fff; border: 1px solid #0000001a; padding: 12px; }
+  .fa-tile .big { font-size: 26px; font-weight: 800; line-height: 1.1; }
+  .fa-grey { opacity: .5; }
+  .fa-br { border: 1px solid #0000002a; border-radius: 10px; overflow: hidden; background: #fff; font-family: Cantarell, "Inter", system-ui, sans-serif; color: #1f1f1f; box-shadow: 0 10px 30px #0000002a; }
+  .fa-br .tabs { background: #dedde0; padding: 6px 8px 0; display: flex; gap: 4px; font-size: 12px; }
+  .fa-br .tabs span { background: #f6f5f4; border-radius: 8px 8px 0 0; padding: 5px 12px; max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .fa-br .url { background: #f6f5f4; padding: 6px 8px; border-bottom: 1px solid #0000001a; }
+  .fa-br .url div { background: #fff; border-radius: 99px; border: 1px solid #0000001a; padding: 4px 12px; font-size: 12px; font-family: ui-monospace, monospace; overflow-wrap: anywhere; }
+  .fa-br .url .lock { color: #1a7f37; }
+  .fa-br .page { padding: 18px 16px; background: #f3f3f3; }
+  .fa-ms { background: #fff; max-width: 380px; margin: 0 auto; padding: 18px; box-shadow: 0 2px 8px #0002; font-family: "Segoe UI", "Noto Sans", system-ui, sans-serif; font-size: 13px; }
+  .fa-ms .acct { display: flex; gap: 10px; align-items: center; padding: 8px; border-radius: 4px; border: 1px solid #0000001a; margin: 6px 0; }
+  .fa-ms .av { width: 32px; height: 32px; border-radius: 50%; background: #5b5fc7; color: #fff; display: grid; place-items: center; font-weight: 700; flex: none; }
+  .fa-ms ul { margin: 8px 0 12px 18px; list-style: disc; } .fa-ms ul li { margin: 2px 0; }
+  .fa-ms .btn { display: inline-block; padding: 6px 22px; font-weight: 600; background: #0067b8; color: #fff; } .fa-ms .btn.g { background: #cccccc; color: #1b1b1b; }
+  .fa-sw { display: grid; grid-template-columns: repeat(2, 9px); gap: 2px; }
+  .fa-sw i { width: 9px; height: 9px; display: block; } .fa-sw i:nth-child(1){background:#f25022} .fa-sw i:nth-child(2){background:#7fba00} .fa-sw i:nth-child(3){background:#00a4ef} .fa-sw i:nth-child(4){background:#ffb900}
+  .fa-gs { background: #fafafa; border: 1px solid #0000001f; border-radius: 12px; padding: 14px; font-family: Cantarell, "Inter", system-ui, sans-serif; color: #1f1f1f; box-shadow: 0 10px 30px #0000002a; }
+  .fa-ext-ic { width: 40px; height: 40px; border-radius: 12px; background: #ebebeb; display: grid; place-items: center; flex: none; }
+  .fa-note { font-size: 12px; opacity: .7; padding: 8px 12px; }
+  .fa-top { background: #000; color: #fff; border-radius: 8px; height: 28px; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; font: 600 12px Cantarell, system-ui, sans-serif; }
+  .fa-trayarrow { color: #e5534b; font-weight: 800; }
+  .fa-two { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); }
+  .fa-two > * { min-width: 0; }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="fa-logo" viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" fill="none" stroke="#0000001a" stroke-width="8"/><circle cx="32" cy="32" r="26" fill="none" stroke="#2ea043" stroke-width="8" stroke-dasharray="120 163" transform="rotate(-90 32 32)" stroke-linecap="round"/><path d="M22 33l7 7 13-15" fill="none" stroke="#1f1f1f" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></symbol></svg>
+
+<section class="fa-wrap" id="fa-start">
+  <h2 class="text-xl font-bold">Getting started &amp; account</h2>
+
+  <!-- A1 -->
+  <div>
+    <h3>A1 · Install</h3>
+    <div class="adw-card max-w-2xl mb-4"><div class="fa-cardh">xixas/pace (private) · Releases</div>
+      <div class="flex gap-3 items-center mt-2"><svg width="40" height="40" class="shrink-0"><use href="#fa-logo"/></svg>
+        <div class="min-w-0"><div class="font-bold">Pace 0.1.0</div><div class="fa-sub">Internal release for Osmosys staff</div></div>
+        <span class="fa-pill ml-auto">Latest</span></div>
+      <ul class="mono text-xs mt-3 space-y-1 break-all"><li>pace-0.1.0-1.fc44.x86_64.rpm</li><li>pace_0.1.0_amd64.deb</li><li>Pace-0.1.0-x86_64.AppImage</li></ul></div>
+    <div class="grid gap-4 md:grid-cols-3">
+      <div class="adw-card"><div class="fa-cardh">Fedora / Nobara</div>
+        <div class="fa-term"><span class="p">$</span> sudo dnf install ./pace-0.1.0-1.fc44.x86_64.rpm</div></div>
+      <div class="adw-card"><div class="fa-cardh">Ubuntu / Debian</div>
+        <div class="fa-term"><span class="p">$</span> sudo apt install ./pace_0.1.0_amd64.deb</div></div>
+      <div class="adw-card"><div class="fa-cardh">AppImage (any distro)</div>
+        <div class="fa-term"><span class="p">$</span> chmod +x Pace-0.1.0-x86_64.AppImage<br><span class="p">$</span> ./Pace-0.1.0-x86_64.AppImage</div></div>
+    </div>
+    <p class="caption">Pace lives in a private GitHub repo: no public package repo and no app-store listing. For now Vikas shares the package file directly; install it as below.</p>
+  </div>
+
+  <div class="grid gap-6 md:grid-cols-2 items-start">
+    <!-- A2 -->
+    <div>
+      <h3>A2 · Welcome</h3>
+      <div class="adw">
+        <div class="adw-head"><span></span><span>Pace</span><span class="opacity-50">✕</span></div>
+        <div class="fa-sp" style="padding:30px 18px">
+          <svg width="72" height="72"><use href="#fa-logo"/></svg>
+          <div class="t">Know your pace before Friday</div>
+          <div class="d">Pace reads your billed hours, leave and holidays, and tells you early if the week or month is slipping.</div>
+          <span class="fa-pill mt-2">Sign in with Microsoft</span>
+          <div class="fa-sub">Opens your browser · no passwords stored</div>
+        </div>
+      </div>
+      <p class="caption">First launch. The pill button opens the system browser to the Microsoft sign-in (A4).</p>
+    </div>
+    <!-- A3 -->
+    <div>
+      <h3>A3 · Waiting for browser</h3>
+      <div class="adw">
+        <div class="adw-head"><span></span><span>Pace</span><span class="opacity-50">✕</span></div>
+        <div class="fa-sp" style="padding:34px 18px">
+          <div class="fa-spin"></div>
+          <div class="t">Finish signing in in your browser…</div>
+          <div class="d">Pace is waiting on <span class="mono">127.0.0.1:53682</span>. It gives up after 5 minutes.</div>
+          <div class="flex gap-4 items-center mt-1"><span class="fa-link">Didn't open? Copy link</span><span class="fa-pill flat">Cancel</span></div>
+        </div>
+      </div>
+      <p class="caption">Shown while the loopback listener waits. "Copy link" puts the sign-in URL on the clipboard (toast "Link copied"); Cancel stops the listener and returns to A2.</p>
+    </div>
+  </div>
+
+  <div class="grid gap-6 md:grid-cols-2 items-start">
+    <!-- A4 -->
+    <div>
+      <h3>A4 · Browser: Microsoft consent</h3>
+      <div class="fa-br">
+        <div class="tabs"><span>Sign in to your account</span></div>
+        <div class="url"><div><span class="lock">🔒</span> login.microsoftonline.com</div></div>
+        <div class="page"><div class="fa-ms">
+          <div class="flex items-center gap-2 mb-3"><span class="fa-sw"><i></i><i></i><i></i><i></i></span><b>Microsoft</b></div>
+          <div class="acct"><span class="av">VK</span><div class="min-w-0"><b>Vikas K</b><div class="fa-sub">vikas.k@osmosys.co</div></div></div>
+          <p class="mt-2"><b>Pace</b> wants to:</p>
+          <ul><li>Sign you in</li><li>Read your profile</li><li>Access DhiHRMS as you</li></ul>
+          <div class="flex gap-2"><span class="btn">Accept</span><span class="btn g">Cancel</span></div>
+        </div></div>
+      </div>
+      <p class="caption">The standard Microsoft consent screen for an Osmosys account. Accept sends the browser back to the loopback address (A5); Cancel produces failure A7a.</p>
+    </div>
+    <!-- A5 -->
+    <div>
+      <h3>A5 · Browser: loopback page</h3>
+      <div class="fa-br">
+        <div class="tabs"><span>Signed in to Pace</span></div>
+        <div class="url"><div>127.0.0.1:53682/</div></div>
+        <div class="page" style="padding:40px 16px;text-align:center">
+          <svg width="56" height="56" class="mx-auto"><use href="#fa-logo"/></svg>
+          <div class="text-xl font-bold mt-2">Signed in to Pace</div>
+          <p class="text-sm opacity-70">You can close this tab and go back to the app.</p>
+        </div>
+      </div>
+      <p class="caption">Served once by Pace's local listener, then the listener shuts down. The app window moves to A6 on its own.</p>
+    </div>
+  </div>
+
+  <div class="grid gap-6 md:grid-cols-2 items-start">
+    <!-- A6 -->
+    <div>
+      <h3>A6 · Signed in: summary</h3>
+      <div class="adw">
+        <div class="adw-head"><span></span><span>Welcome to Pace</span><span class="opacity-50">✕</span></div>
+        <div class="adw-body space-y-3">
+          <div class="adw-card p-0">
+            <div class="adw-row"><span>Signed in as</span><span class="text-right min-w-0"><b>Vikas K</b><br><span class="fa-sub">vikas.k@osmosys.co</span></span></div>
+            <div class="adw-row"><span>DhiHRMS employee</span><span class="chip ok">linked</span></div>
+            <div class="adw-row"><span>PineStem account</span><span class="chip ok">ID 2370</span></div>
+            <div class="adw-row"><span>Holidays 2026</span><span class="chip ok">14</span></div>
+            <div class="adw-row"><span>Leave this month</span><span class="chip ok">1 day</span></div>
+          </div>
+          <div class="text-right"><span class="fa-pill">Next: targets →</span></div>
+        </div>
+      </div>
+      <p class="caption">Proof that every data source resolved. Next opens the targets screen (A11).</p>
+    </div>
+    <!-- A14 -->
+    <div>
+      <h3>A14 · Sign out</h3>
+      <div class="adw">
+        <div class="adw-head"><span></span><span>Pace</span><span class="opacity-50">✕</span></div>
+        <div class="fa-scrim"><div class="fa-dlg"><div class="b"><div class="t">Sign out of Pace?</div><p>Pace will forget your sign-in on this computer. Your targets stay saved. Numbers disappear until you sign in again.</p></div>
+          <div class="f"><span>Cancel</span><span class="d">Sign out</span></div></div></div>
+      </div>
+      <p class="caption">From the main menu → Sign out. Destructive action in red; it deletes the stored token (keyring or file) and returns to A2.</p>
+    </div>
+  </div>
+
+  <!-- A7 -->
+  <div>
+    <h3>A7 · Sign-in failures</h3>
+    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div><div class="adw"><div class="fa-sp sm"><div class="fa-ico">✕</div><div class="t">You cancelled</div><div class="d">Sign-in wasn't completed, so nothing was saved.</div><span class="fa-pill mt-1">Try again</span></div></div>
+        <p class="caption">a · Consent denied: Cancel on the Microsoft page.</p></div>
+      <div><div class="adw"><div class="fa-sp sm"><div class="fa-ico warn">!</div><div class="t">Your organisation must approve Pace first</div><div class="d">An admin needs to allow Pace once for Osmosys. Ask IT.</div><span class="fa-pill mt-1">Copy message for IT</span><span class="fa-sub">Copies a ready-to-send request with the app name and permissions.</span></div></div>
+        <p class="caption">b · Admin consent required: tenant policy blocks the consent.</p></div>
+      <div><div class="adw"><div class="fa-sp sm"><div class="fa-ico warn">@</div><div class="t">Use your Osmosys account</div><div class="d">That was a personal Microsoft account. Sign in with your @osmosys.co address.</div><span class="fa-pill mt-1">Sign in again</span></div></div>
+        <p class="caption">c · Personal account: the token's tenant isn't Osmosys.</p></div>
+      <div><div class="adw"><div class="fa-sp sm"><div class="fa-ico">⏱</div><div class="t">The browser never came back</div><div class="d">Pace waited 5 minutes for the sign-in to finish.</div><span class="fa-pill mt-1">Try again</span></div></div>
+        <p class="caption">d · Timeout: the loopback listener expired.</p></div>
+      <div><div class="adw"><div class="fa-sp sm"><div class="fa-ico">⌁</div><div class="t">No network</div><div class="d">Pace can't reach Microsoft or DhiHRMS. Check your connection.</div><span class="fa-pill mt-1">Retry</span></div></div>
+        <p class="caption">e · Offline at sign-in time (once signed in, offline shows stale numbers instead, A13).</p></div>
+    </div>
+  </div>
+
+  <div class="grid gap-6 md:grid-cols-2 items-start">
+    <!-- A8 -->
+    <div>
+      <h3>A8 · No PineStem mapping</h3>
+      <div class="adw">
+        <div class="adw-head"><span></span><div class="adw-tabs"><span class="on">Week</span><span>Month</span></div><span class="opacity-50">⋮</span></div>
+        <div class="fa-banner w"><span class="min-w-0">Your DhiHRMS profile isn't linked to PineStem. Ask HR.</span><span class="bt">Dismiss</span></div>
+        <div class="adw-body space-y-3">
+          <div class="fa-two">
+            <div class="fa-tile"><div class="fa-sub">This week</div><div class="big">—</div><div class="fa-sub">no billing data</div></div>
+            <div class="fa-tile"><div class="fa-sub">Leave · Oct</div><div class="big">1 day</div><div class="fa-sub">9 Oct</div></div>
+          </div>
+          <div class="fa-tile"><div class="fa-sub">Next holiday</div><b>Sat 14 Nov</b> · Diwali <span class="fa-sub">(14 holidays loaded)</span></div>
+        </div>
+      </div>
+      <p class="caption">PineStem lookup by employee returned nothing. Pace still works for leave and holidays; hours, verdicts and notifications stay off until HR links the profile.</p>
+    </div>
+    <!-- A13 -->
+    <div>
+      <h3>A13 · Session expired</h3>
+      <div class="adw">
+        <div class="adw-head"><span></span><div class="adw-tabs"><span class="on">Week</span><span>Month</span></div><span class="opacity-50">⋮</span></div>
+        <div class="fa-banner"><span class="min-w-0">Your sign-in expired</span><span class="bt">Sign in again</span></div>
+        <div class="adw-body space-y-3 fa-grey">
+          <div class="fa-tile"><div class="flex justify-between gap-2"><b>Week · On track</b><span class="fa-sub">as of 09:40</span></div>
+            <div class="big">30.1 <span class="text-base">/ 42.5 h</span></div>
+            <div class="bar mt-2"><i class="fill-ok" style="width:67%"></i></div></div>
+          <div class="fa-tile"><div class="flex justify-between gap-2"><span>Tweelin · Oct</span><span class="fa-sub">as of 09:40</span></div><b>112.5 / 133 h</b></div>
+        </div>
+      </div>
+      <p class="caption">Refresh token rejected. Numbers stay visible but greyed with "as of"; the panel dot goes amber. Sign in again reruns A3 without the welcome step.</p>
+    </div>
+  </div>
+
+  <div class="grid gap-6 md:grid-cols-2 items-start">
+    <!-- A9 -->
+    <div>
+      <h3>A9 · No keyring</h3>
+      <div class="adw">
+        <div class="adw-head"><span></span><span>Pace</span><span class="opacity-50">✕</span></div>
+        <div class="fa-scrim"><div class="fa-dlg" style="max-width:380px"><div class="b"><div class="t">Pace can't reach a password keyring</div>
+          <p>Your desktop has no Secret Service (common on minimal KDE or COSMIC). Pace needs somewhere to keep your sign-in. You choose once.</p></div>
+          <div class="px-3 pb-3 space-y-2 text-left">
+            <div class="adw-card" style="border:2px solid #3584e4"><b class="text-sm">Store in a private file</b> <span class="chip ok">recommended here</span><div class="fa-sub">~/.local/share/pace, mode 600 — readable only by your user, not encrypted (like rclone.conf)</div></div>
+            <div class="adw-card"><b class="text-sm">Sign in every login</b><div class="fa-sub">Nothing is stored; you sign in each time you log in to the desktop</div></div>
+          </div>
+          <div class="f"><span>Not now</span><span class="s">Continue</span></div></div></div>
+      </div>
+      <p class="caption">Shown once, before the first token is saved, when the Secret Service D-Bus name is absent. The choice lives in Preferences afterwards.</p>
+    </div>
+    <!-- A12 -->
+    <div>
+      <h3>A12 · Import preset</h3>
+      <div class="adw">
+        <div class="adw-head"><span></span><span>Your targets</span><span></span></div>
+        <div class="fa-scrim"><div class="fa-dlg"><div class="b"><div class="t">Import targets?</div>
+          <p>Import targets from <span class="mono">tweelin-oct.pace-targets.json</span> (from Anand, lead)?</p>
+          <div class="adw-card mt-3 text-left text-sm" style="padding:8px 12px">Tweelin <b>140 h</b> / month, prorated for leave &amp; holidays</div></div>
+          <div class="f"><span>Cancel</span><span class="s">Import</span></div></div></div>
+      </div>
+      <p class="caption">After "Import lead's preset…" and the file chooser (GTK file dialog, <span class="mono">*.pace-targets.json</span>). Import fills the locked rows in A11.</p>
+    </div>
+  </div>
+
+  <!-- A10 -->
+  <div>
+    <h3>A10 · Show Pace in the top bar</h3>
+    <div class="grid gap-6 md:grid-cols-2 items-start">
+      <div class="space-y-3">
+        <div class="adw">
+          <div class="adw-head"><span class="opacity-50">←</span><span>Top bar (GNOME)</span><span></span></div>
+          <div class="fa-sp sm"><div class="fa-ico">▭</div><div class="t">Turn on Pace in the top bar</div>
+            <div class="d">GNOME has no system tray, so Pace ships a small panel extension inside the package. It only needs switching on.</div>
+            <span class="fa-pill mt-1">Enable</span><span class="fa-link">Skip, use the window only</span></div>
+        </div>
+        <div class="adw">
+          <div class="adw-head"><span class="opacity-50">←</span><span>Top bar (GNOME)</span><span></span></div>
+          <div class="fa-sp sm"><div class="fa-ico">✓</div><div class="t">Enabled</div>
+            <div class="d">Log out and back in once to show it. GNOME loads new extensions at login.</div>
+            <span class="fa-pill mt-1">Log out now</span><span class="fa-link">Later</span></div>
+        </div>
+      </div>
+      <div class="space-y-3">
+        <div class="adw">
+          <div class="adw-head"><span class="opacity-50">←</span><span>Top bar (KDE / COSMIC)</span><span></span></div>
+          <div class="fa-sp sm"><div class="fa-ico">✓</div><div class="t">Pace is in your system tray</div>
+            <div class="d">Left-click opens the mini widget, right-click the menu.</div>
+            <div class="fa-top" style="width:100%;max-width:300px;margin-top:6px;justify-content:flex-end;gap:10px"><span class="fa-trayarrow">↓</span><svg width="20" height="20" viewBox="0 0 32 32"><circle cx="16" cy="16" r="13" fill="none" stroke="#ffffff33" stroke-width="4"/><circle cx="16" cy="16" r="13" fill="none" stroke="#2ea043" stroke-width="4" stroke-dasharray="58 82" transform="rotate(-90 16 16)"/></svg><span>🔊</span><span>14:10</span></div>
+            <span class="fa-pill mt-2">Got it</span></div>
+        </div>
+      </div>
+    </div>
+    <p class="caption">Setup step shown once per desktop, chosen by <span class="mono">XDG_CURRENT_DESKTOP</span>. The extension lives in <span class="mono">/usr/share/gnome-shell/extensions/pace@osmosys</span> (shipped by the package); Enable runs <span class="mono">gnome-extensions enable pace@osmosys</span>. GNOME only picks it up after the next login. On KDE/COSMIC/XFCE/Cinnamon nothing is enabled: it only points at the tray icon.</p>
+  </div>
+
+  <!-- A11 -->
+  <div>
+    <h3>A11 · Targets</h3>
+    <div class="adw max-w-xl">
+      <div class="adw-head"><span class="opacity-50">←</span><span>Your targets</span><span></span></div>
+      <div class="adw-body space-y-4">
+        <div><div class="text-xs font-bold opacity-60 mb-1 uppercase">Daily</div>
+          <div class="adw-card p-0">
+            <div class="adw-row"><span class="min-w-0">Minimum average<br><span class="fa-sub">Weekly average must stay above this</span></span><span class="flex items-center gap-2 flex-none"><span class="chip mute">🔒 set by org</span><b>8.5 h</b></span></div>
+            <div class="adw-row"><span class="min-w-0">Expected<br><span class="fa-sub">What a good day looks like</span></span><b class="flex-none">9.0 h</b></div>
+            <div class="adw-row"><span class="min-w-0">Loss-of-pay line<br><span class="fa-sub">9 h = a day, 5 h leftover = +1 · 41 h / 5-day week</span></span><span class="chip mute flex-none">read-only</span></div>
+          </div></div>
+        <div><div class="text-xs font-bold opacity-60 mb-1 uppercase">Monthly by project (billable)</div>
+          <div class="adw-card p-0">
+            <div class="adw-row"><span>Tweelin <span class="mono fa-sub">TWE</span></span><span class="flex items-center gap-2 flex-none"><span class="chip mute">set by lead</span><b>140 h</b></span></div>
+            <div class="adw-row"><span class="min-w-0">Prorate for leave &amp; holidays<br><span class="fa-sub">Lead's choice for Tweelin</span></span><span class="flex items-center gap-2 flex-none"><span class="chip mute">set by lead</span><span class="sw"></span></span></div>
+            <div class="adw-row"><span>R&amp;D <span class="mono fa-sub">RES</span></span><span class="fa-sub flex-none">no target · tracked</span></div>
+            <div class="adw-row"><span style="color:#1c71d8;font-weight:700">+ Add personal target</span><span></span></div>
+          </div></div>
+        <div class="adw-card p-0"><div class="adw-row" style="background:#3584e412"><span class="min-w-0">ⓘ Pay (LOP) always counts billable + non-billable.<br><span class="fa-sub">Project targets above count billable only.</span></span></div></div>
+        <div class="flex justify-between gap-2 flex-wrap"><span class="fa-pill flat">Import lead's preset…</span><span class="fa-pill">Done</span></div>
+      </div>
+    </div>
+    <p class="caption">Lead-set values are locked and can only be raised by personal targets. There is deliberately no toggle for non-billable hours: pay always uses the total. The prorate switch is lead-set and read-only here. Import opens A12.</p>
+  </div>
+</section>

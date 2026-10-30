@@ -1,0 +1,432 @@
+
+## 1 steady 8.5 billed 18:00
+Mon    9  ON TRACK                       logged     0  today-left 8.5  need/day 8.5  lopNeed 8.2
+Mon 12.5  ON TRACK                       logged     0  today-left 8.5  need/day 8.5  lopNeed 8.2
+Mon 18.5  ON TRACK                       logged   8.5  today-left 0  need/day 8.5  lopNeed 8.2
+Mon 20.5  ON TRACK                       logged   8.5  today-left -  need/day 8.5  lopNeed 8.13
+Tue    9  ON TRACK                       logged   8.5  today-left 8.5  need/day 8.5  lopNeed 8.13
+Tue 12.5  ON TRACK                       logged   8.5  today-left 8.5  need/day 8.5  lopNeed 8.13
+Tue 18.5  ON TRACK                       logged    17  today-left 0  need/day 8.5  lopNeed 8.13
+Tue 20.5  ON TRACK                       logged    17  today-left -  need/day 8.5  lopNeed 8
+Wed    9  ON TRACK                       logged    17  today-left 8.5  need/day 8.5  lopNeed 8
+Wed 12.5  ON TRACK                       logged    17  today-left 8.5  need/day 8.5  lopNeed 8
+Wed 18.5  ON TRACK                       logged  25.5  today-left 0  need/day 8.5  lopNeed 8
+Wed 20.5  ON TRACK                       logged  25.5  today-left -  need/day 8.5  lopNeed 7.75
+Thu    9  ON TRACK                       logged  25.5  today-left 8.5  need/day 8.5  lopNeed 7.75
+Thu 12.5  ON TRACK                       logged  25.5  today-left 8.5  need/day 8.5  lopNeed 7.75
+Thu 18.5  ON TRACK                       logged    34  today-left 0  need/day 8.5  lopNeed 7.75
+Thu 20.5  ON TRACK                       logged    34  today-left -  need/day 8.5  lopNeed 7
+Fri    9  ON TRACK · pay needs 7.0 h     logged    34  today-left 8.5  need/day 8.5  lopNeed 7
+Fri 12.5  ON TRACK · pay needs 7.0 h     logged    34  today-left 8.5  need/day 8.5  lopNeed 7
+Fri 18.5  DONE                           logged  42.5  today-left 0  need/day 8.5  lopNeed 7
+Fri 20.5  DONE                           logged  42.5  today-left -  need/day -  lopNeed -
+Sat 12.5  DONE                           logged  42.5
+Sun 12.5  DONE                           logged  42.5
+
+## 2 steady 8.5 billed next morning 10:00
+Mon    9  ON TRACK                       logged     0  today-left 8.5  need/day 8.5  lopNeed 8.2
+Mon 12.5  ON TRACK                       logged     0  today-left 8.5  need/day 8.5  lopNeed 8.2
+Mon 18.5  ON TRACK                       logged     0  today-left 8.5  need/day 8.5  lopNeed 8.2
+Mon 20.5  ON TRACK · Mon not billed yet  logged     0  today-left -  need/day 8.5  lopNeed 8.13
+Tue    9  ON TRACK · Mon not billed yet  logged     0  today-left 8.5  need/day 8.5  lopNeed 8.13
+Tue 12.5  ON TRACK                       logged   8.5  today-left 8.5  need/day 8.5  lopNeed 8.13
+Tue 18.5  ON TRACK                       logged   8.5  today-left 8.5  need/day 8.5  lopNeed 8.13
+Tue 20.5  ON TRACK · Tue not billed yet  logged   8.5  today-left -  need/day 8.5  lopNeed 8
+Wed    9  ON TRACK · Tue not billed yet  logged   8.5  today-left 8.5  need/day 8.5  lopNeed 8
+Wed 12.5  ON TRACK                       logged    17  today-left 8.5  need/day 8.5  lopNeed 8
+Wed 18.5  ON TRACK                       logged    17  today-left 8.5  need/day 8.5  lopNeed 8
+Wed 20.5  ON TRACK · Wed not billed yet  logged    17  today-left -  need/day 8.5  lopNeed 7.75
+Thu    9  ON TRACK · Wed not billed yet  logged    17  today-left 8.5  need/day 8.5  lopNeed 7.75
+Thu 12.5  ON TRACK                       logged  25.5  today-left 8.5  need/day 8.5  lopNeed 7.75
+Thu 18.5  ON TRACK                       logged  25.5  today-left 8.5  need/day 8.5  lopNeed 7.75
+Thu 20.5  ON TRACK · Thu not billed yet  logged  25.5  today-left -  need/day 8.5  lopNeed 7
+Fri    9  ON TRACK · pay needs 7.0 h · Thu not billed yet logged  25.5  today-left 8.5  need/day 8.5  lopNeed 7
+Fri 12.5  ON TRACK · pay needs 7.0 h     logged    34  today-left 8.5  need/day 8.5  lopNeed 7
+Fri 18.5  ON TRACK · pay needs 7.0 h     logged    34  today-left 8.5  need/day 8.5  lopNeed 7
+Fri 20.5  BILL · Fri not billed yet      logged    34  today-left -  need/day -  lopNeed -
+Sat 12.5  DONE                           logged  42.5
+Sun 12.5  DONE                           logged  42.5
+
+## 3 front-loaded 10,10,10,8,4.5
+Mon    9  ON TRACK                       logged     0  today-left 8.5  need/day 8.5  lopNeed 8.2
+Mon 12.5  ON TRACK                       logged     0  today-left 8.5  need/day 8.5  lopNeed 8.2
+Mon 18.5  ON TRACK                       logged    10  today-left 0  need/day 8.5  lopNeed 8.2
+Mon 20.5  AHEAD                          logged    10  today-left -  need/day 8.13  lopNeed 7.75
+Tue    9  AHEAD                          logged    10  today-left 8.1  need/day 8.13  lopNeed 7.75
+Tue 12.5  AHEAD                          logged    10  today-left 8.1  need/day 8.13  lopNeed 7.75
+Tue 18.5  AHEAD                          logged    20  today-left 0  need/day 8.13  lopNeed 7.75
+Tue 20.5  AHEAD                          logged    20  today-left -  need/day 7.5  lopNeed 7
+Wed    9  AHEAD                          logged    20  today-left 7.5  need/day 7.5  lopNeed 7
+Wed 12.5  AHEAD                          logged    20  today-left 7.5  need/day 7.5  lopNeed 7
+Wed 18.5  AHEAD                          logged    30  today-left 0  need/day 7.5  lopNeed 7
+Wed 20.5  AHEAD                          logged    30  today-left -  need/day 6.25  lopNeed 5.5
+Thu    9  AHEAD                          logged    30  today-left 6.3  need/day 6.25  lopNeed 5.5
+Thu 12.5  AHEAD                          logged    30  today-left 6.3  need/day 6.25  lopNeed 5.5
+Thu 18.5  AHEAD                          logged    38  today-left 0  need/day 6.25  lopNeed 5.5
+Thu 20.5  AHEAD                          logged    38  today-left -  need/day 4.5  lopNeed 3
+Fri    9  ON TRACK · pay needs 3.0 h     logged    38  today-left 4.5  need/day 4.5  lopNeed 3
+Fri 12.5  ON TRACK · pay needs 3.0 h     logged    38  today-left 4.5  need/day 4.5  lopNeed 3
+Fri 18.5  DONE                           logged  42.5  today-left 0  need/day 4.5  lopNeed 3
+Fri 20.5  DONE                           logged  42.5  today-left -  need/day -  lopNeed -
+Sat 12.5  DONE                           logged  42.5
+Sun 12.5  DONE                           logged  42.5
+
+## 4 back-loaded 0,0,10.5,10.5,10.5
+Mon    9  ON TRACK                       logged     0  today-left 8.5  need/day 8.5  lopNeed 8.2
+Mon 12.5  ON TRACK                       logged     0  today-left 8.5  need/day 8.5  lopNeed 8.2
+Mon 18.5  ON TRACK                       logged     0  today-left 8.5  need/day 8.5  lopNeed 8.2
+Mon 20.5  ON TRACK · Mon not billed yet  logged     0  today-left -  need/day 8.5  lopNeed 8.13
+Tue    9  ON TRACK · Mon not billed yet  logged     0  today-left 8.5  need/day 8.5  lopNeed 8.13
+Tue 12.5  BEHIND                         logged     0  today-left 10.6  need/day 10.63  lopNeed 10.25
+Tue 18.5  BEHIND                         logged     0  today-left 10.6  need/day 10.63  lopNeed 10.25
+Tue 20.5  PAY RISK · Mon 0 h · Tue not billed yet logged     0  today-left -  need/day 11.33  lopNeed 10.83
+Wed    9  PAY RISK · Mon 0 h · Tue not billed yet logged     0  today-left 11.3  need/day 11.33  lopNeed 10.83
+Wed 12.5  PAY RISK · Mon 0 h, Tue 0 h    logged     0  today-left 14.2  need/day 14.17  lopNeed 13.67
+Wed 18.5  PAY RISK · Mon 0 h, Tue 0 h    logged  10.5  today-left 3.7  need/day 14.17  lopNeed 13.67
+Wed 20.5  PAY RISK · Mon 0 h, Tue 0 h    logged  10.5  today-left -  need/day 16  lopNeed 15.25
+Thu    9  PAY RISK · Mon 0 h, Tue 0 h    logged  10.5  today-left 16  need/day 16  lopNeed 15.25
+Thu 12.5  PAY RISK · Mon 0 h, Tue 0 h    logged  10.5  today-left 16  need/day 16  lopNeed 15.25
+Thu 18.5  PAY RISK · Mon 0 h, Tue 0 h    logged    21  today-left 5.5  need/day 16  lopNeed 15.25
+Thu 20.5  PAY RISK · Mon 0 h, Tue 0 h    logged    21  today-left -  need/day 21.5  lopNeed 20
+Fri    9  PAY RISK · pay needs 20.0 h · Mon 0 h, Tue 0 h logged    21  today-left 21.5  need/day 21.5  lopNeed 20
+Fri 12.5  PAY RISK · pay needs 20.0 h · Mon 0 h, Tue 0 h logged    21  today-left 21.5  need/day 21.5  lopNeed 20
+Fri 18.5  PAY RISK · pay needs 9.5 h · Mon 0 h, Tue 0 h logged  31.5  today-left 11  need/day 21.5  lopNeed 20
+Fri 20.5  PAY RISK · pay needs 9.5 h · Mon 0 h, Tue 0 h logged  31.5  today-left -  need/day -  lopNeed -
+Sat 12.5  LOP 2d                         logged  31.5
+Sun 12.5  LOP 2d                         logged  31.5
+
+## 5 Monday zero (sick, no leave) then 9.5
+Mon    9  ON TRACK                       logged     0  today-left 8.5  need/day 8.5  lopNeed 8.2
+Mon 12.5  ON TRACK                       logged     0  today-left 8.5  need/day 8.5  lopNeed 8.2
+Mon 18.5  ON TRACK                       logged     0  today-left 8.5  need/day 8.5  lopNeed 8.2
+Mon 20.5  ON TRACK · Mon not billed yet  logged     0  today-left -  need/day 8.5  lopNeed 8.13
+Tue    9  ON TRACK · Mon not billed yet  logged     0  today-left 8.5  need/day 8.5  lopNeed 8.13
+Tue 12.5  BEHIND                         logged     0  today-left 10.6  need/day 10.63  lopNeed 10.25
+Tue 18.5  BEHIND                         logged   9.5  today-left 1.1  need/day 10.63  lopNeed 10.25
+Tue 20.5  BEHIND                         logged   9.5  today-left -  need/day 11  lopNeed 10.5
+Wed    9  BEHIND                         logged   9.5  today-left 11  need/day 11  lopNeed 10.5
+Wed 12.5  BEHIND                         logged   9.5  today-left 11  need/day 11  lopNeed 10.5
+Wed 18.5  BEHIND                         logged    19  today-left 1.5  need/day 11  lopNeed 10.5
+Wed 20.5  PAY RISK · Mon 0 h             logged    19  today-left -  need/day 11.75  lopNeed 11
+Thu    9  PAY RISK · Mon 0 h             logged    19  today-left 11.8  need/day 11.75  lopNeed 11
+Thu 12.5  PAY RISK · Mon 0 h             logged    19  today-left 11.8  need/day 11.75  lopNeed 11
+Thu 18.5  PAY RISK · Mon 0 h             logged  28.5  today-left 2.3  need/day 11.75  lopNeed 11
+Thu 20.5  PAY RISK · Mon 0 h             logged  28.5  today-left -  need/day 14  lopNeed 12.5
+Fri    9  PAY RISK · pay needs 12.5 h · Mon 0 h logged  28.5  today-left 14  need/day 14  lopNeed 12.5
+Fri 12.5  PAY RISK · pay needs 12.5 h · Mon 0 h logged  28.5  today-left 14  need/day 14  lopNeed 12.5
+Fri 18.5  PAY RISK · pay needs 3.0 h · Mon 0 h logged    38  today-left 4.5  need/day 14  lopNeed 12.5
+Fri 20.5  PAY RISK · pay needs 3.0 h · Mon 0 h logged    38  today-left -  need/day -  lopNeed -
+Sat 12.5  LOP 1d                         logged    38
+Sun 12.5  LOP 1d                         logged    38
+
+## 6 leave Wed, 8.5x4
+Mon    9  ON TRACK                       logged     0  today-left 8.5  need/day 8.5  lopNeed 8
+Mon 12.5  ON TRACK                       logged     0  today-left 8.5  need/day 8.5  lopNeed 8
+Mon 18.5  ON TRACK                       logged   8.5  today-left 0  need/day 8.5  lopNeed 8
+Mon 20.5  ON TRACK                       logged   8.5  today-left -  need/day 8.5  lopNeed 7.83
+Tue    9  ON TRACK                       logged   8.5  today-left 8.5  need/day 8.5  lopNeed 7.83
+Tue 12.5  ON TRACK                       logged   8.5  today-left 8.5  need/day 8.5  lopNeed 7.83
+Tue 18.5  ON TRACK                       logged    17  today-left 0  need/day 8.5  lopNeed 7.83
+Tue 20.5  ON TRACK                       logged    17  today-left -  need/day 8.5  lopNeed 7.5
+Wed    9  ON TRACK                       logged    17  today-left -  need/day 8.5  lopNeed 7.5
+Wed 12.5  ON TRACK                       logged    17  today-left -  need/day 8.5  lopNeed 7.5
+Wed 18.5  ON TRACK                       logged    17  today-left -  need/day 8.5  lopNeed 7.5
+Wed 20.5  ON TRACK                       logged    17  today-left -  need/day 8.5  lopNeed 7.5
+Thu    9  ON TRACK                       logged    17  today-left 8.5  need/day 8.5  lopNeed 7.5
+Thu 12.5  ON TRACK                       logged    17  today-left 8.5  need/day 8.5  lopNeed 7.5
+Thu 18.5  ON TRACK                       logged  25.5  today-left 0  need/day 8.5  lopNeed 7.5
+Thu 20.5  ON TRACK                       logged  25.5  today-left -  need/day 8.5  lopNeed 6.5
+Fri    9  ON TRACK · pay needs 6.5 h     logged  25.5  today-left 8.5  need/day 8.5  lopNeed 6.5
+Fri 12.5  ON TRACK · pay needs 6.5 h     logged  25.5  today-left 8.5  need/day 8.5  lopNeed 6.5
+Fri 18.5  DONE                           logged    34  today-left 0  need/day 8.5  lopNeed 6.5
+Fri 20.5  DONE                           logged    34  today-left -  need/day -  lopNeed -
+Sat 12.5  DONE                           logged    34
+Sun 12.5  DONE                           logged    34
+
+## 7 holiday Mon, 8x4
+Mon    9  ON TRACK                       logged     0  today-left -  need/day 8.5  lopNeed 8
+Mon 12.5  ON TRACK                       logged     0  today-left -  need/day 8.5  lopNeed 8
+Mon 18.5  ON TRACK                       logged     0  today-left -  need/day 8.5  lopNeed 8
+Mon 20.5  ON TRACK                       logged     0  today-left -  need/day 8.5  lopNeed 8
+Tue    9  ON TRACK                       logged     0  today-left 8.5  need/day 8.5  lopNeed 8
+Tue 12.5  ON TRACK                       logged     0  today-left 8.5  need/day 8.5  lopNeed 8
+Tue 18.5  ON TRACK                       logged     8  today-left 0.5  need/day 8.5  lopNeed 8
+Tue 20.5  ON TRACK                       logged     8  today-left -  need/day 8.67  lopNeed 8
+Wed    9  ON TRACK                       logged     8  today-left 8.7  need/day 8.67  lopNeed 8
+Wed 12.5  ON TRACK                       logged     8  today-left 8.7  need/day 8.67  lopNeed 8
+Wed 18.5  ON TRACK                       logged    16  today-left 0.7  need/day 8.67  lopNeed 8
+Wed 20.5  ON TRACK                       logged    16  today-left -  need/day 9  lopNeed 8
+Thu    9  ON TRACK                       logged    16  today-left 9  need/day 9  lopNeed 8
+Thu 12.5  ON TRACK                       logged    16  today-left 9  need/day 9  lopNeed 8
+Thu 18.5  ON TRACK                       logged    24  today-left 1  need/day 9  lopNeed 8
+Thu 20.5  TIGHT                          logged    24  today-left -  need/day 10  lopNeed 8
+Fri    9  TIGHT · pay needs 8.0 h        logged    24  today-left 10  need/day 10  lopNeed 8
+Fri 12.5  TIGHT · pay needs 8.0 h        logged    24  today-left 10  need/day 10  lopNeed 8
+Fri 18.5  TIGHT                          logged    32  today-left 2  need/day 10  lopNeed 8
+Fri 20.5  SHORT (pay safe)               logged    32  today-left -  need/day -  lopNeed -
+Sat 12.5  SHORT (pay safe)               logged    32
+Sun 12.5  SHORT (pay safe)               logged    32
+
+## 8 batch biller, each day entered Fri 17:00
+Mon    9  ON TRACK                       logged     0  today-left 8.5  need/day 8.5  lopNeed 8.2
+Mon 12.5  ON TRACK                       logged     0  today-left 8.5  need/day 8.5  lopNeed 8.2
+Mon 18.5  ON TRACK                       logged     0  today-left 8.5  need/day 8.5  lopNeed 8.2
+Mon 20.5  ON TRACK · Mon not billed yet  logged     0  today-left -  need/day 8.5  lopNeed 8.13
+Tue    9  ON TRACK · Mon not billed yet  logged     0  today-left 8.5  need/day 8.5  lopNeed 8.13
+Tue 12.5  BEHIND                         logged     0  today-left 10.6  need/day 10.63  lopNeed 10.25
+Tue 18.5  BEHIND                         logged     0  today-left 10.6  need/day 10.63  lopNeed 10.25
+Tue 20.5  PAY RISK · Mon 0 h · Tue not billed yet logged     0  today-left -  need/day 11.33  lopNeed 10.83
+Wed    9  PAY RISK · Mon 0 h · Tue not billed yet logged     0  today-left 11.3  need/day 11.33  lopNeed 10.83
+Wed 12.5  PAY RISK · Mon 0 h, Tue 0 h    logged     0  today-left 14.2  need/day 14.17  lopNeed 13.67
+Wed 18.5  PAY RISK · Mon 0 h, Tue 0 h    logged     0  today-left 14.2  need/day 14.17  lopNeed 13.67
+Wed 20.5  PAY RISK · Mon 0 h, Tue 0 h · Wed not billed yet logged     0  today-left -  need/day 17  lopNeed 16.25
+Thu    9  PAY RISK · Mon 0 h, Tue 0 h · Wed not billed yet logged     0  today-left 17  need/day 17  lopNeed 16.25
+Thu 12.5  PAY RISK · Mon 0 h, Tue 0 h, Wed 0 h logged     0  today-left 21.3  need/day 21.25  lopNeed 20.5
+Thu 18.5  PAY RISK · Mon 0 h, Tue 0 h, Wed 0 h logged     0  today-left 21.3  need/day 21.25  lopNeed 20.5
+Thu 20.5  PAY RISK · Mon 0 h, Tue 0 h, Wed 0 h · Thu not billed yet logged     0  today-left -  need/day 34  lopNeed 32.5
+Fri    9  PAY RISK · pay needs 32.5 h · Mon 0 h, Tue 0 h, Wed 0 h · Thu not billed yet logged     0  today-left 34  need/day 34  lopNeed 32.5
+Fri 12.5  PAY RISK · pay needs 41.0 h · Mon 0 h, Tue 0 h, Wed 0 h, Thu 0 h logged     0  today-left 42.5  need/day 42.5  lopNeed 41
+Fri 18.5  DONE                           logged  42.5  today-left 0  need/day 8.5  lopNeed 7
+Fri 20.5  DONE                           logged  42.5  today-left -  need/day -  lopNeed -
+Sat 12.5  DONE                           logged  42.5
+Sun 12.5  DONE                           logged  42.5
+
+## 9 9,9,9,9,4 (1 h under LOP)
+Mon    9  ON TRACK                       logged     0  today-left 8.5  need/day 8.5  lopNeed 8.2
+Mon 12.5  ON TRACK                       logged     0  today-left 8.5  need/day 8.5  lopNeed 8.2
+Mon 18.5  ON TRACK                       logged     9  today-left 0  need/day 8.5  lopNeed 8.2
+Mon 20.5  AHEAD                          logged     9  today-left -  need/day 8.38  lopNeed 8
+Tue    9  AHEAD                          logged     9  today-left 8.4  need/day 8.38  lopNeed 8
+Tue 12.5  AHEAD                          logged     9  today-left 8.4  need/day 8.38  lopNeed 8
+Tue 18.5  AHEAD                          logged    18  today-left 0  need/day 8.38  lopNeed 8
+Tue 20.5  AHEAD                          logged    18  today-left -  need/day 8.17  lopNeed 7.67
+Wed    9  AHEAD                          logged    18  today-left 8.2  need/day 8.17  lopNeed 7.67
+Wed 12.5  AHEAD                          logged    18  today-left 8.2  need/day 8.17  lopNeed 7.67
+Wed 18.5  AHEAD                          logged    27  today-left 0  need/day 8.17  lopNeed 7.67
+Wed 20.5  AHEAD                          logged    27  today-left -  need/day 7.75  lopNeed 7
+Thu    9  AHEAD                          logged    27  today-left 7.8  need/day 7.75  lopNeed 7
+Thu 12.5  AHEAD                          logged    27  today-left 7.8  need/day 7.75  lopNeed 7
+Thu 18.5  AHEAD                          logged    36  today-left 0  need/day 7.75  lopNeed 7
+Thu 20.5  AHEAD                          logged    36  today-left -  need/day 6.5  lopNeed 5
+Fri    9  ON TRACK · pay needs 5.0 h     logged    36  today-left 6.5  need/day 6.5  lopNeed 5
+Fri 12.5  ON TRACK · pay needs 5.0 h     logged    36  today-left 6.5  need/day 6.5  lopNeed 5
+Fri 18.5  ON TRACK · pay needs 1.0 h     logged    40  today-left 2.5  need/day 6.5  lopNeed 5
+Fri 20.5  PAY RISK · pay needs 1.0 h · Fri 4 h logged    40  today-left -  need/day -  lopNeed -
+Sat 12.5  LOP 1d                         logged    40
+Sun 12.5  LOP 1d                         logged    40
+
+## 10 8x5 then Sat 3h
+Mon    9  ON TRACK                       logged     0  today-left 8.5  need/day 8.5  lopNeed 8.2
+Mon 12.5  ON TRACK                       logged     0  today-left 8.5  need/day 8.5  lopNeed 8.2
+Mon 18.5  ON TRACK                       logged     8  today-left 0.5  need/day 8.5  lopNeed 8.2
+Mon 20.5  ON TRACK                       logged     8  today-left -  need/day 8.63  lopNeed 8.25
+Tue    9  ON TRACK                       logged     8  today-left 8.6  need/day 8.63  lopNeed 8.25
+Tue 12.5  ON TRACK                       logged     8  today-left 8.6  need/day 8.63  lopNeed 8.25
+Tue 18.5  ON TRACK                       logged    16  today-left 0.6  need/day 8.63  lopNeed 8.25
+Tue 20.5  ON TRACK                       logged    16  today-left -  need/day 8.83  lopNeed 8.33
+Wed    9  ON TRACK                       logged    16  today-left 8.8  need/day 8.83  lopNeed 8.33
+Wed 12.5  ON TRACK                       logged    16  today-left 8.8  need/day 8.83  lopNeed 8.33
+Wed 18.5  ON TRACK                       logged    24  today-left 0.8  need/day 8.83  lopNeed 8.33
+Wed 20.5  TIGHT                          logged    24  today-left -  need/day 9.25  lopNeed 8.5
+Thu    9  TIGHT                          logged    24  today-left 9.3  need/day 9.25  lopNeed 8.5
+Thu 12.5  TIGHT                          logged    24  today-left 9.3  need/day 9.25  lopNeed 8.5
+Thu 18.5  TIGHT                          logged    32  today-left 1.3  need/day 9.25  lopNeed 8.5
+Thu 20.5  TIGHT                          logged    32  today-left -  need/day 10.5  lopNeed 9
+Fri    9  TIGHT · pay needs 9.0 h        logged    32  today-left 10.5  need/day 10.5  lopNeed 9
+Fri 12.5  TIGHT · pay needs 9.0 h        logged    32  today-left 10.5  need/day 10.5  lopNeed 9
+Fri 18.5  TIGHT · pay needs 1.0 h        logged    40  today-left 2.5  need/day 10.5  lopNeed 9
+Fri 20.5  PAY RISK · pay needs 1.0 h · Mon 8 h, Tue 8 h, Wed 8 h, Thu 8 h, Fri 8 h logged    40  today-left -  need/day -  lopNeed -
+Sat 12.5  DONE                           logged    43
+Sun 12.5  DONE                           logged    43
+
+## 11 on leave all week
+Mon    9  ON LEAVE                       logged     0
+Mon 12.5  ON LEAVE                       logged     0
+Mon 18.5  ON LEAVE                       logged     0
+Mon 20.5  ON LEAVE                       logged     0
+Tue    9  ON LEAVE                       logged     0
+Tue 12.5  ON LEAVE                       logged     0
+Tue 18.5  ON LEAVE                       logged     0
+Tue 20.5  ON LEAVE                       logged     0
+Wed    9  ON LEAVE                       logged     0
+Wed 12.5  ON LEAVE                       logged     0
+Wed 18.5  ON LEAVE                       logged     0
+Wed 20.5  ON LEAVE                       logged     0
+Thu    9  ON LEAVE                       logged     0
+Thu 12.5  ON LEAVE                       logged     0
+Thu 18.5  ON LEAVE                       logged     0
+Thu 20.5  ON LEAVE                       logged     0
+Fri    9  ON LEAVE                       logged     0
+Fri 12.5  ON LEAVE                       logged     0
+Fri 18.5  ON LEAVE                       logged     0
+Fri 20.5  ON LEAVE                       logged     0
+Sat 12.5  ON LEAVE                       logged     0
+Sun 12.5  ON LEAVE                       logged     0
+
+## 12 trickle hourly to 8.5/day
+Mon    9  ON TRACK                       logged     0  today-left 8.5  need/day 8.5  lopNeed 8.2
+Mon 12.5  ON TRACK                       logged     2  today-left 6.5  need/day 8.5  lopNeed 8.2
+Mon 18.5  ON TRACK                       logged   8.5  today-left 0  need/day 8.5  lopNeed 8.2
+Mon 20.5  ON TRACK                       logged   8.5  today-left -  need/day 8.5  lopNeed 8.13
+Tue    9  ON TRACK                       logged   8.5  today-left 8.5  need/day 8.5  lopNeed 8.13
+Tue 12.5  ON TRACK                       logged  10.5  today-left 6.5  need/day 8.5  lopNeed 8.13
+Tue 18.5  ON TRACK                       logged    17  today-left 0  need/day 8.5  lopNeed 8.13
+Tue 20.5  ON TRACK                       logged    17  today-left -  need/day 8.5  lopNeed 8
+Wed    9  ON TRACK                       logged    17  today-left 8.5  need/day 8.5  lopNeed 8
+Wed 12.5  ON TRACK                       logged    19  today-left 6.5  need/day 8.5  lopNeed 8
+Wed 18.5  ON TRACK                       logged  25.5  today-left 0  need/day 8.5  lopNeed 8
+Wed 20.5  ON TRACK                       logged  25.5  today-left -  need/day 8.5  lopNeed 7.75
+Thu    9  ON TRACK                       logged  25.5  today-left 8.5  need/day 8.5  lopNeed 7.75
+Thu 12.5  ON TRACK                       logged  27.5  today-left 6.5  need/day 8.5  lopNeed 7.75
+Thu 18.5  ON TRACK                       logged    34  today-left 0  need/day 8.5  lopNeed 7.75
+Thu 20.5  ON TRACK                       logged    34  today-left -  need/day 8.5  lopNeed 7
+Fri    9  ON TRACK · pay needs 7.0 h     logged    34  today-left 8.5  need/day 8.5  lopNeed 7
+Fri 12.5  ON TRACK · pay needs 5.0 h     logged    36  today-left 6.5  need/day 8.5  lopNeed 7
+Fri 18.5  DONE                           logged  42.5  today-left 0  need/day 8.5  lopNeed 7
+Fri 20.5  DONE                           logged  42.5  today-left -  need/day -  lopNeed -
+Sat 12.5  DONE                           logged  42.5
+Sun 12.5  DONE                           logged  42.5
+
+## 13 exactly 41: 9,9,9,9,5
+Mon    9  ON TRACK                       logged     0  today-left 8.5  need/day 8.5  lopNeed 8.2
+Mon 12.5  ON TRACK                       logged     0  today-left 8.5  need/day 8.5  lopNeed 8.2
+Mon 18.5  ON TRACK                       logged     9  today-left 0  need/day 8.5  lopNeed 8.2
+Mon 20.5  AHEAD                          logged     9  today-left -  need/day 8.38  lopNeed 8
+Tue    9  AHEAD                          logged     9  today-left 8.4  need/day 8.38  lopNeed 8
+Tue 12.5  AHEAD                          logged     9  today-left 8.4  need/day 8.38  lopNeed 8
+Tue 18.5  AHEAD                          logged    18  today-left 0  need/day 8.38  lopNeed 8
+Tue 20.5  AHEAD                          logged    18  today-left -  need/day 8.17  lopNeed 7.67
+Wed    9  AHEAD                          logged    18  today-left 8.2  need/day 8.17  lopNeed 7.67
+Wed 12.5  AHEAD                          logged    18  today-left 8.2  need/day 8.17  lopNeed 7.67
+Wed 18.5  AHEAD                          logged    27  today-left 0  need/day 8.17  lopNeed 7.67
+Wed 20.5  AHEAD                          logged    27  today-left -  need/day 7.75  lopNeed 7
+Thu    9  AHEAD                          logged    27  today-left 7.8  need/day 7.75  lopNeed 7
+Thu 12.5  AHEAD                          logged    27  today-left 7.8  need/day 7.75  lopNeed 7
+Thu 18.5  AHEAD                          logged    36  today-left 0  need/day 7.75  lopNeed 7
+Thu 20.5  AHEAD                          logged    36  today-left -  need/day 6.5  lopNeed 5
+Fri    9  ON TRACK · pay needs 5.0 h     logged    36  today-left 6.5  need/day 6.5  lopNeed 5
+Fri 12.5  ON TRACK · pay needs 5.0 h     logged    36  today-left 6.5  need/day 6.5  lopNeed 5
+Fri 18.5  ON TRACK                       logged    41  today-left 1.5  need/day 6.5  lopNeed 5
+Fri 20.5  SHORT (pay safe)               logged    41  today-left -  need/day -  lopNeed -
+Sat 12.5  SHORT (pay safe)               logged    41
+Sun 12.5  SHORT (pay safe)               logged    41
+
+## 14 half-day leave Thu (d=4.5), 8.5,8.5,8.5,4.5,8.5
+Mon    9  TIGHT                          logged     0  today-left 9.1  need/day 9.11  lopNeed 9.11
+Mon 12.5  TIGHT                          logged     0  today-left 9.1  need/day 9.11  lopNeed 9.11
+Mon 18.5  TIGHT                          logged   8.5  today-left 0.6  need/day 9.11  lopNeed 9.11
+Mon 20.5  TIGHT                          logged   8.5  today-left -  need/day 9.29  lopNeed 9.29
+Tue    9  TIGHT                          logged   8.5  today-left 9.3  need/day 9.29  lopNeed 9.29
+Tue 12.5  TIGHT                          logged   8.5  today-left 9.3  need/day 9.29  lopNeed 9.29
+Tue 18.5  TIGHT                          logged    17  today-left 0.8  need/day 9.29  lopNeed 9.29
+Tue 20.5  TIGHT                          logged    17  today-left -  need/day 9.6  lopNeed 9.6
+Wed    9  TIGHT                          logged    17  today-left 9.6  need/day 9.6  lopNeed 9.6
+Wed 12.5  TIGHT                          logged    17  today-left 9.6  need/day 9.6  lopNeed 9.6
+Wed 18.5  TIGHT                          logged  25.5  today-left 1.1  need/day 9.6  lopNeed 9.6
+Wed 20.5  TIGHT                          logged  25.5  today-left -  need/day 10.33  lopNeed 10.33
+Thu    9  TIGHT                          logged  25.5  today-left 5.2  need/day 10.33  lopNeed 10.33
+Thu 12.5  TIGHT                          logged  25.5  today-left 5.2  need/day 10.33  lopNeed 10.33
+Thu 18.5  TIGHT                          logged    30  today-left 0.7  need/day 10.33  lopNeed 10.33
+Thu 20.5  PAY RISK                       logged    30  today-left -  need/day 11  lopNeed 11
+Fri    9  PAY RISK · pay needs 11.0 h    logged    30  today-left 11  need/day 11  lopNeed 11
+Fri 12.5  PAY RISK · pay needs 11.0 h    logged    30  today-left 11  need/day 11  lopNeed 11
+Fri 18.5  PAY RISK · pay needs 2.5 h     logged  38.5  today-left 2.5  need/day 11  lopNeed 11
+Fri 20.5  PAY RISK · pay needs 2.5 h     logged  38.5  today-left -  need/day -  lopNeed -
+Sat 12.5  LOP 0.5d                       logged  38.5
+Sun 12.5  LOP 0.5d                       logged  38.5
+
+## 15 Friday billed Saturday 10:00
+Mon    9  ON TRACK                       logged     0  today-left 8.5  need/day 8.5  lopNeed 8.2
+Mon 12.5  ON TRACK                       logged     0  today-left 8.5  need/day 8.5  lopNeed 8.2
+Mon 18.5  ON TRACK                       logged   8.5  today-left 0  need/day 8.5  lopNeed 8.2
+Mon 20.5  ON TRACK                       logged   8.5  today-left -  need/day 8.5  lopNeed 8.13
+Tue    9  ON TRACK                       logged   8.5  today-left 8.5  need/day 8.5  lopNeed 8.13
+Tue 12.5  ON TRACK                       logged   8.5  today-left 8.5  need/day 8.5  lopNeed 8.13
+Tue 18.5  ON TRACK                       logged    17  today-left 0  need/day 8.5  lopNeed 8.13
+Tue 20.5  ON TRACK                       logged    17  today-left -  need/day 8.5  lopNeed 8
+Wed    9  ON TRACK                       logged    17  today-left 8.5  need/day 8.5  lopNeed 8
+Wed 12.5  ON TRACK                       logged    17  today-left 8.5  need/day 8.5  lopNeed 8
+Wed 18.5  ON TRACK                       logged  25.5  today-left 0  need/day 8.5  lopNeed 8
+Wed 20.5  ON TRACK                       logged  25.5  today-left -  need/day 8.5  lopNeed 7.75
+Thu    9  ON TRACK                       logged  25.5  today-left 8.5  need/day 8.5  lopNeed 7.75
+Thu 12.5  ON TRACK                       logged  25.5  today-left 8.5  need/day 8.5  lopNeed 7.75
+Thu 18.5  ON TRACK                       logged    34  today-left 0  need/day 8.5  lopNeed 7.75
+Thu 20.5  ON TRACK                       logged    34  today-left -  need/day 8.5  lopNeed 7
+Fri    9  ON TRACK · pay needs 7.0 h     logged    34  today-left 8.5  need/day 8.5  lopNeed 7
+Fri 12.5  ON TRACK · pay needs 7.0 h     logged    34  today-left 8.5  need/day 8.5  lopNeed 7
+Fri 18.5  ON TRACK · pay needs 7.0 h     logged    34  today-left 8.5  need/day 8.5  lopNeed 7
+Fri 20.5  BILL · Fri not billed yet      logged    34  today-left -  need/day -  lopNeed -
+Sat 12.5  DONE                           logged  42.5
+Sun 12.5  DONE                           logged  42.5
+
+## 16 3-day week (Mon,Tue holidays) 8.5x3
+Mon    9  ON TRACK                       logged     0  today-left -  need/day 8.5  lopNeed 7.67
+Mon 12.5  ON TRACK                       logged     0  today-left -  need/day 8.5  lopNeed 7.67
+Mon 18.5  ON TRACK                       logged     0  today-left -  need/day 8.5  lopNeed 7.67
+Mon 20.5  ON TRACK                       logged     0  today-left -  need/day 8.5  lopNeed 7.67
+Tue    9  ON TRACK                       logged     0  today-left -  need/day 8.5  lopNeed 7.67
+Tue 12.5  ON TRACK                       logged     0  today-left -  need/day 8.5  lopNeed 7.67
+Tue 18.5  ON TRACK                       logged     0  today-left -  need/day 8.5  lopNeed 7.67
+Tue 20.5  ON TRACK                       logged     0  today-left -  need/day 8.5  lopNeed 7.67
+Wed    9  ON TRACK                       logged     0  today-left 8.5  need/day 8.5  lopNeed 7.67
+Wed 12.5  ON TRACK                       logged     0  today-left 8.5  need/day 8.5  lopNeed 7.67
+Wed 18.5  ON TRACK                       logged   8.5  today-left 0  need/day 8.5  lopNeed 7.67
+Wed 20.5  ON TRACK                       logged   8.5  today-left -  need/day 8.5  lopNeed 7.25
+Thu    9  ON TRACK                       logged   8.5  today-left 8.5  need/day 8.5  lopNeed 7.25
+Thu 12.5  ON TRACK                       logged   8.5  today-left 8.5  need/day 8.5  lopNeed 7.25
+Thu 18.5  ON TRACK                       logged    17  today-left 0  need/day 8.5  lopNeed 7.25
+Thu 20.5  ON TRACK                       logged    17  today-left -  need/day 8.5  lopNeed 6
+Fri    9  ON TRACK · pay needs 6.0 h     logged    17  today-left 8.5  need/day 8.5  lopNeed 6
+Fri 12.5  ON TRACK · pay needs 6.0 h     logged    17  today-left 8.5  need/day 8.5  lopNeed 6
+Fri 18.5  DONE                           logged  25.5  today-left 0  need/day 8.5  lopNeed 6
+Fri 20.5  DONE                           logged  25.5  today-left -  need/day -  lopNeed -
+Sat 12.5  DONE                           logged  25.5
+Sun 12.5  DONE                           logged  25.5
+
+## 17 50 h week: 10x5
+Mon    9  ON TRACK                       logged     0  today-left 8.5  need/day 8.5  lopNeed 8.2
+Mon 12.5  ON TRACK                       logged     0  today-left 8.5  need/day 8.5  lopNeed 8.2
+Mon 18.5  ON TRACK                       logged    10  today-left 0  need/day 8.5  lopNeed 8.2
+Mon 20.5  AHEAD                          logged    10  today-left -  need/day 8.13  lopNeed 7.75
+Tue    9  AHEAD                          logged    10  today-left 8.1  need/day 8.13  lopNeed 7.75
+Tue 12.5  AHEAD                          logged    10  today-left 8.1  need/day 8.13  lopNeed 7.75
+Tue 18.5  AHEAD                          logged    20  today-left 0  need/day 8.13  lopNeed 7.75
+Tue 20.5  AHEAD                          logged    20  today-left -  need/day 7.5  lopNeed 7
+Wed    9  AHEAD                          logged    20  today-left 7.5  need/day 7.5  lopNeed 7
+Wed 12.5  AHEAD                          logged    20  today-left 7.5  need/day 7.5  lopNeed 7
+Wed 18.5  AHEAD                          logged    30  today-left 0  need/day 7.5  lopNeed 7
+Wed 20.5  AHEAD                          logged    30  today-left -  need/day 6.25  lopNeed 5.5
+Thu    9  AHEAD                          logged    30  today-left 6.3  need/day 6.25  lopNeed 5.5
+Thu 12.5  AHEAD                          logged    30  today-left 6.3  need/day 6.25  lopNeed 5.5
+Thu 18.5  AHEAD                          logged    40  today-left 0  need/day 6.25  lopNeed 5.5
+Thu 20.5  AHEAD                          logged    40  today-left -  need/day 2.5  lopNeed 1
+Fri    9  ON TRACK · pay needs 1.0 h     logged    40  today-left 2.5  need/day 2.5  lopNeed 1
+Fri 12.5  ON TRACK · pay needs 1.0 h     logged    40  today-left 2.5  need/day 2.5  lopNeed 1
+Fri 18.5  DONE                           logged    50  today-left 0  need/day 2.5  lopNeed 1
+Fri 20.5  DONE                           logged    50  today-left -  need/day -  lopNeed -
+Sat 12.5  DONE                           logged    50
+Sun 12.5  DONE                           logged    50
+
+## 18 Thu partial 3.5 entered, rest never
+Mon    9  ON TRACK                       logged     0  today-left 8.5  need/day 8.5  lopNeed 8.2
+Mon 12.5  ON TRACK                       logged     0  today-left 8.5  need/day 8.5  lopNeed 8.2
+Mon 18.5  ON TRACK                       logged   9.2  today-left 0  need/day 8.5  lopNeed 8.2
+Mon 20.5  AHEAD                          logged   9.2  today-left -  need/day 8.32  lopNeed 7.95
+Tue    9  AHEAD                          logged   9.2  today-left 8.3  need/day 8.32  lopNeed 7.95
+Tue 12.5  AHEAD                          logged   9.2  today-left 8.3  need/day 8.32  lopNeed 7.95
+Tue 18.5  AHEAD                          logged  17.6  today-left 0  need/day 8.32  lopNeed 7.95
+Tue 20.5  ON TRACK                       logged  17.6  today-left -  need/day 8.3  lopNeed 7.8
+Wed    9  ON TRACK                       logged  17.6  today-left 8.3  need/day 8.3  lopNeed 7.8
+Wed 12.5  ON TRACK                       logged  17.6  today-left 8.3  need/day 8.3  lopNeed 7.8
+Wed 18.5  ON TRACK                       logged  26.6  today-left 0  need/day 8.3  lopNeed 7.8
+Wed 20.5  ON TRACK                       logged  26.6  today-left -  need/day 7.95  lopNeed 7.2
+Thu    9  ON TRACK                       logged  26.6  today-left 7.9  need/day 7.95  lopNeed 7.2
+Thu 12.5  ON TRACK                       logged  26.6  today-left 7.9  need/day 7.95  lopNeed 7.2
+Thu 18.5  ON TRACK                       logged  30.1  today-left 4.4  need/day 7.95  lopNeed 7.2
+Thu 20.5  PAY RISK · Thu 3.5 h           logged  30.1  today-left -  need/day 12.4  lopNeed 10.9
+Fri    9  PAY RISK · pay needs 10.9 h · Thu 3.5 h logged  30.1  today-left 12.4  need/day 12.4  lopNeed 10.9
+Fri 12.5  PAY RISK · pay needs 10.9 h · Thu 3.5 h logged  30.1  today-left 12.4  need/day 12.4  lopNeed 10.9
+Fri 18.5  PAY RISK · pay needs 2.4 h · Thu 3.5 h logged  38.6  today-left 3.9  need/day 12.4  lopNeed 10.9
+Fri 20.5  PAY RISK · pay needs 2.4 h · Thu 3.5 h logged  38.6  today-left -  need/day -  lopNeed -
+Sat 12.5  LOP 1d                         logged  38.6
+Sun 12.5  LOP 1d                         logged  38.6

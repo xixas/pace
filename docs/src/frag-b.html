@@ -1,0 +1,283 @@
+
+<style>
+  /* ===== Fragment B: Always visible (prefix .fb-) ===== */
+  .fb-sec { display:flex; flex-direction:column; gap:1.5rem; min-width:0; max-width:100%; }
+  .fb-sec h2 { font-size:1.5rem; font-weight:700; margin:0; }
+  .fb-h { font-size:1.25rem; font-weight:700; padding-top:.5rem; margin:0; }
+  .fb-sec p { margin:0; }
+  .fb-g2, .fb-g3, .fb-g4 { display:grid; gap:1.5rem; grid-template-columns:minmax(0,1fr); align-items:start; }
+  @media (min-width:768px) { .fb-g2 { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+  @media (min-width:640px) { .fb-g3 { grid-template-columns:repeat(2,minmax(0,1fr)); } .fb-g4 { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+  @media (min-width:1024px) { .fb-g3 { grid-template-columns:repeat(3,minmax(0,1fr)); } .fb-g4 { grid-template-columns:repeat(4,minmax(0,1fr)); } }
+  .fb-g2 > *, .fb-g3 > *, .fb-g4 > * { min-width:0; }
+  .fb-note { font-size:.875rem; max-width:48rem; overflow-wrap:anywhere; }
+
+  /* verdict colours (GNOME dark panel) */
+  .fb-green { --c:#57e389; } .fb-amber { --c:#ffbe6f; } .fb-red { --c:#ff7b63; }
+  .fb-blue { --c:#78aeed; } .fb-grey { --c:#9a9996; }
+
+  /* ----- B1 strip rows ----- */
+  .fb-rows { display:flex; flex-direction:column; gap:10px; }
+  .fb-row { display:grid; grid-template-columns:minmax(0,1fr); gap:4px; padding-bottom:10px; border-bottom:1px solid #0000001a; }
+  .fb-row:last-child { border-bottom:0; }
+  .fb-row .fb-name { font-weight:700; font-size:.8rem; letter-spacing:.02em; }
+  .fb-row .caption { margin-top:0; }
+  @media (min-width:768px) { .fb-row { grid-template-columns:104px 440px minmax(0,1fr); align-items:center; gap:14px; } }
+
+  /* top-bar slice at real size: 30 px black bar, 13 px Cantarell semibold */
+  .fb-slice { height:30px; background:#000; color:#fff; display:flex; align-items:center; justify-content:space-between; gap:8px;
+    padding:0 8px 0 12px; font:600 13px/1 Cantarell,"Inter",system-ui,sans-serif; width:440px; max-width:100%; border-radius:6px; overflow:hidden; white-space:nowrap; }
+  .fb-lab { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:99px; min-width:0; }
+  .fb-lab.fb-open { background:#ffffff2e; }
+  .fb-lab > span:last-child { overflow:hidden; text-overflow:ellipsis; }
+  .fb-lab.fb-dim { color:#c0bfbc; }
+  /* number takes the verdict colour, same palette as claude-usage (limits.js COLOURS) */
+  .fb-lab.green, .fb-lab.fb-green { color:#8ff0a4; } .fb-lab.amber, .fb-lab.fb-amber { color:#f6d32d; } .fb-lab.red, .fb-lab.fb-red { color:#ff7b63; } .fb-lab.blue, .fb-lab.fb-blue { color:#99c1f1; }
+  .fb-d { width:9px; height:9px; border-radius:50%; background:var(--c); flex:none; }
+  .fb-gl { color:var(--c); font-size:14px; line-height:1; flex:none; }
+  .fb-sys { display:inline-flex; gap:7px; align-items:center; flex:none; opacity:.92; }
+  .fb-sys i { display:block; background:#fff; }
+  .fb-sys i:nth-child(1) { width:11px; height:11px; border-radius:50%; }
+  .fb-sys i:nth-child(2) { width:11px; height:11px; border-radius:3px 3px 8px 3px; }
+  .fb-sys i:nth-child(3) { width:17px; height:9px; border-radius:2px; }
+  .fb-sys::after { content:"\25BE"; font-size:10px; }
+  .fb-clk { opacity:.92; flex:none; }
+  @media (max-width:560px) { .fb-clk .fb-cd { display:none; } }
+  .fb-ring-i { flex:none; display:block; }
+
+  /* ----- GNOME desktop wrapper for dropdowns ----- */
+  .fb-wrap .gn-top { padding:0 8px 0 14px; gap:8px; }
+  .fb-wrap .gn-top > span { white-space:nowrap; }
+  .fb-wrap .fb-r { display:inline-flex; align-items:center; gap:8px; } .fb-wrap .fb-r { min-width:0; } .fb-wrap .fb-r .fb-lab { flex:0 1 auto; overflow:hidden; }
+  .fb-wrap .gn-menu { max-width:calc(100% - 24px); margin:6px 12px 0 auto; width:344px; overflow-wrap:anywhere; line-height:1.35; }
+  @media (max-width:520px) { .fb-wrap .gn-top { justify-content:space-between; } .fb-cd { display:none; } }
+  .fb-ws { display:inline-flex; align-items:center; gap:5px; padding:6px 9px; border-radius:99px; background:#ffffff1f; flex:none; }
+  .fb-ws i { display:block; width:7px; height:7px; border-radius:50%; background:#ffffff80; }
+  .fb-ws i.on { width:20px; border-radius:6px; background:#fff; }
+  .fb-wrap .row b { min-width:0; }
+  .fb-wrap .bar > b.fb-lop { background:#ff7b63; opacity:1; width:3px; height:18px; top:-5px; box-shadow:0 0 0 3px #ff7b6340; border-radius:2px; }
+  .fb-t { font-size:15px; }
+  .fb-sm { font-size:12px; opacity:.72; }
+  .fb-gc { color:var(--c); }
+  .fb-leg { display:flex; justify-content:space-between; gap:8px; font-size:11.5px; opacity:.72; margin-top:5px; flex-wrap:wrap; }
+  .fb-leg .fb-r1 { color:#ff7b63; font-weight:700; opacity:1; }
+  .fb-days { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:4px; margin-top:6px; }
+  .fb-days > div { background:#ffffff12; border-radius:8px; padding:5px 0; text-align:center; font-size:11px; }
+  .fb-days > div b { display:block; font-size:14px; font-weight:700; }
+  .fb-days .t { outline:1.5px solid #78aeed; }
+  .fb-days .x { opacity:.5; }
+  .fb-days .s b { color:#ff7b63; }
+  .fb-btn { display:block; text-align:center; background:#3584e4; color:#fff; border-radius:9px; padding:8px 12px; font-weight:700; margin-top:10px; }
+  .fb-btn.fb-btn-red { background:#c01c28; }
+  .fb-btn.fb-btn-g { background:#ffffff1f; }
+  .fb-pill { display:inline-block; font-size:11px; font-weight:700; padding:2px 8px; border-radius:99px; background:#ffffff1f; color:#deddda; }
+  .fb-pill.fb-p-red { background:#ff7b6329; color:#ff9c8a; }
+  .fb-pill.fb-p-blue { background:#78aeed29; color:#a4c8f4; }
+  .fb-warnrow { display:flex; gap:8px; align-items:flex-start; background:#ffffff14; border-radius:10px; padding:8px 10px; margin-bottom:8px; font-size:12px; }
+  .fb-warnrow b { color:#ffbe6f; }
+  .fb-bannerrow { background:#78aeed29; margin-bottom:10px; } .fb-bannerrow b { color:#a4c8f4; } .fb-bannerrow > span:last-child { min-width:0; flex:1; }
+  .fb-menu-stale .fb-keep { opacity:.62; }
+  .fb-fb { background:#78aeed; } /* blue fill */
+  .fb-fg { background:#9a9996; } /* grey fill */
+  .fb-pair { display:grid; gap:1.5rem; grid-template-columns:minmax(0,1fr); align-items:start; }
+  @media (min-width:768px) { .fb-pair { grid-template-columns:minmax(0,420px) minmax(0,1fr); } .fb-pair > .caption { margin-top:0; padding-top:8px; font-size:.875rem; } }
+  .fb-split { display:grid; gap:1.5rem; grid-template-columns:minmax(0,1fr); }
+
+  /* ----- B7 KDE Plasma 6 ----- */
+  .fb-kde { background:linear-gradient(160deg,#1d99f3 0%,#0c4f8a 100%); border-radius:14px; overflow:hidden; font-family:"Noto Sans",system-ui,sans-serif;
+    display:flex; flex-direction:column; justify-content:flex-end; min-height:360px; padding:0 8px 8px; }
+  .fb-kpanel { height:44px; background:#eff0f1f0; border-radius:10px; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:0 8px; font-size:12px; color:#232629; box-shadow:0 2px 10px #0005; min-width:0; }
+  .fb-kpanel .fb-kl, .fb-kpanel .fb-kr { display:flex; align-items:center; gap:8px; min-width:0; }
+  .fb-kicon { width:28px; height:28px; border-radius:6px; background:#bdc3c7; flex:none; }
+  .fb-kicon.k1 { background:#3daee9; border-radius:50%; } .fb-kicon.k2 { background:#8e8e93; } .fb-kicon.k3 { background:#27ae60; }
+  .fb-kclk { text-align:right; line-height:1.15; font-size:11px; }
+  .fb-ktip { align-self:flex-end; margin:0 28px 8px 0; max-width:calc(100% - 20px); background:#fcfcfc; color:#232629; border:1px solid #bdc3c7; border-radius:6px; padding:8px 10px;
+    font-size:12px; box-shadow:0 4px 14px #0006; display:flex; gap:10px; align-items:flex-start; overflow-wrap:anywhere; }
+  .fb-kpop { align-self:flex-end; background:#fcfcfc; color:#232629; width:340px; max-width:100%; margin:0 2px 8px 0; border-radius:8px; border:1px solid #bdc3c7;
+    box-shadow:0 6px 22px #0006; font-size:13px; overflow:hidden; }
+  .fb-kpop .fb-kh { display:flex; justify-content:space-between; align-items:center; padding:8px 12px; border-bottom:1px solid #e0e3e6; background:#f0f1f2; font-weight:600; gap:8px; }
+  .fb-kpop .fb-kb { padding:12px; display:flex; flex-direction:column; gap:6px; }
+  .fb-kpop .bar { background:#0000001a; }
+  .fb-kbtns { display:flex; gap:6px; flex-wrap:wrap; margin-top:6px; }
+  .fb-kbtn { border:1px solid #bdc3c7; border-radius:4px; padding:4px 10px; font-size:12px; background:linear-gradient(#fcfcfc,#eff0f1); }
+  .fb-kbtn.fb-pri { background:#3daee9; border-color:#2c8fc4; color:#fff; font-weight:600; }
+  .fb-kr2 { display:flex; justify-content:space-between; gap:8px; font-size:13px; }
+  .fb-trays { display:grid; gap:10px; grid-template-columns:repeat(2,minmax(0,1fr)); }
+  @media (min-width:640px) { .fb-trays { grid-template-columns:repeat(5,minmax(0,1fr)); } }
+  .fb-trays > div { background:#eff0f1; color:#232629; border-radius:10px; padding:10px 6px; text-align:center; font-size:11.5px; font-family:"Noto Sans",system-ui,sans-serif; border:1px solid #0000001a; }
+  .fb-trays > div svg { display:block; margin:0 auto 6px; }
+  .fb-trays b { display:block; font-size:12px; }
+
+  /* ----- B8 COSMIC ----- */
+  .fb-cos { background:linear-gradient(135deg,#2b2d42,#5a3e6b); border-radius:14px; overflow:hidden; font-family:"Fira Sans","Open Sans",system-ui,sans-serif; min-height:400px; }
+  .fb-ctop { height:36px; background:#1b1b1d; color:#e8e8e8; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:0 10px; font-size:13px; }
+  .fb-ctop .fb-cl, .fb-ctop .fb-cr { display:flex; align-items:center; gap:10px; min-width:0; }
+  .fb-ctop .fb-capp { padding:3px 10px; border-radius:99px; background:#ffffff14; }
+  .fb-ctop .fb-cws { display:flex; gap:5px; } .fb-ctop .fb-cws i { width:8px; height:8px; border-radius:50%; background:#ffffff55; display:block; } .fb-ctop .fb-cws i.on { background:#63d0df; width:18px; border-radius:6px; }
+  .fb-ctop .fb-capplet { padding:3px 7px; border-radius:99px; background:#ffffff1f; display:inline-flex; align-items:center; }
+  .fb-cpop { background:#27272b; color:#e4e4e4; width:330px; max-width:calc(100% - 20px); margin:8px 10px 14px auto; border-radius:18px; padding:12px; font-size:13px; box-shadow:0 10px 30px #0009; border:1px solid #ffffff14; }
+  .fb-cpop .bar { background:#ffffff22; } .fb-cpop .bar > b { background:#fff; }
+  .fb-ccard { background:#323237; border-radius:12px; padding:10px 12px; margin-top:8px; }
+  .fb-chead { display:flex; align-items:center; gap:10px; padding:2px 2px 4px; }
+  .fb-citem { padding:8px 12px; border-radius:10px; display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  .fb-citem:first-of-type { background:#ffffff0f; }
+  .fb-csw { width:36px; height:20px; border-radius:99px; background:#ffffff2e; position:relative; flex:none; }
+  .fb-csw::after { content:""; position:absolute; width:14px; height:14px; border-radius:50%; background:#c4c4c4; top:3px; left:3px; }
+  .fb-cbtn { display:inline-block; background:#63d0df; color:#0b2a2e; font-weight:700; border-radius:99px; padding:6px 14px; font-size:12.5px; }
+  .fb-cbtn.fb-gh { background:#ffffff1a; color:#e4e4e4; }
+
+
+  .fb-kwin { align-self:flex-end; margin:0 70px 14px auto; max-width:calc(100% - 16px); background:#fcfcfc; color:#232629; border:1px solid #bdc3c7; border-radius:8px; box-shadow:0 6px 22px #0006; overflow:hidden; }
+  .fb-kwt { display:flex; justify-content:space-between; padding:6px 10px; background:#e3e5e7; font-size:12px; font-weight:600; }
+  .fb-kwb { padding:10px; background:#e8eaec; }
+  .fb-kmenu { align-self:flex-end; margin:0 4px 8px auto; width:290px; max-width:100%; background:#fcfcfc; color:#232629; border:1px solid #bdc3c7; border-radius:6px; box-shadow:0 6px 22px #0006; padding:4px; font-size:13px; }
+  .fb-kmenu .mi { padding:5px 14px; border-radius:3px; overflow-wrap:anywhere; }
+  .fb-kmenu .mi:nth-child(-n+3) { color:#4d5358; }
+  .fb-kmenu hr { border:0; border-top:1px solid #e0e3e6; margin:4px 2px; }
+  .fb-cwin { width:274px; max-width:calc(100% - 20px); margin:14px auto 18px 24px; background:#27272b; color:#e4e4e4; border:1px solid #ffffff1f; border-radius:14px; box-shadow:0 10px 30px #0009; overflow:hidden; }
+  .fb-cwt { display:flex; justify-content:space-between; padding:7px 12px; font-size:12px; font-weight:700; background:#1f1f23; }
+  .fb-cwb { padding:12px; display:flex; justify-content:center; }
+  .fb-cmenu { width:290px; max-width:calc(100% - 20px); margin:8px 10px 14px auto; background:#27272b; color:#e4e4e4; border:1px solid #ffffff14; border-radius:14px; padding:6px; font-size:13px; box-shadow:0 10px 30px #0009; }
+  .fb-cmenu .mi { padding:7px 12px; border-radius:8px; overflow-wrap:anywhere; }
+  .fb-cmenu .mi:nth-child(-n+3) { color:#a8a8ad; }
+  .fb-cmenu .sep { border-top:1px solid #ffffff1a; margin:5px 4px; }
+
+  /* ----- B9 XFCE / Cinnamon ----- */
+  .fb-xde { background:linear-gradient(145deg,#6d7b8d,#3a4656); border-radius:14px; overflow:hidden; min-height:380px; font-family:Cantarell,"Noto Sans",system-ui,sans-serif; }
+  .fb-xpanel { height:30px; background:#2e3436; color:#eeeeec; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:0 8px; font-size:12px; }
+  .fb-xpanel .fb-xl, .fb-xpanel .fb-xr { display:flex; align-items:center; gap:10px; min-width:0; }
+  .fb-xhl { background:#ffffff26; border-radius:4px; padding:3px 3px 2px; display:inline-flex; }
+  .fb-gtkm { background:#fff; color:#2e3436; border:1px solid #cdc7c2; border-radius:6px; box-shadow:0 4px 14px #0007; width:288px; max-width:calc(100% - 20px); margin:4px 10px 18px auto; padding:4px 0; font-size:13px; }
+  .fb-gtkm .mi { padding:5px 20px; display:flex; justify-content:space-between; gap:12px; }
+  .fb-gtkm .mi.dis { color:#8c9096; } .fb-gtkm .mi.hd { font-weight:700; color:#2e3436; }
+  .fb-gtkm .mi.hov { background:#3584e4; color:#fff; }
+  .fb-gtkm hr { border:0; border-top:1px solid #e0dcd8; margin:4px 0; }
+
+  /* ----- B10 mini widget ----- */
+  .fb-mini-grid { display:grid; gap:14px; grid-template-columns:repeat(auto-fill,minmax(min(100%,262px),1fr)); }
+  .fb-mini-bg { padding:22px 16px 14px; border-radius:16px; background:linear-gradient(135deg,#9bb5d6,#5c7fa8); display:flex; flex-direction:column; align-items:center; gap:10px; min-width:0; }
+  .fb-mini-bg.fb-bgd { background:linear-gradient(135deg,#46506a,#1e2433); }
+  .fb-mini-bg .fb-lb { font-size:11.5px; font-weight:700; color:#fff; text-shadow:0 1px 2px #0006; }
+  .fb-mini-bg .mini { max-width:100%; }
+  .fb-mini-d { background:#2b2b30ee; color:#eee; border-color:#ffffff22; }
+  .fb-mini-d .bar { background:#ffffff26; } .fb-mini-d .bar > b { background:#fff; }
+  .fb-mini-d .chip.ok { background:#2ea04338; color:#8ff0a4; } .fb-mini-d .chip.warn { background:#ffbe6f33; color:#ffbe6f; } .fb-mini-d .chip.hot { background:#e5534b38; color:#ffa198; } .fb-mini-d .chip.mute { background:#ffffff1a; color:#c0c0c0; }
+  .fb-mini-row { display:flex; justify-content:space-between; align-items:center; gap:6px; }
+  .fb-mini-sub { display:flex; justify-content:space-between; gap:6px; opacity:.72; }
+  .mini .chip.fb-cb { background:#3584e41f; color:#1c71d8; }
+  .fb-mini-d .chip.fb-cb { background:#78aeed2e; color:#a4c8f4; }
+  .fb-fillb { background:#3584e4; } .fb-fillg { background:#9a9996; }
+
+  /* ----- B11 format slices ----- */
+  .fb-fmt { display:flex; flex-direction:column; gap:6px; min-width:0; }
+  .fb-fmt .fb-slice { width:100%; }
+  .fb-fmt .caption { margin-top:0; }
+</style>
+
+<section id="fb-always" class="sec fb-sec">
+  <h2>Always visible</h2>
+  <p class="fb-note">Panel surfaces: the label or icon you glance at, and the menu behind it. Thursday 29 Oct 2026, 14:10 unless a state needs other numbers (each strip row names its own day and time). Colours come from the verdict table: green, amber, red, blue for BILL, grey for offline and leave.</p>
+
+  <h3 class="fb-h">B1 &middot; GNOME top bar: every state</h3><div class="fb-rows"><div class="fb-row"><span class="fb-name">ON TRACK</span><div class="fb-slice"><span class="fb-clk">Thu <span class="fb-cd">29 Oct </span>14:10</span><span class="fb-lab green "><i class="fb-d"></i><span>30.1 / 42.5 h</span></span><span class="fb-sys"><i></i><i></i><i></i></span></div><p class="caption">Need per day is 9.0 h or less. The normal state all week. Click opens the dropdown (B2).</p></div><div class="fb-row"><span class="fb-name">AHEAD</span><div class="fb-slice"><span class="fb-clk">Wed <span class="fb-cd">28 Oct </span>19:10</span><span class="fb-lab green "><span class="fb-gl">&#9650;</span><span>28.4 / 42.5 h</span></span><span class="fb-sys"><i></i><i></i><i></i></span></div><p class="caption">Averaging above 9 h/day so far (28.4 h in 3 days). Up-triangle instead of a dot. Never shown on the last working day.</p></div><div class="fb-row"><span class="fb-name">TIGHT</span><div class="fb-slice"><span class="fb-clk">Thu <span class="fb-cd">29 Oct </span>09:30</span><span class="fb-lab amber "><i class="fb-d"></i><span>23.0 / 42.5 h</span></span><span class="fb-sys"><i></i><i></i><i></i></span></div><p class="caption">Needs 9.8 h/day over Thu and Fri, between 9.0 and 10.5. Still reachable, amber.</p></div><div class="fb-row"><span class="fb-name">BEHIND</span><div class="fb-slice"><span class="fb-clk">Thu <span class="fb-cd">29 Oct </span>09:30</span><span class="fb-lab amber "><i class="fb-d"></i><span>21.0 / 42.5 h &middot; pay 10.0/day</span></span><span class="fb-sys"><i></i><i></i><i></i></span></div><p class="caption">42.5 is out of reach (10.8 h/day) but the 41 h pay line is not. The label switches to what pay needs.</p></div><div class="fb-row"><span class="fb-name">PAY RISK</span><div class="fb-slice"><span class="fb-clk">Fri <span class="fb-cd">30 Oct </span>11:00</span><span class="fb-lab red "><i class="fb-d"></i><span>27.1 / 42.5 h &middot; pay risk</span></span><span class="fb-sys"><i></i><i></i><i></i></span></div><p class="caption">The 41 h line needs 13.9 h today, past the 10.5 h/day limit. Names the short days in the dropdown (B4).</p></div><div class="fb-row"><span class="fb-name">BILL</span><div class="fb-slice"><span class="fb-clk">Fri <span class="fb-cd">30 Oct </span>20:30</span><span class="fb-lab blue "><span class="fb-gl">&#9676;</span><span>34.0 / 42.5 h</span></span><span class="fb-sys"><i></i><i></i><i></i></span></div><p class="caption">Only an unbilled day stands between you and DONE: Fri shows 0 h. Dotted ring, not a dot. Calm blue, not a warning (B5).</p></div><div class="fb-row"><span class="fb-name">LAST DAY GAP</span><div class="fb-slice"><span class="fb-clk">Fri <span class="fb-cd">30 Oct </span>18:30</span><span class="fb-lab green "><i class="fb-d"></i><span>40.0 / 42.5 h &middot; pay needs 1.0 h</span></span><span class="fb-sys"><i></i><i></i><i></i></span></div><p class="caption">Last working day and under 41 h: the hard gap is always in the label (B3). The week verdict is still ON TRACK, so the dot stays green; the gap shows in the label.</p></div><div class="fb-row"><span class="fb-name">DONE</span><div class="fb-slice"><span class="fb-clk">Thu <span class="fb-cd">29 Oct </span>17:40</span><span class="fb-lab green "><span class="fb-gl">&#10003;</span><span>42.5 h</span></span><span class="fb-sys"><i></i><i></i><i></i></span></div><p class="caption">Target met. Check mark, no denominator. Stays until the week rolls over.</p></div><div class="fb-row"><span class="fb-name">SHORT</span><div class="fb-slice"><span class="fb-clk">Sat <span class="fb-cd">31 Oct </span>09:00</span><span class="fb-lab amber "><i class="fb-d"></i><span>41.8 / 42.5 h &middot; pay safe</span></span><span class="fb-sys"><i></i><i></i><i></i></span></div><p class="caption">Week over with 41 &le; hours &lt; 42.5. Below target but no loss of pay.</p></div><div class="fb-row"><span class="fb-name">LOP 1 day</span><div class="fb-slice"><span class="fb-clk">Sat <span class="fb-cd">31 Oct </span>09:00</span><span class="fb-lab red "><i class="fb-d"></i><span>39.5 h &middot; LOP 1 day</span></span><span class="fb-sys"><i></i><i></i><i></i></span></div><p class="caption">Week over under the 41 h line. Names how many days of pay are lost.</p></div><div class="fb-row"><span class="fb-name">ON LEAVE</span><div class="fb-slice"><span class="fb-clk">Wed <span class="fb-cd">28 Oct </span>10:00</span><span class="fb-lab grey fb-dim"><span class="fb-gl">&#9675;</span><span>On leave</span></span><span class="fb-sys"><i></i><i></i><i></i></span></div><p class="caption">Whole week is leave or holiday. Neutral grey, no nudges, no numbers.</p></div><div class="fb-row"><span class="fb-name">OFFLINE</span><div class="fb-slice"><span class="fb-clk">Thu <span class="fb-cd">29 Oct </span>14:10</span><span class="fb-lab grey fb-dim"><span class="fb-gl">&#9675;</span><span>26.6 / 42.5 h &middot; 09:40</span></span><span class="fb-sys"><i></i><i></i><i></i></span></div><p class="caption">DhiHRMS or the network is unreachable. Last good numbers stay, greyed, with the time of the last fetch.</p></div><div class="fb-row"><span class="fb-name">SIGNED OUT</span><div class="fb-slice"><span class="fb-clk">Thu <span class="fb-cd">29 Oct </span>14:10</span><span class="fb-lab amber "><i class="fb-d"></i><span>Sign in again</span></span><span class="fb-sys"><i></i><i></i><i></i></span></div><p class="caption">Session expired. Amber dot, one notification, click opens the browser to sign in.</p></div></div><p class="fb-note">Each strip is a 30 px GNOME Shell top bar slice at real size: clock, the Pace label, then system indicators. The dot and the number take the week verdict colour (same palette as claude-usage); projects colour their own rows in the menus.</p>
+
+  <h3 class="fb-h">B2 &middot; GNOME dropdown: ON TRACK</h3><div class="fb-pair"><div class="gn-desk fb-wrap "><div class="gn-top"><span class="fb-act fb-ws"><i class="on"></i><i></i><i></i></span><span>Thu <span class="fb-cd">29 Oct </span>14:10</span><span class="fb-r"><span class="fb-lab fb-green fb-open "><i class="fb-d"></i><span>30.1 / 42.5 h</span></span><span class="fb-sys"><i></i><i></i><i></i></span></span></div><div class="gn-menu">
+  <div class="row"><b class="fb-t">Week &middot; On track</b><span class="fb-gc" style="--c:#57e389">needs 8.0 h/day</span></div>
+  <div class="fb-sm" style="margin-top:2px">4.5 h left today</div>
+  <div class="bar" style="margin:8px 0 2px"><i class="fill-ok" style="width:66.9%"></i><b style="left:91.1%"></b><b style="left:94.4%"></b><b style="left:calc(100% - 2px)"></b></div>
+  <div class="fb-leg"><span>LOP 41</span><span>target 42.5</span><span>expected 45</span></div>
+  <div class="fb-days"><div class="">Mon<b>9.2</b></div><div class="">Tue<b>8.4</b></div><div class="">Wed<b>9.0</b></div><div class="t">Thu<b>3.5</b></div><div class="">Fri<b>&ndash;</b></div></div>
+  <hr>
+  <div class="row"><b>October</b><span class="fb-sm">2 working days left</span></div>
+  <div class="row" style="margin-top:8px"><span>Tweelin</span><span class="fb-gc" style="--c:#ffbe6f">112.5 / 133 h &middot; behind 6.5</span></div>
+  <div class="bar" style="margin:6px 0"><i class="fill-warn" style="width:84.6%"></i><b style="left:89.5%"></b></div>
+  <div class="fb-sm">needs 10.3 h/day on Tweelin</div>
+  <div class="row" style="margin-top:8px"><span>R&amp;D</span><span class="fb-sm">18.4 h &middot; no target</span></div>
+  <hr><div class="item">Open dashboard</div><div class="item">Open PineStem</div><div class="item">Snooze nudges today</div><hr><div class="row fb-sm"><span>Updated 4 min ago</span><span style="color:#99c1f1;font-weight:700;opacity:1">Refresh</span></div>
+</div></div><p class="caption">The reference menu. Click the label to open it. Rows are plain menu items: Open dashboard opens the Pace window, Open PineStem opens the task list in the browser, Snooze nudges today mutes every nudge until midnight. Refresh forces a fetch.</p></div>
+
+  <h3 class="fb-h">B3 &middot; GNOME dropdown: Friday 18:30, under the pay line</h3><div class="fb-pair"><div class="gn-desk fb-wrap "><div class="gn-top"><span class="fb-act fb-ws"><i class="on"></i><i></i><i></i></span><span>Fri <span class="fb-cd">30 Oct </span>18:30</span><span class="fb-r"><span class="fb-lab fb-green fb-open "><i class="fb-d"></i><span>40.0 / 42.5 h &middot; pay needs 1.0 h</span></span><span class="fb-sys"><i></i><i></i><i></i></span></span></div><div class="gn-menu">
+  <div class="row"><b class="fb-t">Week &middot; On track</b><span class="fb-pill fb-p-red">pay needs 1.0 h</span></div>
+  <div class="fb-sm" style="margin-top:2px">Last working day &middot; 40.0 of the 41 h line</div>
+  <div class="bar" style="margin:8px 0 2px"><i class="fill-ok" style="width:88.9%"></i><b class="fb-lop" style="left:91.1%"></b><b style="left:94.4%"></b><b style="left:calc(100% - 2px)"></b></div>
+  <div class="fb-leg"><span><span class="fb-r1">LOP 41</span></span><span>target 42.5</span><span>expected 45</span></div>
+  <div class="fb-days"><div class="">Mon<b>9.2</b></div><div class="">Tue<b>8.4</b></div><div class="">Wed<b>9.0</b></div><div class="">Thu<b>9.0</b></div><div class="t">Fri<b>4.4</b></div></div>
+  <div class="fb-sm" style="margin-top:8px">1.0 h to the loss-of-pay line &middot; 2.5 h to target</div>
+  <a class="fb-btn">Bill 1 h to stay clear of loss of pay</a>
+  <hr><div class="item">Open PineStem</div><div class="item">Snooze nudges today</div><hr><div class="row fb-sm"><span>Updated 1 min ago</span><span style="color:#99c1f1;font-weight:700;opacity:1">Refresh</span></div>
+</div></div><p class="caption">Last working day, 40.0 h, still ON TRACK by the target maths, but under the 41 h line so the hard gap is spelled out. The red LOP tick is emphasised and the action button is the fix. Clicking it opens PineStem on today&rsquo;s billing form.</p></div>
+
+  <h3 class="fb-h">B4 &middot; GNOME dropdown: PAY RISK</h3><div class="fb-pair"><div class="gn-desk fb-wrap "><div class="gn-top"><span class="fb-act fb-ws"><i class="on"></i><i></i><i></i></span><span>Fri <span class="fb-cd">30 Oct </span>11:00</span><span class="fb-r"><span class="fb-lab fb-red fb-open "><i class="fb-d"></i><span>27.1 / 42.5 h &middot; pay risk</span></span><span class="fb-sys"><i></i><i></i><i></i></span></span></div><div class="gn-menu">
+  <div class="row"><b class="fb-t fb-gc" style="--c:#ff7b63">Week &middot; Pay at risk</b><span class="fb-sm">27.1 / 42.5 h</span></div>
+  <div class="fb-sm" style="margin-top:2px">Needs 13.9 h today to reach 41 h. The limit is 10.5 h/day.</div>
+  <div class="bar" style="margin:8px 0 2px"><i class="fill-hot" style="width:60.2%"></i><b class="fb-lop" style="left:91.1%"></b><b style="left:94.4%"></b><b style="left:calc(100% - 2px)"></b></div>
+  <div class="fb-leg"><span><span class="fb-r1">LOP 41</span></span><span>target 42.5</span><span>expected 45</span></div>
+  <div class="fb-days"><div class="">Mon<b>9.2</b></div><div class="">Tue<b>8.4</b></div><div class="s">Wed<b>6.0</b></div><div class="s">Thu<b>3.5</b></div><div class="t">Fri<b>0.0</b></div></div>
+  <div class="warnrow fb-warnrow" style="margin-top:10px;margin-bottom:0"><span class="fb-gc" style="--c:#ff7b63">&#9888;</span><span><b style="color:#ff9c8a">Short days: Wed 6.0 h &middot; Thu 3.5 h</b><br>Even 10.5 h today ends 3.4 h under the line, about 1 day of loss of pay.</span></div>
+  <a class="fb-btn fb-btn-red">Open PineStem to bill Fri</a>
+  <hr><div class="item">Open dashboard</div><div class="item">Snooze nudges today</div><hr><div class="row fb-sm"><span>Updated 2 min ago</span><span style="color:#99c1f1;font-weight:700;opacity:1">Refresh</span></div>
+</div></div><p class="caption">The 41 h line is out of reach even at 10.5 h/day. The short days are named so you know where hours went missing. Red title, red LOP tick. The only way to avoid it is to bill missing hours now, so the button opens PineStem.</p></div>
+
+  <h3 class="fb-h">B5 &middot; GNOME dropdown: BILL</h3><div class="fb-pair"><div class="gn-desk fb-wrap "><div class="gn-top"><span class="fb-act fb-ws"><i class="on"></i><i></i><i></i></span><span>Fri <span class="fb-cd">30 Oct </span>20:30</span><span class="fb-r"><span class="fb-lab fb-blue fb-open "><span class="fb-gl">&#9676;</span><span>34.0 / 42.5 h</span></span><span class="fb-sys"><i></i><i></i><i></i></span></span></div><div class="gn-menu">
+  <div class="row"><b class="fb-t fb-gc" style="--c:#78aeed">Week &middot; Bill your hours</b><span class="fb-sm">34.0 / 42.5 h</span></div>
+  <div style="margin-top:6px"><span class="fb-pill">Fri not billed yet</span></div>
+  <div class="bar" style="margin:8px 0 2px"><i class="fb-fb" style="width:75.6%"></i><b style="left:91.1%"></b><b style="left:94.4%"></b><b style="left:calc(100% - 2px)"></b></div>
+  <div class="fb-leg"><span>LOP 41</span><span>target 42.5</span><span>expected 45</span></div>
+  <div class="fb-days"><div class="">Mon<b>8.5</b></div><div class="">Tue<b>8.5</b></div><div class="">Wed<b>8.5</b></div><div class="">Thu<b>8.5</b></div><div class="t">Fri<b>not yet</b></div></div>
+  <div class="fb-sm" style="margin-top:10px;opacity:.85">Not a shortfall. A day with 0 h stays &ldquo;not billed yet&rdquo; from 20:00 that day until 12:00 on the next working day (Mon). Bill Fri and the week is done.</div>
+  <a class="fb-btn">Open PineStem to bill Fri</a>
+  <hr><div class="item">Open dashboard</div><div class="item">Snooze nudges today</div><hr><div class="row fb-sm"><span>Updated 3 min ago</span><span style="color:#99c1f1;font-weight:700;opacity:1">Refresh</span></div>
+</div></div><p class="caption">Calm blue, not a warning. A day with 0 h is &ldquo;not billed yet&rdquo; from 20:00 until 12:00 on the next working day, and only then becomes a shortfall. Clicking opens PineStem to bill the day.</p></div>
+
+  <h3 class="fb-h">B6 &middot; GNOME dropdown: offline or stale</h3><div class="fb-pair"><div class="gn-desk fb-wrap "><div class="gn-top"><span class="fb-act fb-ws"><i class="on"></i><i></i><i></i></span><span>Thu <span class="fb-cd">29 Oct </span>14:10</span><span class="fb-r"><span class="fb-lab fb-grey fb-dim fb-open "><span class="fb-gl">&#9675;</span><span>26.6 / 42.5 h &middot; 09:40</span></span><span class="fb-sys"><i></i><i></i><i></i></span></span></div><div class="gn-menu fb-menu-stale">
+  <div class="fb-warnrow"><span class="fb-gc" style="--c:#ffbe6f">&#9888;</span><span><b>Can't reach DhiHRMS</b><br>as of 09:40 &middot; retrying in 2 min</span></div>
+  <div class="fb-keep">
+  <div class="row"><b class="fb-t">Week &middot; On track</b><span>needs 8.0 h/day</span></div>
+  <div class="bar" style="margin:8px 0 2px"><i class="fb-fg" style="width:59.1%"></i><b style="left:91.1%"></b><b style="left:94.4%"></b><b style="left:calc(100% - 2px)"></b></div>
+  <div class="fb-leg"><span>LOP 41</span><span>target 42.5</span><span>expected 45</span></div>
+  <div class="fb-days"><div class="">Mon<b>9.2</b></div><div class="">Tue<b>8.4</b></div><div class="">Wed<b>9.0</b></div><div class="t">Thu<b>0.0</b></div><div class="">Fri<b>&ndash;</b></div></div>
+  <div class="row" style="margin-top:10px"><span>Tweelin &middot; Oct</span><span>109.0 / 133 h</span></div>
+  <div class="row" style="margin-top:4px"><span>R&amp;D</span><span>18.4 h</span></div>
+  </div>
+  <hr><div class="item">Open PineStem</div><hr><div class="row fb-sm"><span>Last updated 09:40</span><span style="color:#99c1f1;font-weight:700;opacity:1">Retry now</span></div>
+</div></div><p class="caption">Grey label, last numbers kept but dimmed, and a banner row with the reason and last fetch time. The clock reads 14:10, the data is from 09:40, so Thu still shows 0.0. No notifications while offline; Retry now forces a fetch.</p></div>
+
+  <h3 class="fb-h">B7 &middot; KDE Plasma 6: tray icon, tooltip, click and right-click</h3><div class="fb-g3"><div><h4 style="font-weight:700;margin:0 0 6px;font-size:.95rem">Hover tooltip</h4><div class="fb-kde"><div class="fb-ktip"><svg class="tray-ic fb-ring-i" viewBox="0 0 32 32" width="28" height="28" style="width:28px;height:28px"><circle cx="16" cy="16" r="13" fill="none" stroke="#0000002a" stroke-width="4"/><circle cx="16" cy="16" r="13" fill="none" stroke="#2ea043" stroke-width="4" stroke-dasharray="57.8 81.7" stroke-linecap="round" transform="rotate(-90 16 16)"/><text x="16" y="20.0" text-anchor="middle" font-size="11" font-weight="800" fill="#232629" font-family="Noto Sans,Cantarell,sans-serif">30</text></svg><div><b>Pace &mdash; Week &middot; On track</b><br>30.1 / 42.5 h &middot; needs 8.0 h/day<br>Tweelin Oct 112.5 / 133 h (&minus;6.5)</div></div><div class="fb-kpanel"><div class="fb-kl"><span class="fb-kicon k1"></span><span class="fb-kicon k2"></span><span class="fb-kicon k3"></span></div><div class="fb-kr"><span>&#8963;</span><svg class="tray-ic fb-ring-i" viewBox="0 0 32 32" width="26" height="26" style="width:26px;height:26px"><circle cx="16" cy="16" r="13" fill="none" stroke="#0000002a" stroke-width="4"/><circle cx="16" cy="16" r="13" fill="none" stroke="#2ea043" stroke-width="4" stroke-dasharray="57.8 81.7" stroke-linecap="round" transform="rotate(-90 16 16)"/><text x="16" y="20.0" text-anchor="middle" font-size="11" font-weight="800" fill="#232629" font-family="Noto Sans,Cantarell,sans-serif">30</text></svg><span class="fb-kclk">14:10<br>29/10/2026</span></div></div></div><p class="caption">Hover the ring: a Breeze tooltip with the verdict, hours and the Tweelin month gap. Panel is Plasma 6 floating style.</p></div><div><h4 style="font-weight:700;margin:0 0 6px;font-size:.95rem">Left-click: mini widget window</h4><div class="fb-kde"><div class="fb-kwin"><div class="fb-kwt"><span>Pace</span><span style="opacity:.6">&#215;</span></div><div class="fb-kwb"><div class="mini"><div class="fb-mini-row"><b>Week</b><span class="chip ok">on track</span></div><div style="margin:6px 0 2px"><div class="bar"><i class="fill-ok" style="width:66.9%"></i><b style="left:91.1%"></b><b style="left:94.4%"></b></div></div><div class="fb-mini-sub"><span>30.1 / 42.5</span><span>8.0/day</span></div><div class="fb-mini-row" style="margin-top:8px"><b>Tweelin</b><span class="chip warn">&minus;6.5 h</span></div><div class="bar" style="margin:6px 0 2px"><i class="fill-warn" style="width:84.6%"></i></div><div class="fb-mini-sub"><span>112.5 / 133</span><span>10.3/day</span></div></div></div></div><div class="fb-kpanel"><div class="fb-kl"><span class="fb-kicon k1"></span><span class="fb-kicon k2"></span><span class="fb-kicon k3"></span></div><div class="fb-kr"><span>&#8963;</span><svg class="tray-ic fb-ring-i" viewBox="0 0 32 32" width="26" height="26" style="width:26px;height:26px"><circle cx="16" cy="16" r="13" fill="none" stroke="#0000002a" stroke-width="4"/><circle cx="16" cy="16" r="13" fill="none" stroke="#2ea043" stroke-width="4" stroke-dasharray="57.8 81.7" stroke-linecap="round" transform="rotate(-90 16 16)"/><text x="16" y="20.0" text-anchor="middle" font-size="11" font-weight="800" fill="#232629" font-family="Noto Sans,Cantarell,sans-serif">30</text></svg><span class="fb-kclk">14:10<br>29/10/2026</span></div></div></div><p class="caption">A StatusNotifierItem tray icon cannot show app-drawn popups; it only gets Activate (left-click) and a DBusMenu. Left-click opens the Pace mini widget as a normal window, placed by the compositor, not anchored to the icon on Wayland.</p></div><div><h4 style="font-weight:700;margin:0 0 6px;font-size:.95rem">Right-click: native menu</h4><div class="fb-kde"><div class="fb-kmenu"><div class="mi">Week &middot; On track &mdash; 30.1 / 42.5 h</div><div class="mi">Needs 8.0 h/day &middot; 4.5 h left today</div><div class="mi">Tweelin &minus;6.5 h (Oct)</div><hr><div class="mi">Open dashboard</div><div class="mi">Open PineStem</div><div class="mi">Snooze nudges today</div><div class="mi">Refresh</div><div class="mi">Quit</div></div><div class="fb-kpanel"><div class="fb-kl"><span class="fb-kicon k1"></span><span class="fb-kicon k2"></span><span class="fb-kicon k3"></span></div><div class="fb-kr"><span>&#8963;</span><svg class="tray-ic fb-ring-i" viewBox="0 0 32 32" width="26" height="26" style="width:26px;height:26px"><circle cx="16" cy="16" r="13" fill="none" stroke="#0000002a" stroke-width="4"/><circle cx="16" cy="16" r="13" fill="none" stroke="#2ea043" stroke-width="4" stroke-dasharray="57.8 81.7" stroke-linecap="round" transform="rotate(-90 16 16)"/><text x="16" y="20.0" text-anchor="middle" font-size="11" font-weight="800" fill="#232629" font-family="Noto Sans,Cantarell,sans-serif">30</text></svg><span class="fb-kclk">14:10<br>29/10/2026</span></div></div></div><p class="caption">The DBusMenu: plain text rows drawn by Plasma in Breeze light. The first three rows are information only; the rest are actions.</p></div></div>
+  <div><h4 style="font-weight:700;margin:0 0 8px;font-size:.95rem">Tray icon states</h4><div class="fb-trays"><div><svg class="tray-ic fb-ring-i" viewBox="0 0 32 32" width="32" height="32" style="width:32px;height:32px"><circle cx="16" cy="16" r="13" fill="none" stroke="#0000002a" stroke-width="4"/><circle cx="16" cy="16" r="13" fill="none" stroke="#2ea043" stroke-width="4" stroke-dasharray="57.8 81.7" stroke-linecap="round" transform="rotate(-90 16 16)"/><text x="16" y="20.3" text-anchor="middle" font-size="12" font-weight="800" fill="#232629" font-family="Noto Sans,Cantarell,sans-serif">30</text></svg><b>ON TRACK</b>green ring, 30 h</div><div><svg class="tray-ic fb-ring-i" viewBox="0 0 32 32" width="32" height="32" style="width:32px;height:32px"><circle cx="16" cy="16" r="13" fill="none" stroke="#0000002a" stroke-width="4"/><circle cx="16" cy="16" r="13" fill="none" stroke="#d4a72c" stroke-width="4" stroke-dasharray="69.2 81.7" stroke-linecap="round" transform="rotate(-90 16 16)"/><text x="16" y="20.3" text-anchor="middle" font-size="12" font-weight="800" fill="#232629" font-family="Noto Sans,Cantarell,sans-serif">36</text></svg><b>TIGHT</b>amber ring, 36 h</div><div><svg class="tray-ic fb-ring-i" viewBox="0 0 32 32" width="32" height="32" style="width:32px;height:32px"><circle cx="16" cy="16" r="13" fill="none" stroke="#0000002a" stroke-width="4"/><circle cx="16" cy="16" r="13" fill="none" stroke="#e5534b" stroke-width="4" stroke-dasharray="51.9 81.7" stroke-linecap="round" transform="rotate(-90 16 16)"/><text x="16" y="20.3" text-anchor="middle" font-size="12" font-weight="800" fill="#232629" font-family="Noto Sans,Cantarell,sans-serif">27</text></svg><b>PAY RISK</b>red ring, 27 h</div><div><svg class="tray-ic fb-ring-i" viewBox="0 0 32 32" width="32" height="32" style="width:32px;height:32px"><circle cx="16" cy="16" r="13" fill="none" stroke="#0000002a" stroke-width="4"/><circle cx="16" cy="16" r="13" fill="none" stroke="#3584e4" stroke-width="4" stroke-dasharray="65.3 81.7" stroke-linecap="round" transform="rotate(-90 16 16)"/><text x="16" y="20.3" text-anchor="middle" font-size="12" font-weight="800" fill="#232629" font-family="Noto Sans,Cantarell,sans-serif">34</text></svg><b>BILL</b>blue ring, 34 h</div><div><svg class="tray-ic fb-ring-i" viewBox="0 0 32 32" width="32" height="32" style="width:32px;height:32px"><circle cx="16" cy="16" r="13" fill="none" stroke="#0000002a" stroke-width="4"/><circle cx="16" cy="16" r="13" fill="none" stroke="#8d9399" stroke-width="4" stroke-dasharray="51.1 81.7" stroke-linecap="round" transform="rotate(-90 16 16)"/><text x="16" y="20.3" text-anchor="middle" font-size="12" font-weight="800" fill="#232629" font-family="Noto Sans,Cantarell,sans-serif">26</text></svg><b>OFFLINE</b>grey ring, last value</div></div><p class="caption">Plasma trays do not reliably show text beside an icon, so the number is drawn inside the ring: colour is the verdict, digits are this week&rsquo;s hours. Ring fill is hours over target.</p></div>
+
+
+  <h3 class="fb-h">B8 &middot; COSMIC: tray icon, click and right-click</h3><div class="fb-g2"><div><h4 style="font-weight:700;margin:0 0 6px;font-size:.95rem">Left-click: mini widget window</h4><div class="fb-cos"><div class="fb-ctop"><div class="fb-cl"><span class="fb-cws"><i class="on"></i><i></i><i></i></span><span class="fb-capp">Applications</span></div>
+  <span>Thu 29 Oct &nbsp;14:10</span>
+  <div class="fb-cr"><span class="fb-capplet"><svg class="tray-ic fb-ring-i" viewBox="0 0 32 32" width="20" height="20" style="width:20px;height:20px"><circle cx="16" cy="16" r="13" fill="none" stroke="#ffffff33" stroke-width="4"/><circle cx="16" cy="16" r="13" fill="none" stroke="#57e389" stroke-width="4" stroke-dasharray="57.8 81.7" stroke-linecap="round" transform="rotate(-90 16 16)"/><text x="16" y="20.0" text-anchor="middle" font-size="11" font-weight="800" fill="#fff" font-family="Noto Sans,Cantarell,sans-serif">30</text></svg></span><span class="fb-capplet">&#9835; &nbsp;&#9711;</span></div></div><div class="fb-cwin"><div class="fb-cwt"><span>Pace</span><span style="opacity:.6">&#215;</span></div><div class="fb-cwb"><div class="mini fb-mini-d" style="width:100%"><div class="fb-mini-row"><b>Week</b><span class="chip ok">on track</span></div><div style="margin:6px 0 2px"><div class="bar"><i class="fill-ok" style="width:66.9%"></i><b style="left:91.1%"></b><b style="left:94.4%"></b></div></div><div class="fb-mini-sub"><span>30.1 / 42.5</span><span>8.0/day</span></div><div class="fb-mini-row" style="margin-top:8px"><b>Tweelin</b><span class="chip warn">&minus;6.5 h</span></div><div class="bar" style="margin:6px 0 2px"><i class="fill-warn" style="width:84.6%"></i></div><div class="fb-mini-sub"><span>112.5 / 133</span><span>10.3/day</span></div></div></div></div></div><p class="caption">The tray icon only gets Activate. Left-click opens the Pace mini widget as a normal window, placed by the compositor, not anchored to the icon on Wayland. The COSMIC applet API has not been verified for click events, so this needs a VM check before release.</p></div><div><h4 style="font-weight:700;margin:0 0 6px;font-size:.95rem">Right-click: native menu</h4><div class="fb-cos"><div class="fb-ctop"><div class="fb-cl"><span class="fb-cws"><i class="on"></i><i></i><i></i></span><span class="fb-capp">Applications</span></div>
+  <span>Thu 29 Oct &nbsp;14:10</span>
+  <div class="fb-cr"><span class="fb-capplet"><svg class="tray-ic fb-ring-i" viewBox="0 0 32 32" width="20" height="20" style="width:20px;height:20px"><circle cx="16" cy="16" r="13" fill="none" stroke="#ffffff33" stroke-width="4"/><circle cx="16" cy="16" r="13" fill="none" stroke="#57e389" stroke-width="4" stroke-dasharray="57.8 81.7" stroke-linecap="round" transform="rotate(-90 16 16)"/><text x="16" y="20.0" text-anchor="middle" font-size="11" font-weight="800" fill="#fff" font-family="Noto Sans,Cantarell,sans-serif">30</text></svg></span><span class="fb-capplet">&#9835; &nbsp;&#9711;</span></div></div><div class="fb-cmenu"><div class="mi">Week &middot; On track &mdash; 30.1 / 42.5 h</div><div class="mi">Needs 8.0 h/day &middot; 4.5 h left today</div><div class="mi">Tweelin &minus;6.5 h (Oct)</div><div class="sep"></div><div class="mi">Open dashboard</div><div class="mi">Open PineStem</div><div class="mi">Snooze nudges today</div><div class="mi">Refresh</div><div class="mi">Quit</div></div></div><p class="caption">The DBusMenu: plain text rows in the dark COSMIC menu style. The first three rows are information only.</p></div></div>
+
+  <h3 class="fb-h">B9 &middot; XFCE and Cinnamon: tray icon and classic menu</h3><div class="fb-pair"><div class="fb-xde"><div class="fb-xpanel"><div class="fb-xl"><span>Applications</span><span style="opacity:.6">Files</span><span style="opacity:.6">Terminal</span></div>
+  <div class="fb-xr"><span class="fb-xhl"><svg class="tray-ic fb-ring-i" viewBox="0 0 32 32" width="22" height="22" style="width:22px;height:22px"><circle cx="16" cy="16" r="13" fill="none" stroke="#ffffff40" stroke-width="4"/><circle cx="16" cy="16" r="13" fill="none" stroke="#57e389" stroke-width="4" stroke-dasharray="57.8 81.7" stroke-linecap="round" transform="rotate(-90 16 16)"/><text x="16" y="20.0" text-anchor="middle" font-size="11" font-weight="800" fill="#fff" font-family="Noto Sans,Cantarell,sans-serif">30</text></svg></span><span>&#9835;</span><span>Thu 29 Oct 14:10</span></div></div><div class="fb-gtkm">
+  <div class="mi hd"><span>Week &middot; On track</span></div>
+  <div class="mi dis"><span>30.1 / 42.5 h &middot; needs 8.0 h/day</span></div>
+  <div class="mi dis"><span>Tweelin Oct 112.5 / 133 h (&minus;6.5)</span></div>
+  <div class="mi dis"><span>R&amp;D 18.4 h</span></div>
+  <hr>
+  <div class="mi hov"><span>Open dashboard</span></div>
+  <div class="mi"><span>Open PineStem</span></div>
+  <div class="mi"><span>Show mini widget</span></div>
+  <div class="mi"><span>Snooze nudges today</span></div>
+  <div class="mi"><span>Refresh now</span><span style="opacity:.55">Updated 4 min ago</span></div>
+  <hr>
+  <div class="mi"><span>Quit Pace</span></div>
+</div></div><p class="caption">Right-click the ring for a classic GTK menu. Label text is not supported in these trays, so the number is drawn in the icon. Disabled rows show the numbers, the rest are actions. Left-click opens the mini widget, as on KDE and COSMIC.</p></div>
+
+  <h3 class="fb-h">B10 &middot; Mini widget</h3><div class="fb-split"><div class="fb-mini-grid"><div class="fb-mini-bg"><div class="mini"><div class="fb-mini-row"><b>Week</b><span class="chip ok">on track</span></div><div style="margin:6px 0 2px"><div class="bar"><i class="fill-ok" style="width:66.9%"></i><b style="left:91.1%"></b><b style="left:94.4%"></b></div></div><div class="fb-mini-sub"><span>30.1 / 42.5</span><span>8.0/day</span></div><div class="fb-mini-row" style="margin-top:8px"><b>Tweelin</b><span class="chip warn">&minus;6.5 h</span></div><div class="bar" style="margin:6px 0 2px"><i class="fill-warn" style="width:84.6%"></i></div><div class="fb-mini-sub"><span>112.5 / 133</span><span>10.3/day</span></div></div><span class="fb-lb">ON TRACK &middot; light</span></div><div class="fb-mini-bg fb-bgd"><div class="mini fb-mini-d"><div class="fb-mini-row"><b>Week</b><span class="chip ok">on track</span></div><div style="margin:6px 0 2px"><div class="bar"><i class="fill-ok" style="width:66.9%"></i><b style="left:91.1%"></b><b style="left:94.4%"></b></div></div><div class="fb-mini-sub"><span>30.1 / 42.5</span><span>8.0/day</span></div><div class="fb-mini-row" style="margin-top:8px"><b>Tweelin</b><span class="chip warn">&minus;6.5 h</span></div><div class="bar" style="margin:6px 0 2px"><i class="fill-warn" style="width:84.6%"></i></div><div class="fb-mini-sub"><span>112.5 / 133</span><span>10.3/day</span></div></div><span class="fb-lb">ON TRACK &middot; dark</span></div><div class="fb-mini-bg"><div class="mini"><div class="fb-mini-row"><b>Week</b><span class="chip hot">pay risk</span></div><div style="margin:6px 0 2px"><div class="bar"><i class="fill-hot" style="width:60.2%"></i><b style="left:91.1%"></b><b style="left:94.4%"></b></div></div><div class="fb-mini-sub"><span>27.1 / 42.5</span><span>13.9 today</span></div><div style="color:#c62828;font-weight:700;margin-top:4px">Wed 6.0 h &middot; Thu 3.5 h</div></div><span class="fb-lb">PAY RISK</span></div><div class="fb-mini-bg"><div class="mini"><div class="fb-mini-row"><b>Week</b><span class="chip fb-cb">bill</span></div><div style="margin:6px 0 2px"><div class="bar"><i class="fb-fillb" style="width:75.6%"></i><b style="left:91.1%"></b><b style="left:94.4%"></b></div></div><div class="fb-mini-sub"><span>34.0 / 42.5</span><span>Fri not billed yet</span></div></div><span class="fb-lb">BILL</span></div><div class="fb-mini-bg"><div class="mini"><div class="fb-mini-row"><b>Week</b><span class="chip mute">offline</span></div><div style="margin:6px 0 2px"><div class="bar"><i class="fb-fillg" style="width:59.1%"></i><b style="left:91.1%"></b><b style="left:94.4%"></b></div></div><div class="fb-mini-sub"><span>26.6 / 42.5</span><span>as of 09:40</span></div><div style="opacity:.72;margin-top:4px">Can&#8217;t reach DhiHRMS &middot; retrying</div></div><span class="fb-lb">OFFLINE</span></div></div><p class="caption">230 px, frameless, draggable. It remembers its position. On GNOME and KDE Wayland it cannot stay on top (there is no protocol for it), so it behaves like a sticky note on the desktop; a KDE window rule can pin it above other windows. On X11, Windows and macOS it can float on top.</p></div>
+
+  <h3 class="fb-h">B11 &middot; Panel label format options</h3><div class="fb-g3"><div class="fb-fmt"><b style="font-size:.85rem">Hours / target</b><div class="fb-slice"><span class="fb-clk">Thu <span class="fb-cd">29 Oct </span>14:10</span><span class="fb-lab fb-green "><i class="fb-d"></i><span>30.1 / 42.5 h</span></span><span class="fb-sys"><i></i><i></i><i></i></span></div><p class="caption">Default. Week hours over the week target.</p></div><div class="fb-fmt"><b style="font-size:.85rem">Percent</b><div class="fb-slice"><span class="fb-clk">Thu <span class="fb-cd">29 Oct </span>14:10</span><span class="fb-lab fb-green "><i class="fb-d"></i><span>71%</span></span><span class="fb-sys"><i></i><i></i><i></i></span></div><p class="caption">30.1 of 42.5 h. Shortest text with a progress feel.</p></div><div class="fb-fmt"><b style="font-size:.85rem">Gap on a project</b><div class="fb-slice"><span class="fb-clk">Thu <span class="fb-cd">29 Oct </span>14:10</span><span class="fb-lab fb-amber "><i class="fb-d"></i><span>&minus;6.5 h TWE</span></span><span class="fb-sys"><i></i><i></i><i></i></span></div><p class="caption">Tweelin month gap. Shown in the BEHIND amber.</p></div><div class="fb-fmt"><b style="font-size:.85rem">Left today</b><div class="fb-slice"><span class="fb-clk">Thu <span class="fb-cd">29 Oct </span>14:10</span><span class="fb-lab fb-green "><i class="fb-d"></i><span>4.5 h left today</span></span><span class="fb-sys"><i></i><i></i><i></i></span></div><p class="caption">What still has to be billed before you log off today.</p></div><div class="fb-fmt"><b style="font-size:.85rem">Icon only</b><div class="fb-slice"><span class="fb-clk">Thu <span class="fb-cd">29 Oct </span>14:10</span><span class="fb-lab"><svg class="tray-ic fb-ring-i" viewBox="0 0 32 32" width="18" height="18" style="width:18px;height:18px"><circle cx="16" cy="16" r="13" fill="none" stroke="#ffffff40" stroke-width="4"/><circle cx="16" cy="16" r="13" fill="none" stroke="#57e389" stroke-width="4" stroke-dasharray="57.8 81.7" stroke-linecap="round" transform="rotate(-90 16 16)"/><text x="16" y="20.0" text-anchor="middle" font-size="11" font-weight="800" fill="#fff" font-family="Noto Sans,Cantarell,sans-serif"></text></svg></span><span class="fb-sys"><i></i><i></i><i></i></span></div><p class="caption">Ring only, no text. For narrow panels. The tooltip and dropdown carry the numbers.</p></div></div><p class="fb-note">Chosen in Settings, Display, Panel text. All five show on the GNOME top bar; trays that cannot show text (KDE, COSMIC, XFCE) always use the drawn number.</p>
+
+  <h3 class="fb-h">B12 &middot; Monday morning, last week still open</h3><div class="fb-pair"><div class="gn-desk fb-wrap "><div class="gn-top"><span class="fb-act fb-ws"><i class="on"></i><i></i><i></i></span><span>Mon <span class="fb-cd">2 Nov </span>09:20</span><span class="fb-r"><span class="fb-lab fb-green fb-open "><i class="fb-d"></i><span>0.0 / 42.5 h</span></span><span class="fb-sys"><i></i><i></i><i></i></span></span></div><div class="gn-menu">
+  <div class="fb-warnrow fb-bannerrow"><span class="fb-gc" style="--c:#78aeed">&#9432;</span><span><b>Last week: Fri 30 Oct not billed yet</b><br>Bill by 12:00 today or it counts as 34.0 h &rarr; LOP 1 day.<a class="fb-btn" style="margin-top:8px">Open PineStem</a></span></div>
+  <div class="row"><b class="fb-t">Week &middot; On track</b><span class="fb-gc" style="--c:#57e389">needs 8.5 h/day</span></div>
+  <div class="fb-sm" style="margin-top:2px">0.0 / 42.5 h &middot; week just started</div>
+  <div class="bar" style="margin:8px 0 2px"><i class="fill-ok" style="width:0%"></i><b style="left:91.1%"></b><b style="left:94.4%"></b><b style="left:calc(100% - 2px)"></b></div>
+  <div class="fb-leg"><span>LOP 41</span><span>target 42.5</span><span>expected 45</span></div>
+  <div class="fb-days"><div class="t">Mon<b>0.0</b></div><div class="">Tue<b>&ndash;</b></div><div class="">Wed<b>&ndash;</b></div><div class="">Thu<b>&ndash;</b></div><div class="">Fri<b>&ndash;</b></div></div>
+  <hr><div class="item">Open dashboard</div><div class="item">Open PineStem</div><div class="item">Snooze nudges today</div><hr><div class="row fb-sm"><span>Updated 1 min ago</span><span style="color:#99c1f1;font-weight:700;opacity:1">Refresh</span></div>
+</div></div><p class="caption">The Friday grace runs until Monday 12:00. Until then a blue banner sits above the new week and the top-bar dot still shows only this week&rsquo;s verdict. After 12:00 last week is final: if Fri is still unbilled it stays at 34.0 h and counts as LOP 1 day.</p></div>
+</section>

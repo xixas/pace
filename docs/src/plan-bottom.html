@@ -1,0 +1,88 @@
+</section>
+
+<section id="build" class="sec space-y-4">
+  <h2 class="text-2xl font-bold">Build order</h2>
+  <p class="max-w-3xl">The app builds in eight slices, each with a check that proves it done. Slice 1 runs in hrms-api's own repo through its own session, and only on your go typed there. Slices 2–3 can start before it lands by running against recorded fixtures (saved API responses).</p>
+  <div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
+    <table class="table table-sm">
+      <thead><tr><th>#</th><th>Slice</th><th>Done when</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td><b>hrms-api</b>: <span class="mono">my-hours</span> + <span class="mono">my-days</span>, a 60 s cache and <span class="mono">?fresh=1</span> (TDD, in its repo)</td><td>For a fixed week, my-hours totals equal the HR billing report's totals. my-days returns 0.5 for a half-day and excludes restricted holidays the person didn't opt into.</td></tr>
+        <tr><td>2</td><td><b>Pace engine</b> (pure Python), ported from <span class="mono">sim/week-rules-v4.js</span></td><td>pytest replays all 18 simulated weeks and matches <span class="mono">week-rules-v4-out.txt</span> cell for cell on verdicts and need/day (display rounds minutes half-up, so 267 min shows 4.5 h where the sim prints 4.4), plus a Monday 09:00 poll while last Friday is still "not billed yet". Fable judges any new timeline before a rule changes.</td></tr>
+        <tr><td>3</td><td><b>paced</b>: sign-in (PKCE, loopback), Secret Service token, poll, <span class="mono">status.json</span></td><td>On Nobara the number reaches <span class="mono">status.json</span> within 300 ms of login. <span class="mono">ps</span> shows paced under 35 MB.</td></tr>
+        <tr><td>4</td><td><b>GNOME extension</b> <span class="mono">pace@osmosys</span> (forked from claude-usage)</td><td>All 13 label states render from fixture <span class="mono">status.json</span> files. Screenshots are reviewed by Fable.</td></tr>
+        <tr><td>5</td><td><b>Tray icon</b> (StatusNotifierItem) + notifications</td><td>A KDE Plasma 6 VM and a COSMIC VM both show the icon. Left-click opens the mini widget, and right-click shows the text menu (a tray icon gets nothing richer).</td></tr>
+        <tr><td>6</td><td><b>GTK4 UI</b>: sign-in, targets, dashboard, settings, mini widget</td><td>Every mock in sections A–C is rendered on Broadway (GTK's HTML5 display backend, used for headless screenshots) and looked at, and Fable reviews the PNGs.</td></tr>
+        <tr><td>7</td><td><b>Packaging</b>: <span class="mono">.rpm</span>, <span class="mono">.deb</span>, AppImage from GitHub Actions</td><td>A clean Fedora 44 and an Ubuntu 24.04 container install it and start paced.</td></tr>
+        <tr><td>8</td><td><b>Pilot</b>: Vikas + 2 colleagues for two weeks</td><td>Pace's verdict matched HR's LOP email every week. No colleague turned nudges off.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="text-sm max-w-3xl">Later, not in v1: the <span class="mono">my-targets</span> endpoint plus the hrms-portal targets page (mock C9), Flathub, and Windows/macOS (with this toolkit that means new UI screens; the engine and <span class="mono">status.json</span> contract carry over).</p>
+</section>
+
+<section id="risks" class="sec space-y-4">
+  <h2 class="text-2xl font-bold">Risks: Fable's pre-mortem, and the answer to each</h2>
+  <div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
+    <table class="table table-sm">
+      <thead><tr><th>If Pace fails, it will be because…</th><th>What this draft does</th></tr></thead>
+      <tbody>
+        <tr><td><b>Numbers look stale</b> right after billing, so people stop trusting them</td><td>The server cache drops to 60 s. Refresh sends <span class="mono">?fresh=1</span> (limited to once a minute). Every surface shows "as of".</td></tr>
+        <tr><td><b>Green while HR docks pay</b></td><td>Pay comes first in the rules, the half-day target rises to 41&nbsp;h, and the last day always shows "pay needs N h". Simulation plus 4 Fable rounds; the pilot compares against the real LOP email.</td></tr>
+        <tr><td><b>"Always visible" fails on stock GNOME</b>: no tray, and extensions break with each Shell release</td><td>The package ships the panel extension. Setup enables it, which needs one re-login (A10), and a version-skew banner covers upgrades (C10). Without the extension, notifications and the mini widget still work.</td></tr>
+        <tr><td><b>No keyring</b> on COSMIC or minimal KDE, so a sign-in prompt every morning</td><td>A one-time choice (A9): a file in <span class="mono">~/.local/share/pace</span> with mode 600, like <span class="mono">rclone.conf</span>, or sign in each login.</td></tr>
+        <tr><td><b>It feels like surveillance</b>: nightly nudges and locked targets</td><td>Every nudge has its own switch plus "Snooze today", the data stays on the person's machine, and leads set targets but never see the app.</td></tr>
+        <tr><td><b>Wayland can't keep the widget on top</b></td><td>The widget behaves like a sticky note. KDE users can pin it with a window rule. The panel label is the always-visible surface.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="decide" class="sec space-y-4">
+  <h2 class="text-2xl font-bold">Decisions</h2>
+  <p class="max-w-3xl">Each row has a recommendation. <b>Row 3 (who owns targets) and row 9 (fixed vs prorated) are the ones I'd defend least.</b> Pick per row and press <b>Queue answers</b>, or say "go" in the terminal.</p>
+  <form data-lavish-question="decisions" class="space-y-3" onsubmit="event.preventDefault(); const fd=new FormData(event.currentTarget); const a={}; for (const [k,v] of fd.entries()) a[k]=v; window.lavish && window.lavish.queuePrompt('Pace design decisions: '+JSON.stringify(a), {tag:'choice', text:'Decisions: '+Object.values(a).join(' · '), element:event.currentTarget, data:a});">
+    <div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
+      <table class="table table-sm">
+        <thead><tr><th>#</th><th>Decision</th><th>Choice</th><th>The fact that decides it</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Where the app gets hours</td>
+            <td><label class="flex gap-2"><input type="radio" class="radio radio-xs" name="data" value="hrms-api endpoints" checked> hrms-api endpoints (rec.)</label><label class="flex gap-2"><input type="radio" class="radio radio-xs" name="data" value="direct PineStem login"> App logs in to PineStem</label></td>
+            <td>hrms-api already holds org PineStem credentials and the user mapping (<span class="mono">pinestem.client.ts:185</span>).</td></tr>
+          <tr><td>2</td><td>Entra registration</td>
+            <td><label class="flex gap-2"><input type="radio" class="radio radio-xs" name="entra" value="new Pace registration" checked> New "Pace" public client (rec.)</label><label class="flex gap-2"><input type="radio" class="radio radio-xs" name="entra" value="reuse dhihrms-mcp"> Reuse dhihrms-mcp's</label></td>
+            <td>hrms-api checks only <span class="mono">aud</span> + <span class="mono">access_as_user</span> (<span class="mono">microsoft-sso.service.ts:64-71</span>). A separate app gets its own consent screen and its own revocation.</td></tr>
+          <tr><td>3</td><td>Who owns targets</td>
+            <td><label class="flex gap-2"><input type="radio" class="radio radio-xs" name="targets" value="lead preset file now, hrms-portal later" checked> Lead's preset file now, portal later (rec.)</label><label class="flex gap-2"><input type="radio" class="radio radio-xs" name="targets" value="local only"> Each person sets their own</label></td>
+            <td>Targets differ per person and that's the lead's call. A preset file needs no hrms-portal work for v1.</td></tr>
+          <tr><td>4</td><td>Toolkit</td>
+            <td><label class="flex gap-2"><input type="radio" class="radio radio-xs" name="stack" value="Python GTK4 libadwaita (Lifeboat stack)" checked> Python + GTK4/libadwaita, as Lifeboat (rec.)</label><label class="flex gap-2"><input type="radio" class="radio radio-xs" name="stack" value="Tauri v2"> Tauri v2</label></td>
+            <td>The first users are all on Linux. Tauri only imitates GTK in a webview (80–150 MB per window). Windows/macOS later means about 6 new screens; the engine carries over.</td></tr>
+          <tr><td>5</td><td>Repo home</td>
+            <td><label class="flex gap-2"><input type="radio" class="radio radio-xs" name="repo" value="personal GitHub private" checked> Personal GitHub (xixas), private ✓</label><label class="flex gap-2"><input type="radio" class="radio radio-xs" name="repo" value="Osmosys GitLab"> Osmosys GitLab</label></td>
+            <td>Pace is Vikas's personal project (decided 2026-10-28). Private for now; packages shared by hand when needed.</td></tr>
+          <tr><td>6</td><td>Packages</td>
+            <td><label class="flex gap-2"><input type="radio" class="radio radio-xs" name="dist" value="GitHub private release rpm+deb+AppImage" checked> .rpm + .deb + AppImage on private GitHub releases ✓</label><label class="flex gap-2"><input type="radio" class="radio radio-xs" name="dist" value="COPR"> Public COPR, as Lifeboat</label></td>
+            <td>The repo is private, so its releases are too: Vikas shares the files by hand for now. No COPR, no extensions.gnome.org. The GNOME extension ships inside the package.</td></tr>
+          <tr><td>7</td><td>Week rules</td>
+            <td><label class="flex gap-2"><input type="radio" class="radio radio-xs" name="rules" value="v4" checked> Rules v4, pay first (rec.)</label><label class="flex gap-2"><input type="radio" class="radio radio-xs" name="rules" value="draft 1"> Draft 1 bands</label></td>
+            <td>Draft 1 showed AHEAD at 40&nbsp;h on a Friday that cost a day's pay. v4 came back clean from Fable on round 4.</td></tr>
+          <tr><td>8</td><td>No keyring available</td>
+            <td><label class="flex gap-2"><input type="radio" class="radio radio-xs" name="keyring" value="file mode 600 fallback" checked> Offer a file with mode 600 (rec.)</label><label class="flex gap-2"><input type="radio" class="radio radio-xs" name="keyring" value="keyring required"> Require a keyring</label></td>
+            <td>Without it, COSMIC and minimal KDE users sign in every morning. It's the same trade-off <span class="mono">rclone.conf</span> already makes.</td></tr>
+          <tr><td>9</td><td>Project targets during leave</td>
+            <td><label class="flex gap-2"><input type="radio" class="radio radio-xs" name="prorate" value="lead picks per target, default fixed" checked> Lead picks per target, default fixed (rec.)</label><label class="flex gap-2"><input type="radio" class="radio radio-xs" name="prorate" value="always prorate"> Always prorate</label></td>
+            <td>Prorating Tweelin 140 → 133 hides a real 7&nbsp;h gap if 140 is the client's number.</td></tr>
+          <tr><td>10</td><td>Name</td>
+            <td><input class="input input-xs w-36" name="name" value="Pace"></td>
+            <td>Short and verb-like, and it reads well in a tray tooltip.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <button class="btn btn-primary btn-sm" type="submit">Queue answers</button>
+  </form>
+  <div class="alert alert-soft alert-warning text-sm"><span><b>Before slice 1:</b> type your go in the <span class="mono">hrms-api</span> session's own window (a relayed go doesn't count). Ask its owner the two open questions: do Saturday hours count, and is a half-day 0.5 in <span class="mono">leave.total</span>? An Azure admin creates the "Pace" Entra registration.</span></div>
+</section>
+
+<footer class="text-xs opacity-60 pb-10">Sources: <span class="mono">hrms-api</span> <span class="mono">dev</span> v7.34.0 (<span class="mono">src/modules/billing-report/lop-calculator.ts</span>, <span class="mono">billing-report.xlsx.ts:78-79,303-331</span>), <span class="mono">lifeboat.spec</span> (GTK4 + libadwaita ≥ 1.5), simulation <span class="mono">/home/vikas/work/osmosys/pace/sim/week-rules-v4.js</span>, Fable pre-mortem and 4 timeline review rounds on 2026-10-28. Draft 1 is kept at <span class="mono">design-draft1.html</span>. Unverified until a VM test: COSMIC tray click behaviour.</footer>
+</main>

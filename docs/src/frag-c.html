@@ -1,0 +1,471 @@
+<style>
+  .fc-grid { display: grid; gap: 1.5rem; align-items: start; grid-template-columns: minmax(0,1fr); }
+  @media (min-width: 768px) { .fc-g2 { grid-template-columns: repeat(2,minmax(0,1fr)); } .fc-g3 { grid-template-columns: repeat(3,minmax(0,1fr)); } .fc-g12 { grid-template-columns: minmax(0,1.25fr) minmax(0,1fr); } }
+  .fc-sec h3 { font-size: 1.15rem; font-weight: 700; padding-top: .75rem; }
+  .fc-sec { display: grid; gap: .75rem; min-width: 0; grid-template-columns: minmax(0,1fr); }
+  .fc-mock { min-width: 0; }
+
+  /* libadwaita 1.6 window */
+  .fc-win { background: #fafafa; color: #000c; border: 1px solid #0000001f; border-radius: 12px; overflow: hidden; font-family: Cantarell, "Noto Sans", "Inter", system-ui, sans-serif; font-size: 14px; box-shadow: 0 8px 28px #0000002e, 0 0 0 1px #0000000a; }
+  .fc-hb { height: 46px; background: #ebebeb; border-bottom: 1px solid #00000018; display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 0 6px; font-weight: 700; }
+  .fc-hb > * { flex: none; } .fc-hb > .fc-mid { flex: 0 1 auto; min-width: 0; }
+  .fc-hb .fc-title { text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fc-ib { min-width: 34px; height: 34px; border-radius: 8px; display: inline-grid; place-items: center; background: #0000000d; font-size: 14px; font-weight: 600; padding: 0 9px; white-space: nowrap; }
+  .fc-ib.fc-flat { background: none; }
+  .fc-vs { display: inline-flex; gap: 2px; background: #0000000f; padding: 2px; border-radius: 9px; font-size: 13px; font-weight: 700; }
+  .fc-vs span { padding: 5px 12px; border-radius: 7px; white-space: nowrap; } .fc-vs .on { background: #fff; box-shadow: 0 1px 2px #0003, 0 0 0 1px #0000000f; }
+  .fc-body { padding: 14px; display: grid; gap: 12px; }
+  .fc-body.fc-pad0 { padding: 0; }
+  .fc-grp-t { font-weight: 700; font-size: 13px; margin: 2px 4px 6px; } .fc-grp-d { font-size: 12px; opacity: .65; margin: -3px 4px 6px; }
+  .fc-card, .fc-list { background: #fff; border-radius: 12px; box-shadow: 0 0 0 1px #00000014; }
+  .fc-card { padding: 12px 14px; } .fc-list { overflow: hidden; }
+  .fc-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 14px; min-height: 50px; border-top: 1px solid #00000014; font-size: 14px; }
+  .fc-row:first-child { border-top: 0; }
+  .fc-row small { display: block; font-size: 12px; opacity: .62; font-weight: 400; margin-top: 1px; }
+  .fc-row > :first-child { min-width: 0; } .fc-row > :last-child { flex: none; max-width: 55%; text-align: right; }
+  .fc-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 7px 14px; border-radius: 8px; background: #0000000f; font-weight: 700; font-size: 13px; white-space: nowrap; }
+  .fc-btn.fc-s { background: #3584e4; color: #fff; } .fc-btn.fc-d { background: #c01c28; color: #fff; } .fc-btn.fc-dt { color: #c01c28; } .fc-btn.fc-pill { border-radius: 99px; padding: 8px 22px; }
+  .fc-combo { display: inline-flex; gap: 8px; align-items: center; background: #0000000f; border-radius: 8px; padding: 5px 10px; font-size: 13px; }
+  .fc-sw { width: 40px; height: 24px; border-radius: 99px; background: #3584e4; position: relative; display: inline-block; vertical-align: middle; }
+  .fc-sw::after { content: ""; position: absolute; width: 20px; height: 20px; border-radius: 50%; background: #fff; top: 2px; right: 2px; box-shadow: 0 1px 2px #0004; }
+  .fc-sw.off { background: #0000002e; } .fc-sw.off::after { right: auto; left: 2px; }
+  .fc-time { font-variant-numeric: tabular-nums; background: #0000000f; border-radius: 8px; padding: 4px 9px; font-size: 13px; margin-right: 10px; }
+  .fc-ok { color: #26a269; } .fc-wn { color: #a2690a; } .fc-ht { color: #c01c28; } .fc-bl { color: #1c71d8; }
+  .fc-pill-v { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: .03em; padding: 2px 9px; border-radius: 99px; }
+  .fc-pv-ok { background: #26a26922; color: #1a7a4c; } .fc-pv-hot { background: #e01b2422; color: #c01c28; } .fc-pv-wn { background: #e5a50a33; color: #8a5a00; } .fc-pv-mute { background: #0000000f; color: #555; }
+  .fc-bar { height: 8px; border-radius: 99px; background: #0000001a; position: relative; }
+  .fc-bar > i { position: absolute; inset: 0 auto 0 0; border-radius: 99px; } .fc-bar > b { position: absolute; top: -3px; width: 2px; height: 14px; background: #000; opacity: .5; }
+  .fc-bar > em { position: absolute; top: 14px; font-size: 9px; font-style: normal; opacity: .6; transform: translateX(-50%); white-space: nowrap; }
+  .fc-f-ok { background: #26a269; } .fc-f-wn { background: #e5a50a; } .fc-f-hot { background: #e01b24; }
+  .fc-tiles { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
+  .fc-tile { background: #fff; border-radius: 12px; box-shadow: 0 0 0 1px #00000014; padding: 10px 12px; min-width: 0; }
+  .fc-tile .fc-k { font-size: 11px; opacity: .65; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; }
+  .fc-tile .fc-v { font-size: 24px; font-weight: 800; line-height: 1.15; } .fc-tile .fc-v small { font-size: 12px; font-weight: 600; opacity: .7; }
+  .fc-tile .fc-s2 { font-size: 11.5px; opacity: .7; margin-top: 2px; }
+  .fc-days { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 6px; }
+  .fc-dc { background: #fff; border-radius: 10px; box-shadow: 0 0 0 1px #00000018; padding: 7px 4px; text-align: center; font-size: 11px; min-width: 0; position: relative; overflow: hidden; }
+  .fc-dc .fc-dn { font-weight: 700; opacity: .65; } .fc-dc .fc-dh { font-size: 17px; font-weight: 800; margin: 1px 0; } .fc-dc .fc-sp { font-size: 10px; opacity: .72; line-height: 1.35; }
+  .fc-dc.fc-today { box-shadow: 0 0 0 2px #3584e4; } .fc-dc.fc-fut { opacity: .55; }
+  .fc-dc.fc-half { background: linear-gradient(135deg,#fff 0 50%, #e9e9e9 50% 100%); background-image: linear-gradient(135deg,#fff 0 48%, transparent 48%), repeating-linear-gradient(45deg,#f0f0f0,#f0f0f0 5px,#e2e2e2 5px,#e2e2e2 10px); }
+  .fc-dc .fc-tag { display: inline-block; font-size: 9.5px; font-weight: 800; background: #e5a50a33; color: #7a4f00; border-radius: 99px; padding: 0 6px; margin-top: 2px; }
+  .fc-pc { background: #fff; border-radius: 12px; box-shadow: 0 0 0 1px #00000014; padding: 12px 14px; display: grid; gap: 6px; min-width: 0; }
+  .fc-kv { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; } .fc-kv span:last-child { text-align: right; }
+  .fc-tbl { width: 100%; border-collapse: collapse; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+  .fc-tbl th { text-align: left; font-size: 11px; opacity: .65; font-weight: 700; padding: 6px 8px; } .fc-tbl td { padding: 7px 8px; border-top: 1px solid #00000014; }
+  .fc-tbl .n { text-align: right; } .fc-tbl tr.cur td { background: #3584e414; font-weight: 700; }
+  .fc-note { font-size: 12px; opacity: .7; }
+  /* calendar */
+  .fc-cal { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); gap: 4px; }
+  .fc-cal .fc-wd { font-size: 11px; font-weight: 700; opacity: .6; text-align: center; padding: 2px 0; }
+  .fc-cc { border-radius: 8px; min-height: 52px; padding: 4px 2px; text-align: center; font-size: 10px; background: #00000008; min-width: 0; line-height: 1.25; overflow: hidden; }
+  .fc-cc b { display: block; font-size: 14px; } .fc-cc u { text-decoration: none; display: block; opacity: .7; font-size: 10px; text-align: left; padding-left: 3px; }
+  .fc-cc.we { background: transparent; opacity: .45; } .fc-cc.e { background: transparent; }
+  .fc-cc.g { background: #26a26926; } .fc-cc.a { background: #e5a50a38; } .fc-cc.r { background: #e01b2426; } .fc-cc.n { background: #0000000c; }
+  .fc-cc.hol { background: repeating-linear-gradient(45deg,#f1f1f1,#f1f1f1 5px,#e4e4e4 5px,#e4e4e4 10px); } .fc-cc.lv { background: #3584e41f; }
+  .fc-cc.t { box-shadow: inset 0 0 0 2px #3584e4; }
+  .fc-leg { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: 11.5px; } .fc-leg i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -2px; margin-right: 4px; box-shadow: 0 0 0 1px #0000001a; }
+  /* status page */
+  .fc-sp-page { text-align: center; padding: 26px 18px 30px; display: grid; gap: 8px; justify-items: center; }
+  .fc-sp-page .fc-ic { width: 84px; height: 84px; border-radius: 50%; background: #0000000d; display: grid; place-items: center; opacity: .75; }
+  .fc-sp-page h4 { font-size: 22px; font-weight: 800; line-height: 1.2; } .fc-sp-page p { font-size: 13px; opacity: .7; max-width: 24em; }
+  /* notifications */
+  .fc-nd { background: linear-gradient(135deg,#3d3846,#241f31); border-radius: 14px; padding: 14px 10px; display: grid; gap: 8px; justify-items: center; overflow: hidden; }
+  .fc-grid > *, .fc-nd > *, .fc-kde-wrap > *, .fc-nb > *, .fc-nh > div { min-width: 0; } .fc-nd, .fc-nb, .fc-kde-wrap { grid-template-columns: minmax(0,1fr); } .fc-nb .fc-nt, .fc-nb .fc-nx { overflow-wrap: anywhere; }
+  .fc-nl { font-size: 11px; color: #ffffffaa; font-family: Cantarell, system-ui, sans-serif; justify-self: start; padding-left: 4px; }
+  .fc-nb { background: #1e1e1e; color: #fff; border-radius: 18px; width: 400px; max-width: 100%; padding: 12px 14px; font-family: Cantarell, "Noto Sans", system-ui, sans-serif; font-size: 14px; box-shadow: 0 8px 26px #0009, 0 0 0 1px #ffffff1a; display: grid; gap: 8px; }
+  .fc-nb .fc-nh { display: flex; gap: 10px; align-items: flex-start; } .fc-nb .fc-ni { width: 32px; height: 32px; border-radius: 9px; flex: none; display: grid; place-items: center; background: #1c71d8; }
+  .fc-nb .fc-nt { font-weight: 700; } .fc-nb .fc-nx { font-size: 13.5px; opacity: .85; } .fc-nb .fc-nm { font-size: 11px; opacity: .55; margin-left: auto; flex: none; }
+  .fc-nb .fc-na { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px; }
+  .fc-nb .fc-na span { text-align: center; padding: 7px 4px; border-radius: 10px; background: #ffffff1f; font-weight: 700; font-size: 13px; }
+  .fc-nb.fc-warnic .fc-ni { background: #e5a50a; } .fc-nb.fc-hotic .fc-ni { background: #e01b24; } .fc-nb.fc-okic .fc-ni { background: #26a269; } .fc-nb.fc-muteic .fc-ni { background: #5e5c64; }
+  .fc-kde { background: #fcfcfc; color: #232629; border: 1px solid #bdc3c7; border-radius: 6px; width: 400px; max-width: 100%; font-family: "Noto Sans", system-ui, sans-serif; font-size: 13px; box-shadow: 0 6px 20px #0006; overflow: hidden; }
+  .fc-kde .fc-kh { display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: #eff0f1; border-bottom: 1px solid #dadcdd; font-size: 12px; } .fc-kde .fc-kh span:last-child { margin-left: auto; opacity: .6; }
+  .fc-kde .fc-kb { display: flex; gap: 10px; padding: 10px; } .fc-kde .fc-ki { width: 48px; height: 48px; border-radius: 8px; background: #3daee9; display: grid; place-items: center; flex: none; }
+  .fc-kde .fc-ka { display: flex; gap: 6px; padding: 0 10px 10px 68px; flex-wrap: wrap; } .fc-kde .fc-ka span { border: 1px solid #bdc3c7; background: #eff0f1; border-radius: 4px; padding: 3px 12px; font-size: 12px; }
+  /* json */
+  .fc-json { background: #1e1e1e; color: #d4d4d4; font: 12px/1.55 ui-monospace, "JetBrains Mono", monospace; border-radius: 10px; padding: 10px 12px; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .fc-json .k { color: #9cdcfe; } .fc-json .s { color: #ce9178; } .fc-json .m { color: #b5cea8; }
+  /* generic web admin */
+  .fc-web { background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 10px; overflow: hidden; font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 13px; color: #111827; }
+  .fc-web .fc-wtop { background: #fff; border-bottom: 1px solid #e5e7eb; padding: 10px 14px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; } .fc-web .fc-wtop b { color: #2563eb; }
+  .fc-web .fc-wtop span.l { color: #6b7280; } .fc-web .fc-wtop span.on { color: #2563eb; font-weight: 600; }
+  .fc-web .fc-wb { padding: 14px; display: grid; gap: 12px; } .fc-web .fc-wc { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; min-width: 0; }
+  .fc-web table { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 12px; } .fc-web th { text-align: left; color: #6b7280; font-weight: 600; padding: 6px 4px; border-bottom: 1px solid #e5e7eb; } .fc-web td { padding: 8px 4px; border-bottom: 1px solid #f3f4f6; }
+  .fc-web .fc-wbtn { display: inline-block; background: #2563eb; color: #fff; border-radius: 6px; padding: 6px 12px; font-weight: 600; font-size: 12px; } .fc-web .fc-wbtn.o { background: #fff; color: #2563eb; border: 1px solid #2563eb; padding: 3px 8px; }
+  .fc-web .fc-tag { font-size: 10px; background: #dbeafe; color: #1d4ed8; border-radius: 99px; padding: 1px 8px; font-weight: 600; }
+  .fc-web .fc-in { border: 1px solid #d1d5db; border-radius: 6px; padding: 4px 6px; background: #fff; }
+  .fc-ribbon { position: absolute; }
+  .fc-ws { display: inline-flex; align-items: center; gap: 4px; background: #ffffff26; border-radius: 99px; padding: 4px 9px; } .fc-ws i { display: block; width: 6px; height: 6px; border-radius: 99px; background: #ffffff80; } .fc-ws i.on { width: 18px; background: #fff; }
+  .fc-dimbg { background: linear-gradient(#0000004d,#0000004d), #dcdce0; padding: 18px 14px; border-radius: 12px; } .fc-pd { border-radius: 18px; box-shadow: 0 10px 30px #0006; max-width: 100%; }
+  .fc-banner { background: #3584e4; color: #fff; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 8px 12px; font-size: 13.5px; font-weight: 600; min-height: 46px; flex-wrap: wrap; text-align: center; }
+  .fc-banner .fc-bb { background: #ffffff2e; border-radius: 8px; padding: 5px 14px; font-weight: 700; }
+  .fc-toast { background: #333; color: #fff; border-radius: 99px; padding: 8px 8px 8px 16px; display: inline-flex; gap: 14px; align-items: center; font-size: 13px; max-width: 100%; } .fc-toast b { color: #99c1f1; padding: 0 8px; }
+  .fc-gm { background: #2e2e32; color: #fff; border-radius: 14px; width: 340px; max-width: 100%; padding: 14px; font-size: 13px; font-family: Cantarell, "Noto Sans", system-ui, sans-serif; box-shadow: 0 10px 30px #0008; display: grid; gap: 6px; }
+  .fc-gm .r { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; } .fc-gm hr { border: 0; border-top: 1px solid #ffffff1f; margin: 4px 0; } .fc-gm .it { padding: 6px 8px; border-radius: 8px; }
+  .fc-gm .fc-bar { background: #ffffff22; } .fc-gm .fc-bar > b { background: #fff; }
+  .fc-gm .snz { background: #3584e433; border-radius: 8px; padding: 7px 8px; display: flex; justify-content: space-between; gap: 8px; } .fc-gm .snz b { color: #99c1f1; }
+  .fc-ul { font-size: 13px; display: grid; gap: 4px; padding-left: 0; list-style: none; } .fc-ul li { display: flex; gap: 8px; } .fc-ul li > span:first-child { flex: none; width: 1.2em; }
+  @media (max-width: 520px) { .fc-hb .fc-lbl { display: none; } .fc-vs span { padding: 5px 8px; } .fc-days { gap: 4px; } .fc-dc .fc-dh { font-size: 15px; } .fc-row > :last-child { max-width: 60%; } .fc-body { padding: 10px; } }
+</style>
+
+<!-- ============ C1 ============ -->
+<section class="fc-sec" id="fc-c1">
+  <h3>C1 · Dashboard · Week</h3>
+  <div class="fc-grid fc-g12">
+    <div class="fc-mock">
+      <div class="fc-win">
+        <div class="fc-hb"><span class="fc-ib">⟳<span class="fc-lbl">&nbsp;4 min ago</span></span><span class="fc-vs fc-mid"><span class="on">Week</span><span>Month</span><span>Calendar</span></span><span class="fc-ib fc-flat">☰</span></div>
+        <div class="fc-body">
+          <div class="fc-tiles">
+            <div class="fc-tile"><div class="fc-k">This week</div><div class="fc-v">30.1 <small>h</small></div><div class="fc-s2"><span class="fc-pill-v fc-pv-ok">ON TRACK</span> need 8.0/day</div></div>
+            <div class="fc-tile"><div class="fc-k">Average / working day</div><div class="fc-v">8.87 <small>h</small></div><div class="fc-s2">3 finished days · 26.6 h</div></div>
+            <div class="fc-tile"><div class="fc-k">Pay line</div><div class="fc-v">41 <small>h</small></div><div class="fc-s2">10.9 h to go · 0 LOP days</div></div>
+            <div class="fc-tile"><div class="fc-k">Projected Friday</div><div class="fc-v">44.6 <small>h</small></div><div class="fc-s2">at the 9.0 h/day expected pace</div></div>
+          </div>
+          <div class="fc-card">
+            <div class="fc-kv" style="font-weight:700;margin-bottom:6px"><span>Week of 26 Oct</span><span class="fc-ok">30.1 / 42.5 h</span></div>
+            <div class="fc-bar" style="margin-bottom:10px"><i class="fc-f-ok" style="width:66.9%"></i><b style="left:91.1%"></b><b style="left:94.4%"></b><b style="left:99.7%"></b></div>
+            <div class="fc-note">Ticks: pay line 41 · target 42.5 · expected 45</div>
+          </div>
+          <div class="fc-days">
+            <div class="fc-dc"><div class="fc-dn">Mon</div><div class="fc-dh">9.2</div><div class="fc-sp">TWE 7.7<br>RES 1.5</div></div>
+            <div class="fc-dc"><div class="fc-dn">Tue</div><div class="fc-dh">8.4</div><div class="fc-sp">TWE 7.0<br>RES 1.4</div></div>
+            <div class="fc-dc"><div class="fc-dn">Wed</div><div class="fc-dh">9.0</div><div class="fc-sp">TWE 7.6<br>RES 1.4</div></div>
+            <div class="fc-dc fc-today"><div class="fc-dn" style="color:#1c71d8;opacity:1">Thu · today</div><div class="fc-dh">3.5</div><div class="fc-sp">TWE 3.5<br>4.5 left</div></div>
+            <div class="fc-dc fc-fut"><div class="fc-dn">Fri</div><div class="fc-dh">–</div><div class="fc-sp">needs<br>8.0</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="fc-note" style="font-size:.8rem;opacity:1;color:#57606a">Opens from the tray / panel "Open dashboard", or at login if enabled. Verdict, need/day and the three bar ticks come from the same core as the panel label. The refresh button re-pulls from hrms-api (otherwise every 15 min); clicking a day card opens that day's PineStem entries in the browser.</p>
+  </div>
+</section>
+
+<!-- ============ C2 ============ -->
+<section class="fc-sec" id="fc-c2">
+  <h3>C2 · Dashboard · Week with a half-day leave</h3>
+  <div class="fc-grid fc-g12">
+    <div class="fc-mock">
+      <div class="fc-win">
+        <div class="fc-hb"><span class="fc-ib">⟳<span class="fc-lbl">&nbsp;4 min ago</span></span><span class="fc-vs fc-mid"><span class="on">Week</span><span>Month</span><span>Calendar</span></span><span class="fc-ib fc-flat">☰</span></div>
+        <div class="fc-body">
+          <div class="fc-tiles">
+            <div class="fc-tile"><div class="fc-k">This week</div><div class="fc-v fc-ht">27.1 <small>h</small></div><div class="fc-s2"><span class="fc-pill-v fc-pv-hot">PAY RISK</span> pay needs 13.9 h</div></div>
+            <div class="fc-tile"><div class="fc-k">Target</div><div class="fc-v">41 <small>h</small></div><div class="fc-s2">half-day leave Thu (d = 4.5)</div></div>
+            <div class="fc-tile"><div class="fc-k">Average / working day</div><div class="fc-v">7.87 <small>h</small></div><div class="fc-s2">3 finished days · 23.6 h</div></div>
+            <div class="fc-tile"><div class="fc-k">Pay line</div><div class="fc-v fc-ht">41 <small>h</small></div><div class="fc-s2">13.9 h to go · LOP risk 1 day</div></div>
+          </div>
+          <div class="fc-card">
+            <div class="fc-kv" style="font-weight:700;margin-bottom:6px"><span>Week of 26 Oct</span><span class="fc-ht">27.1 / 41 h</span></div>
+            <div class="fc-bar" style="margin-bottom:6px"><i class="fc-f-hot" style="width:66%"></i><b style="left:100%"></b></div>
+            <div class="fc-note">HR still needs 41 h for zero loss of pay with a half-day leave, so the target is 41 h, not 38.25. Thu +1.75 h, Fri 10.5 h at most = 12.25 h: the line is out of reach. Short days (under 8.25 h): <span class="fc-wn">Mon 8.2 h</span> · <span class="fc-wn">Tue 7.4 h</span> · <span class="fc-wn">Wed 8.0 h</span>.</div>
+          </div>
+          <div class="fc-days">
+            <div class="fc-dc"><div class="fc-dn">Mon</div><div class="fc-dh fc-wn">8.2</div><div class="fc-sp">TWE 6.9<br>RES 1.3</div></div>
+            <div class="fc-dc"><div class="fc-dn">Tue</div><div class="fc-dh fc-wn">7.4</div><div class="fc-sp">TWE 6.2<br>RES 1.2</div></div>
+            <div class="fc-dc"><div class="fc-dn">Wed</div><div class="fc-dh fc-wn">8.0</div><div class="fc-sp">TWE 6.7<br>RES 1.3</div></div>
+            <div class="fc-dc fc-today fc-half"><div class="fc-dn" style="color:#1c71d8;opacity:1">Thu</div><div class="fc-dh">3.5</div><div class="fc-sp">TWE 3.5</div><span class="fc-tag">½ leave</span></div>
+            <div class="fc-dc fc-fut"><div class="fc-dn">Fri</div><div class="fc-dh">–</div><div class="fc-sp">full<br>day</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="fc-note" style="font-size:.8rem;opacity:1;color:#57606a">A half-day leave from DhiHRMS (Thu, d = 4.5) turns the Thursday card half-striped with a "½ leave" tag. This mock uses different hours than the running example so the PAY RISK rule can show. Pay risk fires because even Thu +1.75 h and Fri at 10.5 h cannot reach 41 h.</p>
+  </div>
+</section>
+
+<!-- ============ C3 ============ -->
+<section class="fc-sec" id="fc-c3">
+  <h3>C3 · Dashboard · Month</h3>
+  <div class="fc-grid fc-g12">
+    <div class="fc-mock">
+      <div class="fc-win">
+        <div class="fc-hb"><span class="fc-ib">⟳<span class="fc-lbl">&nbsp;4 min ago</span></span><span class="fc-vs fc-mid"><span>Week</span><span class="on">Month</span><span>Calendar</span></span><span class="fc-ib fc-flat">☰</span></div>
+        <div class="fc-body">
+          <div class="fc-pc">
+            <div class="fc-kv"><b>Tweelin <span class="mono" style="font-size:11px;opacity:.6">TWE</span></b><span class="fc-pill-v fc-pv-wn">BEHIND 6.5 h</span></div>
+            <div class="fc-kv"><span style="font-size:22px;font-weight:800">112.5 <span style="font-size:13px;opacity:.65">/ 133 h</span></span><span class="fc-note">140 prorated · lead's choice</span></div>
+            <div class="fc-bar" style="margin:4px 0 2px"><i class="fc-f-wn" style="width:84.6%"></i><b style="left:89.5%"></b></div>
+            <div class="fc-kv fc-note"><span>needs 10.3 h/day · 2 working days left</span><span>expected by now 119 h</span></div>
+            <svg viewBox="0 0 320 124" role="img" aria-label="Cumulative Tweelin hours, actual vs expected" style="width:100%;margin-top:4px">
+              <g stroke="#0000001a" stroke-width="1"><line x1="28" y1="10" x2="312" y2="10"/><line x1="28" y1="41" x2="312" y2="41"/><line x1="28" y1="73" x2="312" y2="73"/><line x1="28" y1="105" x2="312" y2="105"/></g>
+              <g font-size="9" fill="#666"><text x="2" y="13">133</text><text x="6" y="44">90</text><text x="6" y="76">45</text><text x="14" y="108">0</text><text x="28" y="118">1 Oct</text><text x="276" y="118">30 Oct</text></g>
+              <polyline points="28,105 298,10" fill="none" stroke="#888" stroke-width="1.5" stroke-dasharray="4 3"/>
+              <polyline points="28,105 42,100 99,80 170,62 227,43 276,25" fill="none" stroke="#e5a50a" stroke-width="2.4" stroke-linejoin="round"/>
+              <circle cx="276" cy="25" r="3.5" fill="#e5a50a"/>
+              <g font-size="9"><text x="150" y="30" fill="#777">expected: 7 h per working day</text><text x="150" y="80" fill="#a2690a">actual 112.5 h</text></g>
+            </svg>
+          </div>
+          <div class="fc-pc">
+            <div class="fc-kv"><b>R&amp;D <span class="mono" style="font-size:11px;opacity:.6">RES</span></b><span class="fc-pill-v fc-pv-mute">no target</span></div>
+            <div class="fc-kv"><span style="font-size:22px;font-weight:800">18.4 <span style="font-size:13px;opacity:.65">h</span></span><span class="fc-note">tracked only · billable</span></div>
+          </div>
+          <div>
+            <div class="fc-grp-t">October, week by week</div>
+            <div class="fc-list" style="padding:0 2px">
+              <table class="fc-tbl">
+                <thead><tr><th>Week</th><th class="n">Days</th><th class="n">TWE</th><th class="n">RES</th><th class="n">Total*</th></tr></thead>
+                <tbody>
+                  <tr><td>1–2 Oct</td><td class="n">1</td><td class="n">7.6</td><td class="n">0.6</td><td class="n">8.9</td></tr>
+                  <tr><td>5–9 Oct</td><td class="n">4</td><td class="n">28.0</td><td class="n">4.2</td><td class="n">35.2</td></tr>
+                  <tr><td>12–16</td><td class="n">5</td><td class="n">25.2</td><td class="n">5.0</td><td class="n">44.1</td></tr>
+                  <tr><td>19–23</td><td class="n">4</td><td class="n">25.9</td><td class="n">4.3</td><td class="n">35.0</td></tr>
+                  <tr class="cur"><td>26–30</td><td class="n">5</td><td class="n">25.8</td><td class="n">4.3</td><td class="n">30.1</td></tr>
+                  <tr><td><b>Month</b></td><td class="n"><b>19</b></td><td class="n"><b>112.5</b></td><td class="n"><b>18.4</b></td><td class="n"><b>153.3</b></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="fc-note" style="margin:4px 4px 0">*Total includes non-billable (used for pay). Targets use billable only. Holidays 2 and 20 Oct, leave 9 Oct.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="fc-note" style="font-size:.8rem;opacity:1;color:#57606a">One card per project. Tweelin shows the prorated target (133 h, from the lead's 140 h with one leave day) and the hard gap; the sparkline compares actual cumulative hours with the expected 7 h per working day. R&amp;D has no target so it is just a running total. Clicking a table row jumps to that week in the Week tab.</p>
+  </div>
+</section>
+
+<!-- ============ C4 ============ -->
+<section class="fc-sec" id="fc-c4">
+  <h3>C4 · Dashboard · Calendar</h3>
+  <div class="fc-grid fc-g12">
+    <div class="fc-mock">
+      <div class="fc-win">
+        <div class="fc-hb"><span class="fc-ib">⟳<span class="fc-lbl">&nbsp;4 min ago</span></span><span class="fc-vs fc-mid"><span>Week</span><span>Month</span><span class="on">Calendar</span></span><span class="fc-ib fc-flat">☰</span></div>
+        <div class="fc-body">
+          <div class="fc-kv" style="align-items:center"><span class="fc-ib fc-flat">‹</span><b style="font-size:16px">October 2026</b><span class="fc-ib fc-flat">›</span></div>
+          <div class="fc-cal">
+            <div class="fc-wd">Mon</div><div class="fc-wd">Tue</div><div class="fc-wd">Wed</div><div class="fc-wd">Thu</div><div class="fc-wd">Fri</div><div class="fc-wd">Sat</div><div class="fc-wd">Sun</div>
+            <div class="fc-cc e"></div><div class="fc-cc e"></div><div class="fc-cc e"></div>
+            <div class="fc-cc g"><u>1</u><b>8.9</b></div><div class="fc-cc hol"><u>2</u>Holiday</div><div class="fc-cc we"><u>3</u></div><div class="fc-cc we"><u>4</u></div>
+            <div class="fc-cc g"><u>5</u><b>9.0</b></div><div class="fc-cc g"><u>6</u><b>8.8</b></div><div class="fc-cc g"><u>7</u><b>8.6</b></div><div class="fc-cc g"><u>8</u><b>8.8</b></div><div class="fc-cc lv"><u>9</u>Leave</div><div class="fc-cc we"><u>10</u></div><div class="fc-cc we"><u>11</u></div>
+            <div class="fc-cc g"><u>12</u><b>9.9</b></div><div class="fc-cc r"><u>13</u><b>6.6</b></div><div class="fc-cc g"><u>14</u><b>10.2</b></div><div class="fc-cc g"><u>15</u><b>9.4</b></div><div class="fc-cc a"><u>16</u><b>8.0</b></div><div class="fc-cc we"><u>17</u></div><div class="fc-cc we"><u>18</u></div>
+            <div class="fc-cc g"><u>19</u><b>9.5</b></div><div class="fc-cc hol"><u>20</u>Holiday</div><div class="fc-cc g"><u>21</u><b>8.7</b></div><div class="fc-cc g"><u>22</u><b>8.8</b></div><div class="fc-cc a"><u>23</u><b>8.0</b></div><div class="fc-cc we"><u>24</u></div><div class="fc-cc we"><u>25</u></div>
+            <div class="fc-cc g"><u>26</u><b>9.2</b></div><div class="fc-cc a"><u>27</u><b>8.4</b></div><div class="fc-cc g"><u>28</u><b>9.0</b></div><div class="fc-cc n t"><u>29</u><b>3.5</b></div><div class="fc-cc n"><u>30</u>–</div><div class="fc-cc we"><u>31</u></div>
+          </div>
+          <div class="fc-leg"><span><i style="background:#26a26940"></i>≥ 8.5 h</span><span><i style="background:#e5a50a55"></i>7.0–8.4 h</span><span><i style="background:#e01b2440"></i>&lt; 7.0 h</span><span><i style="background:#0000000c"></i>not billed yet</span><span><i style="background:repeating-linear-gradient(45deg,#f1f1f1,#f1f1f1 3px,#ddd 3px,#ddd 6px)"></i>holiday</span><span><i style="background:#3584e433"></i>leave</span><span><i style="box-shadow:inset 0 0 0 2px #3584e4"></i>today</span></div>
+          <div class="fc-note">Colour = total billed hours that day vs the 8.5 h daily minimum. Restricted holidays only appear here when you have opted in (none this month). Weekends are never counted.</div>
+        </div>
+      </div>
+    </div>
+    <p class="fc-note" style="font-size:.8rem;opacity:1;color:#57606a">Read-only heat map of the month. Hover a day for the project split; click opens that day's entries in PineStem. Holidays come from the 14 loaded for 2026 and leave from DhiHRMS (9 Oct).</p>
+  </div>
+</section>
+
+<!-- ============ C5 ============ -->
+<section class="fc-sec" id="fc-c5">
+  <h3>C5 · Empty states (AdwStatusPage)</h3>
+  <div class="fc-grid fc-g3">
+    <div class="fc-mock"><div class="fc-win"><div class="fc-hb"><span class="fc-ib">⟳<span class="fc-lbl">&nbsp;just now</span></span><span class="fc-title fc-mid">Pace</span><span class="fc-ib fc-flat">☰</span></div>
+      <div class="fc-banner">Last week: Fri 30 Oct not billed yet. Bill by 12:00 today. <span class="fc-bb">Open PineStem</span></div>
+      <div class="fc-sp-page"><div class="fc-ic"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><h4>Nothing billed yet this week</h4><p>It is Monday morning. Hours appear here as soon as you bill them in PineStem. Target for the week is 42.5 h.</p><span class="fc-btn fc-s fc-pill">Open PineStem</span></div></div>
+      <p class="fc-note" style="margin-top:6px">Monday morning, before any billing. The banner shows while Friday is still inside its grace period (closes Monday 12:00).</p></div>
+    <div class="fc-mock"><div class="fc-win"><div class="fc-hb"><span class="fc-ib">⟳<span class="fc-lbl">&nbsp;4 min ago</span></span><span class="fc-title fc-mid">Pace</span><span class="fc-ib fc-flat">☰</span></div>
+      <div class="fc-sp-page"><div class="fc-ic"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="1.6" stroke-linecap="round"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg></div><h4>Targets start from your joining date</h4><p>You joined on Thu 15 Oct, so earlier days are not counted. That first week had 2 working days (Thu, Fri), so its target is prorated to 2 days.</p><span class="fc-pill-v fc-pv-mute">Joined 15 Oct 2026</span></div></div>
+      <p class="fc-note" style="margin-top:6px">Mid-month joiner (HR join date from DhiHRMS).</p></div>
+    <div class="fc-mock"><div class="fc-win"><div class="fc-hb"><span class="fc-ib">⟳<span class="fc-lbl">&nbsp;4 min ago</span></span><span class="fc-title fc-mid">Pace</span><span class="fc-ib fc-flat">☰</span></div>
+      <div class="fc-sp-page"><div class="fc-ic"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="1.6" stroke-linecap="round"><path d="M3 20l9-15 9 15zM12 10v4"/><circle cx="12" cy="17" r=".5"/></svg></div><h4>Enjoy your leave</h4><p>The whole week is leave or holiday, so there is no target and nothing to bill. Nudges are paused.</p><span class="fc-pill-v fc-pv-mute">ON LEAVE · 26–30 Oct</span></div></div>
+      <p class="fc-note" style="margin-top:6px">Whole week on leave / holiday.</p></div>
+  </div>
+</section>
+
+<!-- ============ C6 ============ -->
+<section class="fc-sec" id="fc-c6">
+  <h3>C6 · Notifications</h3>
+  <p class="fc-note" style="font-size:.8rem;opacity:1;color:#57606a">Native desktop notifications at real size: GNOME banner look first, KDE Plasma last. "Open PineStem" opens the portal in the browser; "Snooze today" mutes all nudges until midnight (see C12). The Daily 20:00 one is skipped on leave days and holidays.</p>
+  <div class="fc-grid fc-g2">
+    <div class="fc-nd"><div class="fc-nl">Friday 16:00</div>
+      <div class="fc-nb fc-warnic"><div class="fc-nh"><div class="fc-ni">⏱</div><div><div class="fc-nt">Friday check: 4.9 h left to reach 42.5</div><div class="fc-nx">Bill your work before you log off.</div></div><span class="fc-nm">Pace · now</span></div><div class="fc-na"><span>Open PineStem</span><span>Snooze today</span></div></div></div>
+    <div class="fc-nd"><div class="fc-nl">Daily 20:00 (Thu, pay risk)</div>
+      <div class="fc-nb fc-hotic"><div class="fc-nh"><div class="fc-ni">!</div><div><div class="fc-nt">Pay at risk this week</div><div class="fc-nx">Thursday has 3.5 h. Reaching the 41 h line needs 10.9 h on Friday, more than 10.5. Bill the rest of Thursday now.</div></div><span class="fc-nm">Pace · now</span></div><div class="fc-na"><span>Open PineStem</span><span>Snooze today</span></div></div></div>
+    <div class="fc-nd"><div class="fc-nl">Pay risk</div>
+      <div class="fc-nb fc-hotic"><div class="fc-nh"><div class="fc-ni">!</div><div><div class="fc-nt">Pay at risk: 41 h is out of reach</div><div class="fc-nx">27.1 h by Fri 11:00 needs 13.9 h today, more than 10.5. Short days: Wed 6.0 h · Thu 3.5 h. Bill missing hours now.</div></div><span class="fc-nm">Pace · now</span></div><div class="fc-na"><span>Open PineStem</span><span>Snooze today</span></div></div></div>
+    <div class="fc-nd"><div class="fc-nl">Project behind</div>
+      <div class="fc-nb fc-warnic"><div class="fc-nh"><div class="fc-ni">↘</div><div><div class="fc-nt">Tweelin is 6.5 h behind for October</div><div class="fc-nx">112.5 of 133 h. 10.3 h/day needed on Thu–Fri.</div></div><span class="fc-nm">Pace · now</span></div><div class="fc-na"><span>Open PineStem</span><span>Snooze today</span></div></div></div>
+    <div class="fc-nd"><div class="fc-nl">Zero-hour day (from 12:00 next working day)</div>
+      <div class="fc-nb fc-warnic"><div class="fc-nh"><div class="fc-ni">0</div><div><div class="fc-nt">Wednesday has 0 h billed</div><div class="fc-nx">Forgot to bill? Add it before the week closes.</div></div><span class="fc-nm">Pace · 12:00</span></div><div class="fc-na"><span>Open PineStem</span><span>Snooze today</span></div></div></div>
+    <div class="fc-nd"><div class="fc-nl">Monday 12:30 summary</div>
+      <div class="fc-nb fc-okic"><div class="fc-nh"><div class="fc-ni">✓</div><div><div class="fc-nt">Last week 43.1 h ✓</div><div class="fc-nx">Above the 42.5 h target. Tweelin 112.5 / 133 h for October.</div></div><span class="fc-nm">Pace · 12:30</span></div><div class="fc-na"><span>Open dashboard</span><span>Dismiss</span></div></div></div>
+    <div class="fc-nd"><div class="fc-nl">Session expired</div>
+      <div class="fc-nb fc-muteic"><div class="fc-nh"><div class="fc-ni">🔑</div><div><div class="fc-nt">Sign in again</div><div class="fc-nx">Your Microsoft session has expired. Numbers are paused at 09:40.</div></div><span class="fc-nm">Pace · now</span></div><div class="fc-na"><span>Sign in</span><span>Later</span></div></div></div>
+    <div class="fc-kde-wrap" style="background:linear-gradient(160deg,#1d99f3,#0c4f8a);border-radius:14px;padding:14px 10px;display:grid;gap:8px;justify-items:center;overflow:hidden">
+      <div class="fc-nl" style="justify-self:start;padding-left:4px">KDE Plasma 6 · Friday 16:00</div>
+      <div class="fc-kde"><div class="fc-kh"><span>⏱</span><span>Pace</span><span>now ✕</span></div>
+        <div class="fc-kb"><div class="fc-ki"><svg width="30" height="30" viewBox="0 0 32 32"><circle cx="16" cy="16" r="12" fill="none" stroke="#ffffff66" stroke-width="4"/><circle cx="16" cy="16" r="12" fill="none" stroke="#fff" stroke-width="4" stroke-dasharray="60 76" transform="rotate(-90 16 16)"/></svg></div><div><b>Friday check: 4.9 h left to reach 42.5</b><div style="opacity:.8">Bill your work before you log off.</div></div></div>
+        <div class="fc-ka"><span>Open PineStem</span><span>Snooze today</span></div></div></div>
+  </div>
+</section>
+
+<!-- ============ C7 ============ -->
+<section class="fc-sec" id="fc-c7">
+  <h3>C7 · Settings (AdwPreferencesDialog)</h3>
+  <div class="fc-grid fc-g12">
+    <div class="fc-mock">
+      <div class="fc-dimbg"><div class="fc-win fc-pd">
+        <div class="fc-hb"><span class="fc-ib fc-flat">🔍</span><span class="fc-title fc-mid">Preferences</span><span class="fc-ib fc-flat">✕</span></div>
+        <div class="fc-body">
+          <div><div class="fc-grp-t">Notify me when</div><div class="fc-list">
+            <div class="fc-row"><span>Friday check<small>Hours left to reach the target</small></span><span><span class="fc-time">16:00</span><span class="fc-sw"></span></span></div>
+            <div class="fc-row"><span>Daily summary<small>Skipped on leave days and holidays</small></span><span><span class="fc-time">20:00</span><span class="fc-sw"></span></span></div>
+            <div class="fc-row"><span>Pay risk<small>When the loss-of-pay line gets out of reach</small></span><span><span class="fc-time">11:00</span><span class="fc-sw"></span></span></div>
+            <div class="fc-row"><span>Project behind<small>Monthly project targets, once a day</small></span><span><span class="fc-time">10:30</span><span class="fc-sw"></span></span></div>
+            <div class="fc-row"><span>Zero-hour day<small>A working day with nothing billed</small></span><span><span class="fc-time">12:00</span><span class="fc-sw"></span></span></div>
+            <div class="fc-row"><span>Monday summary<small>How last week ended, after Friday closes at 12:00</small></span><span><span class="fc-time">12:30</span><span class="fc-sw off"></span></span></div>
+            <div class="fc-row"><span>Session expired<small>Cannot be turned off</small></span><span><span class="fc-sw" style="opacity:.4"></span></span></div></div></div>
+          <div><div class="fc-grp-t">Display</div><div class="fc-list">
+            <div class="fc-row"><span>Panel text</span><span class="fc-combo">30.1 / 42.5 h&nbsp;▾</span></div>
+            <div class="fc-row"><span>Show mini widget at login</span><span class="fc-sw off"></span></div>
+            <div class="fc-row"><span>Refresh every</span><span class="fc-combo">15 min&nbsp;▾</span></div></div></div>
+          <div><div class="fc-grp-t">Startup</div><div class="fc-list"><div class="fc-row"><span>Start Pace at login<small>Adds an autostart entry</small></span><span class="fc-sw"></span></div></div></div>
+          <div><div class="fc-grp-t">Account</div><div class="fc-list">
+            <div class="fc-row"><span>Signed in as<small>Vikas K · PineStem ID 2370</small></span><span style="font-size:13px">vikas.k@osmosys.co</span></div>
+            <div class="fc-row"><span></span><span class="fc-btn fc-dt">Sign out</span></div></div></div>
+          <div><div class="fc-grp-t">About</div><div class="fc-list">
+            <div class="fc-row"><span>Version</span><span class="mono" style="font-size:13px">0.1.0</span></div>
+            <div class="fc-row"><span>Updates<small>Updates: install the newer package file you were sent</small></span><span class="fc-btn">Download</span></div></div></div>
+        </div>
+      </div></div>
+    </div>
+    <p class="fc-note" style="font-size:.8rem;opacity:1;color:#57606a">Each rule is one switch row; the time button opens a small time picker. Defaults match the nudge rules (Friday 16:00, daily 20:00, Monday 12:30). Preferences opens as a dialog over the main window (libadwaita 1.6 AdwPreferencesDialog: rounded, close button, no separate title bar). "Remove my Pace data" lives at the bottom of this dialog, see C11.</p>
+  </div>
+</section>
+
+<!-- ============ C8 ============ -->
+<section class="fc-sec" id="fc-c8">
+  <h3>C8 · Lead, phase 1: share targets</h3>
+  <div class="fc-grid fc-g2">
+    <div class="fc-mock">
+      <div class="fc-win">
+        <div class="fc-hb"><span class="fc-ib fc-flat">Cancel</span><span class="fc-title fc-mid">Share targets</span><span class="fc-ib" style="background:#3584e4;color:#fff">Export…</span></div>
+        <div class="fc-body">
+          <div class="fc-note">Make a preset file for your team. They import it in Preferences, and its values show as "set by lead".</div>
+          <div class="fc-list">
+            <div class="fc-row"><span>Project</span><span class="fc-combo">Tweelin · TWE&nbsp;▾</span></div>
+            <div class="fc-row"><span>Monthly target<small>billable hours</small></span><span class="fc-combo">140 h&nbsp;−&nbsp;+</span></div>
+            <div class="fc-row"><span>Prorate for leave and holidays<small>Yes: 140 becomes 133 h with one leave day</small></span><span class="fc-sw"></span></div>
+          </div>
+          <div style="text-align:center"><span class="fc-btn fc-s fc-pill">Export preset…</span></div>
+          <div class="fc-note" style="text-align:center">Saves <span class="mono">tweelin-oct.pace-targets.json</span></div>
+        </div>
+      </div>
+      <div class="fc-toast" style="margin-top:10px">Saved tweelin-oct.pace-targets.json <b>Show in folder</b></div>
+    </div>
+    <div class="fc-mock">
+      <div class="fc-grp-t">tweelin-oct.pace-targets.json</div>
+      <div class="fc-json"><span class="k">{</span>
+  <span class="k">"schema"</span>: <span class="s">"pace-targets/1"</span>,
+  <span class="k">"project"</span>: { <span class="k">"code"</span>: <span class="s">"TWE"</span>, <span class="k">"name"</span>: <span class="s">"Tweelin"</span> },
+  <span class="k">"monthlyTarget"</span>: <span class="m">140</span>,
+  <span class="k">"prorate"</span>: <span class="m">true</span>,
+  <span class="k">"dailyMinimum"</span>: <span class="m">8.5</span>,
+  <span class="k">"validFrom"</span>: <span class="s">"2026-10-01"</span>,
+  <span class="k">"sharedBy"</span>: <span class="s">"Vikas K"</span>
+<span class="k">}</span></div>
+      <p class="fc-note" style="margin-top:6px">Phase 1 has no server: the lead picks a project and a number, exports this file, and sends it over chat or email. Team members import it from Preferences.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ C9 ============ -->
+<section class="fc-sec" id="fc-c9">
+  <h3>C9 · Lead, phase 2 (later): hrms-portal "Pace targets"</h3>
+  <div class="fc-grid fc-g12">
+    <div class="fc-mock">
+      <div class="fc-web">
+        <div class="fc-wtop"><b>hrms-portal</b><span class="l">Team</span><span class="on">Pace targets</span><span class="l">Leave</span><span class="fc-tag" style="margin-left:auto">later</span></div>
+        <div class="fc-wb">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><b style="font-size:16px">Pace targets</b><span class="fc-wbtn">+ Add target</span></div>
+          <div class="fc-wc">
+            <table>
+              <colgroup><col style="width:23%"><col style="width:17%"><col style="width:19%"><col style="width:15%"><col style="width:12%"><col style="width:14%"></colgroup>
+              <thead><tr><th>Name</th><th>Project</th><th>Monthly</th><th>Prorate</th><th>Daily min</th><th></th></tr></thead>
+              <tbody>
+                <tr><td>Vikas K</td><td><span class="fc-tag">TWE</span></td><td>140 h</td><td>Yes</td><td>8.5</td><td><span class="fc-wbtn o">Edit</span></td></tr>
+                <tr><td>Aarav S</td><td><span class="fc-tag">TWE</span></td><td>140 h</td><td>Yes</td><td>8.5</td><td><span class="fc-wbtn o">Edit</span></td></tr>
+                <tr><td>Meera P</td><td><span class="fc-tag">TWE</span></td><td>120 h</td><td>No</td><td>8.5</td><td><span class="fc-wbtn o">Edit</span></td></tr>
+                <tr><td>Rohan D</td><td><span class="fc-tag">RES</span></td><td>–</td><td>–</td><td>8.5</td><td><span class="fc-wbtn o">Edit</span></td></tr>
+                <tr><td>Isha N</td><td><span class="fc-tag">TWE</span></td><td>140 h</td><td>Yes</td><td>8.5</td><td><span class="fc-wbtn o">Edit</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="fc-wc" style="display:grid;gap:8px">
+            <b>Edit · Meera P</b>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><span>Monthly</span><span class="fc-in">120</span><span>Prorate</span><span class="fc-in">No ▾</span></div>
+            <div><span class="fc-wbtn">Save</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="fc-note" style="font-size:.8rem;opacity:1;color:#57606a">Phase 2, later: once hrms-portal exposes targets, leads edit them here and every Pace client picks them up from hrms-api, replacing the JSON preset of C8. Styled as a generic web admin on purpose: this is not part of the Pace app.</p>
+  </div>
+</section>
+
+<!-- ============ C10 ============ -->
+<section class="fc-sec" id="fc-c10">
+  <h3>C10 · Upgrade skew: app and extension disagree</h3>
+  <div class="fc-grid fc-g2">
+    <div class="fc-mock">
+      <div class="fc-win">
+        <div class="fc-hb"><span class="fc-ib">⟳<span class="fc-lbl">&nbsp;4 min ago</span></span><span class="fc-vs fc-mid"><span class="on">Week</span><span>Month</span><span>Calendar</span></span><span class="fc-ib fc-flat">☰</span></div>
+        <div class="fc-banner">Log out and back in to load the new panel extension <span class="fc-bb">Log out now</span></div>
+        <div class="fc-body"><div class="fc-tiles">
+          <div class="fc-tile"><div class="fc-k">This week</div><div class="fc-v">30.1 <small>h</small></div><div class="fc-s2"><span class="fc-pill-v fc-pv-ok">ON TRACK</span> need 8.0/day</div></div>
+          <div class="fc-tile"><div class="fc-k">Pay line</div><div class="fc-v">41 <small>h</small></div><div class="fc-s2">10.9 h to go</div></div></div></div>
+      </div>
+      <p class="fc-note" style="margin-top:6px">The app is newer than the installed GNOME extension: <span class="mono">status.json</span> has schema 2, the extension reads schema 1. The extension ships inside the package, but GNOME only loads new extensions at login, so the fix is to log out and back in.</p>
+    </div>
+    <div class="fc-mock">
+      <div class="gn-desk" style="padding:0 10px 14px">
+        <div class="gn-top"><span class="fc-ws"><i class="on"></i><i></i><i></i></span><span>Thu 29 Oct 14:10</span><span class="gn-pill">⚠ Pace</span></div>
+        <div class="fc-gm" style="margin:8px 0 0 auto">
+          <div class="r"><b style="font-size:15px">Pace</b><span style="opacity:.6">schema mismatch</span></div>
+          <div class="it" style="background:#ffffff14"><b>Log out and back in to show numbers</b></div>
+          <hr><div class="it">Open dashboard</div><div class="it" style="opacity:.6">Open PineStem</div>
+        </div>
+      </div>
+      <p class="fc-note" style="margin-top:6px">The opposite skew (extension newer than app): the panel pill drops to "⚠ Pace" and the dropdown shows only the update prompt, never wrong numbers.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ C11 ============ -->
+<section class="fc-sec" id="fc-c11">
+  <h3>C11 · Uninstall: what goes and what stays</h3>
+  <div class="fc-grid fc-g2">
+    <div class="fc-mock">
+      <div class="fc-card" style="font-family:Cantarell,'Noto Sans',system-ui,sans-serif;display:grid;gap:10px">
+        <b>sudo dnf remove pace</b>
+        <div><div class="fc-grp-t" style="margin:0 0 4px">Removed by dnf remove</div>
+          <ul class="fc-ul"><li><span class="fc-ok">✓</span><span>the app, <span class="mono">/usr/bin/pace</span></span></li><li><span class="fc-ok">✓</span><span>GNOME extension, <span class="mono">/usr/share/gnome-shell/extensions/pace@osmosys</span> (it lives in /usr, so it goes with the package)</span></li><li><span class="fc-ok">✓</span><span>system autostart and <span class="mono">.desktop</span> files</span></li></ul></div>
+        <div><div class="fc-grp-t" style="margin:0 0 4px">Left behind (yours)</div>
+          <ul class="fc-ul"><li><span class="fc-wn">•</span><span>login token in the keyring (Secret Service, "Pace")</span></li><li><span class="fc-wn">•</span><span><span class="mono">~/.local/state/pace/status.json</span></span></li><li><span class="fc-wn">•</span><span><span class="mono">~/.config/pace</span> (targets, settings)</span></li><li><span class="fc-wn">•</span><span><span class="mono">~/.config/autostart/pace.desktop</span> if you enabled start at login</span></li></ul></div>
+        <div class="fc-note">Packages never delete files in your home directory. Run the button on the right first for a clean slate.</div>
+      </div>
+    </div>
+    <div class="fc-mock">
+      <div class="fc-dimbg"><div class="fc-win fc-pd">
+        <div class="fc-hb"><span class="fc-ib fc-flat">🔍</span><span class="fc-title fc-mid">Preferences</span><span class="fc-ib fc-flat">✕</span></div>
+        <div class="fc-body"><div><div class="fc-grp-t">Data</div><div class="fc-list">
+          <div class="fc-row"><span>Remove my Pace data<small>Deletes the keyring entry, status.json, ~/.config/pace and the autostart entry. Cannot be undone.</small></span><span class="fc-btn fc-d">Remove…</span></div></div></div></div>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ C12 ============ -->
+<section class="fc-sec" id="fc-c12">
+  <h3>C12 · Snoozed state</h3>
+  <div class="fc-grid fc-g12">
+    <div class="fc-mock">
+      <div class="gn-desk" style="padding:0 10px 14px">
+        <div class="gn-top"><span class="fc-ws"><i class="on"></i><i></i><i></i></span><span>Thu 29 Oct 14:10</span><span class="gn-pill"><span style="color:#57e389">●</span> 30.1 / 42.5 h</span></div>
+        <div class="fc-gm" style="margin:8px 0 0 auto">
+          <div class="r"><b style="font-size:15px">Week · On track</b><span style="color:#57e389">needs 8.0 h/day</span></div>
+          <div class="fc-bar"><i class="fc-f-ok" style="width:66.9%"></i><b style="left:91.1%"></b><b style="left:94.4%"></b></div>
+          <div class="snz"><span>Nudges snoozed until midnight</span><b>Undo</b></div>
+          <hr><div class="it">Open dashboard</div><div class="it">Open PineStem</div>
+        </div>
+      </div>
+    </div>
+    <p class="fc-note" style="font-size:.8rem;opacity:1;color:#57606a">"Snooze today" on any notification (C6) mutes every nudge until 00:00 local time. The menu row says so, and Undo restores them. Numbers and colours in the panel keep updating; only notifications are held back.</p>
+  </div>
+</section>

@@ -1,0 +1,1432 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pace design</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daisyui@5.5.19/daisyui.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daisyui@5.5.19/themes.css">
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.2.4/dist/index.global.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :where(.grid, .flex) > * { min-width: 0; }
+  :where(p, li, td, th, .badge) { overflow-wrap: anywhere; }
+  :where(svg) { max-width: 100%; height: auto; }
+  body { background: #f6f5f2; color: #1f2328; }
+  .mono { font-family: ui-monospace, "JetBrains Mono", monospace; }
+  .sec { scroll-margin-top: 72px; }
+  .caption { font-size: .8rem; color: #57606a; margin-top: .5rem; }
+
+  /* ---------- shared mock tokens ---------- */
+  .ok { color: #1a7f37; } .warn { color: #b25e00; } .hot { color: #c62828; }
+  .bar { height: 8px; border-radius: 99px; background: #0000001a; position: relative; overflow: visible; }
+  .bar > i { position: absolute; inset: 0 auto 0 0; border-radius: 99px; }
+  .bar > b { position: absolute; top: -3px; width: 2px; height: 14px; background: #1f2328; opacity: .55; }
+  .fill-ok { background: #2ea043; } .fill-warn { background: #d4a72c; } .fill-hot { background: #e5534b; }
+
+  /* ---------- GNOME / Adwaita ---------- */
+  .gn-desk { background: linear-gradient(135deg,#3d3846,#241f31); border-radius: 14px; padding: 0 0 18px; overflow: hidden; font-family: Cantarell, "Inter", system-ui, sans-serif; }
+  .gn-top { height: 30px; background: #000; color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; font-size: 13px; font-weight: 600; }
+  .gn-pill { padding: 2px 10px; border-radius: 99px; background: #ffffff26; display: inline-flex; gap: 6px; align-items: center; }
+  .gn-menu { background: #2e2e32; color: #fff; border-radius: 14px; width: 340px; max-width: 100%; margin: 8px 12px 0 auto; padding: 14px; box-shadow: 0 10px 30px #0008; font-size: 13px; }
+  .gn-menu .row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .gn-menu .bar { background: #ffffff22; } .gn-menu .bar > b { background: #fff; }
+  .gn-menu hr { border: 0; border-top: 1px solid #ffffff1f; margin: 10px 0; }
+  .gn-menu .item { padding: 6px 8px; border-radius: 8px; } .gn-menu .item:hover { background: #ffffff14; }
+  .gn-banner { background: #2e2e32; color: #fff; border-radius: 14px; width: 380px; max-width: 100%; margin: 10px auto 0; padding: 12px 14px; display: flex; gap: 10px; box-shadow: 0 10px 30px #0008; font-size: 13px; }
+  .gn-banner .ic { width: 34px; height: 34px; border-radius: 9px; background: #e5534b; display: grid; place-items: center; font-weight: 800; flex: none; }
+
+  /* ---------- KDE / Breeze ---------- */
+  .kde-desk { background: linear-gradient(160deg,#1d99f3 0%,#0c4f8a 100%); border-radius: 14px; overflow: hidden; font-family: "Noto Sans", system-ui, sans-serif; display: flex; flex-direction: column; justify-content: flex-end; min-height: 330px; }
+  .kde-pop { background: #fcfcfc; color: #232629; width: 330px; max-width: 100%; margin: 0 10px 6px auto; border-radius: 8px; border: 1px solid #bdc3c7; padding: 12px; font-size: 13px; box-shadow: 0 6px 20px #0006; }
+  .kde-pop h4 { font-weight: 600; margin-bottom: 6px; }
+  .kde-panel { height: 40px; background: #eff0f1ee; display: flex; align-items: center; justify-content: flex-end; gap: 10px; padding: 0 10px; font-size: 12px; color: #232629; }
+  .tray-ic { width: 26px; height: 26px; }
+
+  /* ---------- COSMIC ---------- */
+  .cos-desk { background: linear-gradient(135deg,#2b2d42,#5a3e6b); border-radius: 14px; overflow: hidden; font-family: "Fira Sans","Open Sans", system-ui, sans-serif; min-height: 330px; }
+  .cos-top { height: 34px; background: #1b1b1d; color: #e8e8e8; display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding: 0 12px; font-size: 12px; }
+  .cos-pop { background: #27272b; color: #eee; width: 320px; max-width: 100%; margin: 8px 10px 0 auto; border-radius: 16px; padding: 14px; font-size: 13px; box-shadow: 0 10px 30px #0008; }
+  .cos-pop .bar { background: #ffffff22; } .cos-pop .bar > b { background: #fff; }
+
+  /* ---------- Windows 11 ---------- */
+  .win-desk { background: radial-gradient(circle at 30% 20%,#7aa7e8,#20407a 70%); border-radius: 14px; overflow: hidden; font-family: "Segoe UI Variable","Segoe UI", system-ui, sans-serif; min-height: 360px; display: flex; flex-direction: column; justify-content: flex-end; }
+  .win-fly { background: #f3f3f3f2; color: #1b1b1b; width: 340px; max-width: 100%; margin: 0 12px 10px auto; border-radius: 10px; border: 1px solid #0000001a; padding: 14px; font-size: 13px; box-shadow: 0 12px 32px #0006; }
+  .win-toast { background: #f3f3f3f2; color: #1b1b1b; width: 340px; max-width: 100%; margin: 0 12px 10px auto; border-radius: 10px; padding: 12px; font-size: 13px; box-shadow: 0 12px 32px #0006; }
+  .win-bar { height: 44px; background: #eeeeeef2; display: flex; align-items: center; justify-content: flex-end; gap: 10px; padding: 0 12px; font-size: 11px; color: #1b1b1b; }
+
+  /* ---------- macOS ---------- */
+  .mac-desk { background: linear-gradient(160deg,#f4a261,#e76f51 40%,#264653); border-radius: 14px; overflow: hidden; font-family: -apple-system, "SF Pro Text", "Inter", system-ui, sans-serif; min-height: 330px; }
+  .mac-top { height: 26px; background: #ffffffb8; backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: flex-end; gap: 14px; padding: 0 12px; font-size: 13px; color: #111; }
+  .mac-pop { background: #f6f6f6f2; color: #111; width: 320px; max-width: 100%; margin: 6px 10px 0 auto; border-radius: 10px; padding: 12px; font-size: 13px; box-shadow: 0 10px 30px #0005; border: 1px solid #0000001f; }
+
+  /* ---------- Pace app window (Adwaita-like, libadwaita look) ---------- */
+  .adw { background: #fafafa; border: 1px solid #0000001f; border-radius: 12px; overflow: hidden; font-family: Cantarell, "Inter", system-ui, sans-serif; box-shadow: 0 10px 30px #0000002a; color: #1f1f1f; }
+  .adw-head { height: 46px; background: #ebebeb; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; font-weight: 700; font-size: 14px; border-bottom: 1px solid #0000001a; }
+  .adw-tabs { display: flex; gap: 4px; background: #0000000f; padding: 3px; border-radius: 9px; font-size: 12px; font-weight: 600; }
+  .adw-tabs span { padding: 4px 12px; border-radius: 7px; } .adw-tabs .on { background: #fff; box-shadow: 0 1px 2px #0002; }
+  .adw-body { padding: 16px; }
+  .adw-card { background: #fff; border-radius: 12px; border: 1px solid #0000001a; padding: 14px; }
+  .adw-btn { background: #3584e4; color: #fff; border-radius: 8px; padding: 8px 16px; font-weight: 700; font-size: 13px; display: inline-flex; gap: 8px; align-items: center; }
+  .adw-btn.flat { background: #0000000f; color: #1f1f1f; }
+  .adw-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 12px; border-bottom: 1px solid #00000012; font-size: 13px; }
+  .adw-row:last-child { border-bottom: 0; }
+  .sw { width: 38px; height: 22px; border-radius: 99px; background: #3584e4; position: relative; flex: none; }
+  .sw::after { content: ""; position: absolute; width: 18px; height: 18px; border-radius: 50%; background: #fff; top: 2px; right: 2px; }
+  .sw.off { background: #0000002a; } .sw.off::after { right: auto; left: 2px; }
+  .chip { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+  .chip.ok { background: #2ea04322; } .chip.warn { background: #d4a72c33; } .chip.hot { background: #e5534b22; } .chip.mute { background: #0000000f; color: #57606a; }
+  .day { border-radius: 10px; padding: 8px; text-align: center; font-size: 12px; border: 1px solid #0000001a; background: #fff; }
+  .day .h { font-size: 18px; font-weight: 800; }
+  .day.off { background: repeating-linear-gradient(45deg,#f2f2f2,#f2f2f2 6px,#e9e9e9 6px,#e9e9e9 12px); color: #6e7781; }
+  .day.today { outline: 2px solid #3584e4; }
+
+  /* ---------- mini widget ---------- */
+  .mini { width: 230px; background: #ffffffee; border-radius: 14px; padding: 10px 12px; box-shadow: 0 8px 24px #0004; font-family: Cantarell, "Inter", system-ui, sans-serif; font-size: 12px; color: #1f1f1f; border: 1px solid #0000001a; }
+</style>
+</head>
+<body>
+<div class="navbar bg-base-100 border-b border-base-300 sticky top-0 z-10 px-4">
+  <div class="navbar-start gap-3"><span class="text-xl font-bold">Pace</span><span class="badge badge-soft badge-primary">design · draft 2 · Linux</span></div>
+  <div class="navbar-end hidden md:flex gap-1 text-sm">
+    <a class="btn btn-ghost btn-sm" href="#changed">What changed</a>
+    <a class="btn btn-ghost btn-sm" href="#arch">Architecture</a>
+    <a class="btn btn-ghost btn-sm" href="#math">Pace rules</a>
+    <a class="btn btn-ghost btn-sm" href="#screens">Mockups</a>
+    <a class="btn btn-ghost btn-sm" href="#build">Build</a>
+    <a class="btn btn-ghost btn-sm" href="#risks">Risks</a>
+    <a class="btn btn-ghost btn-sm" href="#decide">Decisions</a>
+  </div>
+</div>
+
+<main class="mx-auto max-w-6xl p-4 lg:p-8 space-y-14">
+
+<section class="space-y-4">
+  <h1 class="text-3xl lg:text-4xl font-bold">Always know if your billed hours are on pace</h1>
+  <p class="text-lg max-w-3xl">A small <b>Linux</b> app that always shows the person their week (billed hours against the 8.5&nbsp;h/day target and the <b>loss-of-pay line</b>) and their month (per-project targets like <b>Tweelin 140&nbsp;h</b>) in the panel. It reads hours from PineStem and leave and holidays from DhiHRMS, all through hrms-api. It nudges them while a shortfall is still fixable.</p>
+  <div class="grid md:grid-cols-3 gap-4">
+    <div class="card card-border bg-base-100"><div class="card-body p-5">
+      <div class="text-sm opacity-70">Today</div>
+      <p>The <span class="mono">pinestem-billing-report</span> skill runs on demand, for Vikas only. It ignores leave and holidays and hard-codes 42.5&nbsp;h.</p>
+    </div></div>
+    <div class="card card-border bg-base-100"><div class="card-body p-5">
+      <div class="text-sm opacity-70">Target</div>
+      <p>A Linux user installs one package and <b>signs in once with Microsoft</b>. From then on the panel shows <span class="mono">30.1 / 42.5 h</span> in a colour that means what HR means, and a nudge arrives before pay is at risk.</p>
+    </div></div>
+    <div class="card card-border bg-base-100"><div class="card-body p-5">
+      <div class="text-sm opacity-70">Done when</div>
+      <p>Vikas on GNOME and one colleague on KDE see week and month numbers that match the HR billing report to 0.01&nbsp;h, with leave applied. <b>Pace never shows green in a week HR docks pay.</b></p>
+    </div></div>
+  </div>
+</section>
+
+<section id="changed" class="sec space-y-4">
+  <h2 class="text-2xl font-bold">What changed since draft 1</h2>
+  <p class="max-w-3xl">Draft 2 is Linux-only, and Fable reviewed it in two ways. A <b>pre-mortem</b> (assume Pace failed in three months and ask why) checked the design. Four rounds of <b>timeline simulation</b> replayed 18 realistic weeks poll by poll and judged each verdict from the employee's side. Every finding below is either fixed in this draft or listed under Risks.</p>
+  <div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
+    <table class="table table-sm">
+      <thead><tr><th>Change</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td><b>Linux only</b>: GNOME, KDE Plasma 6, COSMIC, XFCE/Cinnamon. No Windows or macOS mockups.</td><td>The first users are all on Linux.</td></tr>
+        <tr><td><b>Toolkit: Python + GTK4 + libadwaita</b>, the same stack as Lifeboat (Tauri is the alternative, see decision 4)</td><td>Real GNOME widgets, not HTML imitating them. It reuses Lifeboat's sign-in, Broadway screenshot tests (windows rendered to PNG with no display) and RPM pipeline.</td></tr>
+        <tr><td><b>Week verdict rewritten</b> (rules v4)</td><td>Draft 1 showed <b>AHEAD at 40&nbsp;h on Friday evening</b>, and HR then docked a day. It also showed red all week to people who bill the next morning.</td></tr>
+        <tr><td><b>Half-day leave</b>: the target becomes 41&nbsp;h, not 38.25</td><td>HR counts whole days (<span class="mono">lop-calculator.ts:36-48</span>), so 4.5 working days still need 41&nbsp;h for zero loss of pay.</td></tr>
+        <tr><td><b>Pay always counts billable + non-billable.</b> The "count non-billable" toggle is gone.</td><td>That is what HR sums (<span class="mono">billing-report.xlsx.ts:316-318</span>). The toggle could have raised a false loss-of-pay alarm.</td></tr>
+        <tr><td>LOP confirmed <b>weekly</b>, not monthly</td><td><span class="mono">countWorkingDays</span> assumes a Mon–Fri window (<span class="mono">lop-calculator.ts:14-22</span>).</td></tr>
+        <tr><td><b>Mockups for every screen and state</b> (sections A, B, C)</td><td>The pre-mortem found 20+ states that had no screen.</td></tr>
+        <tr><td>Project target proration is <b>the lead's choice per target</b></td><td>"Tweelin 140" may be a client commitment, and prorating it to 133 would hide a real 7&nbsp;h gap.</td></tr>
+        <tr><td><b>Tray (KDE, COSMIC, XFCE)</b>: left-click opens the mini widget, right-click shows a text menu. The <b>panel dot shows the week verdict only</b>.</td><td>A tray icon only gets "activate" plus a text menu; it can't show a drawn popup. A project's lag colours its own row instead of turning the whole panel amber.</td></tr>
+        <tr><td><b>Refresh bypasses the server cache</b> (rate-limited)</td><td>A 5-minute server cache plus a 15-minute poll meant numbers could be 20 minutes stale right after billing, and people would decide "it's wrong".</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="arch" class="sec space-y-4">
+  <h2 class="text-2xl font-bold">Architecture: a quiet daemon, windows on demand</h2>
+  <p class="max-w-3xl">hrms-api is still the only door. It already calls PineStem with org credentials and maps each employee (<span class="mono">common/pinestem/pinestem.client.ts:185</span>), and it owns the leave and holiday calendar (<span class="mono">common/calendar/working-calendar.ts</span>). On the desktop, Pace splits into a small <b>headless daemon</b> (always running, no GTK loaded) and a <b>GTK4 UI process</b> that starts only when you open a window. That keeps the idle footprint low without needing a webview.</p>
+  <figure class="card card-border bg-base-100 p-4" role="img" aria-labelledby="archT">
+    <svg viewBox="0 0 1100 380" class="w-full" font-family="Inter, system-ui, sans-serif" font-size="13">
+      <title id="archT">Pace architecture on Linux</title>
+      <defs><marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="#57606a"/></marker></defs>
+      <rect x="10" y="10" width="560" height="360" rx="16" fill="#f6f8fa" stroke="#d0d7de"/>
+      <text x="26" y="36" font-weight="700">Your Linux session</text>
+      <rect x="30" y="54" width="250" height="150" rx="12" fill="#ddf4ff" stroke="#54aeff"/>
+      <text x="44" y="78" font-weight="700">paced · daemon (Python, Gio only)</text>
+      <text x="44" y="100" fill="#57606a" font-size="12">• poll hrms-api every 15 min</text>
+      <text x="44" y="118" fill="#57606a" font-size="12">• pace engine (pure, tested)</text>
+      <text x="44" y="136" fill="#57606a" font-size="12">• writes status.json</text>
+      <text x="44" y="154" fill="#57606a" font-size="12">• tray icon (StatusNotifierItem, D-Bus)</text>
+      <text x="44" y="172" fill="#57606a" font-size="12">• notifications (org.freedesktop.Notifications)</text>
+      <text x="44" y="190" fill="#57606a" font-size="12">• token in Secret Service (libsecret)</text>
+      <rect x="30" y="226" width="250" height="124" rx="12" fill="#fff" stroke="#d0d7de"/>
+      <text x="44" y="250" font-weight="700">pace · GTK4 + libadwaita UI</text>
+      <text x="44" y="272" fill="#57606a" font-size="12">started on click, exits on close</text>
+      <text x="44" y="290" fill="#57606a" font-size="12">sign-in · targets · dashboard</text>
+      <text x="44" y="308" fill="#57606a" font-size="12">settings · mini widget</text>
+      <text x="44" y="326" fill="#57606a" font-size="12">reads status.json, asks paced via D-Bus</text>
+      <rect x="310" y="54" width="240" height="70" rx="12" fill="#fff8c5" stroke="#d4a72c"/>
+      <text x="324" y="80" font-weight="700">~/.local/state/pace/status.json</text>
+      <text x="324" y="102" fill="#57606a" font-size="12">verdict, numbers, as-of, schema v1</text>
+      <rect x="310" y="146" width="240" height="90" rx="12" fill="#dafbe1" stroke="#4ac26b"/>
+      <text x="324" y="172" font-weight="700">GNOME: pace@osmosys extension</text>
+      <text x="324" y="194" fill="#57606a" font-size="12">top-bar label + menu, reads</text>
+      <text x="324" y="212" fill="#57606a" font-size="12">status.json, zero network calls</text>
+      <rect x="310" y="258" width="240" height="92" rx="12" fill="#fff" stroke="#d0d7de"/>
+      <text x="324" y="284" font-weight="700">KDE · COSMIC · XFCE · Cinnamon</text>
+      <text x="324" y="306" fill="#57606a" font-size="12">tray icon from paced, number</text>
+      <text x="324" y="324" fill="#57606a" font-size="12">drawn into the icon</text>
+      <line x1="280" y1="100" x2="308" y2="90" stroke="#57606a" marker-end="url(#ar3)"/>
+      <line x1="430" y1="124" x2="430" y2="144" stroke="#57606a" marker-end="url(#ar3)"/>
+      <line x1="280" y1="170" x2="308" y2="290" stroke="#57606a" marker-end="url(#ar3)"/>
+      <rect x="640" y="40" width="250" height="230" rx="16" fill="#fff" stroke="#d0d7de"/>
+      <text x="656" y="66" font-weight="700">hrms-api (DhiHRMS)</text>
+      <text x="656" y="92" fill="#1a7f37" font-size="12">NEW GET /billing-report/my-hours/</text>
+      <text x="656" y="112" fill="#1a7f37" font-size="12">NEW GET /calendar/my-days/</text>
+      <text x="656" y="132" fill="#57606a" font-size="12">later GET /pace/my-targets/</text>
+      <text x="656" y="152" fill="#57606a" font-size="12">GET /billing-report/config/ (9 / 5)</text>
+      <text x="656" y="172" fill="#57606a" font-size="12">POST /auth/microsoft/ · /auth/refresh/</text>
+      <text x="656" y="192" fill="#57606a" font-size="12">60 s cache · ?fresh=1 (1/min)</text>
+      <rect x="930" y="60" width="160" height="70" rx="14" fill="#f6f8fa" stroke="#d0d7de"/>
+      <text x="1010" y="92" text-anchor="middle" font-weight="700">PineStem</text>
+      <text x="1010" y="112" text-anchor="middle" fill="#57606a" font-size="12">org creds, server-side</text>
+      <rect x="930" y="190" width="160" height="70" rx="14" fill="#f6f8fa" stroke="#d0d7de"/>
+      <text x="1010" y="222" text-anchor="middle" font-weight="700">Microsoft Entra</text>
+      <text x="1010" y="242" text-anchor="middle" fill="#57606a" font-size="12">"Pace" public client</text>
+      <line x1="280" y1="80" x2="638" y2="90" stroke="#57606a" marker-end="url(#ar3)"/>
+      <text x="420" y="40" fill="#57606a" font-size="12">≤ 3 GETs / 15 min</text>
+      <line x1="890" y1="95" x2="928" y2="95" stroke="#57606a" marker-end="url(#ar3)"/>
+      <line x1="280" y1="300" x2="928" y2="230" stroke="#57606a" stroke-dasharray="5 4" marker-end="url(#ar3)"/>
+      <text x="640" y="300" fill="#57606a" font-size="12">sign-in: system browser, PKCE, loopback 127.0.0.1</text>
+    </svg>
+  </figure>
+  <div class="grid md:grid-cols-3 gap-4 text-sm">
+    <div class="card card-border bg-base-100"><div class="card-body p-4">
+      <b>New: my-hours</b>
+      <p><span class="mono">?from=2026-10-26&amp;to=2026-11-01</span> returns one row per day per project: <span class="mono">{date, project_code, project_name, billable_min, non_billable_min}</span>. It is built on <span class="mono">getEmployeeDetailedBilling</span> and aggregated by day on the server.</p>
+    </div></div>
+    <div class="card card-border bg-base-100"><div class="card-body p-4">
+      <b>New: my-days</b>
+      <p>The output of <span class="mono">working-calendar.ts</span> for a range: off days, holidays, opted-in restricted holidays only, approved leave with <b>half-days as 0.5</b>, comp-off and joining date. It mirrors what <span class="mono">leaveCounts</span> feeds the LOP report.</p>
+    </div></div>
+    <div class="card card-border bg-base-100"><div class="card-body p-4">
+      <b>Speed and memory budget</b>
+      <p>Number in the panel <b>&lt; 300 ms</b> after login (cached <span class="mono">status.json</span>). <span class="mono">paced</span> idles <b>&lt; 35 MB</b> with no GTK loaded. A UI window runs about 60–80 MB while open and frees it on close. CPU stays near 0 between polls.</p>
+    </div></div>
+  </div>
+</section>
+
+<section id="math" class="sec space-y-4">
+  <h2 class="text-2xl font-bold">Pace rules v4: pay first, then target</h2>
+  <p class="max-w-3xl">The week has two separate questions. <b>Will HR dock pay?</b> HR counts <span class="mono">floor(total/9) + (remainder ≥ 5)</span> days against working days, weekly, on billable + non-billable hours. <b>Will I hit 8.5&nbsp;h/day?</b> The colour answers the pay question first. Late billing is treated as "not billed yet" rather than a shortfall, and the last working day always shows the hard gap.</p>
+  <div class="grid lg:grid-cols-2 gap-4">
+    <div class="card card-border bg-base-100"><div class="card-body p-5 text-sm space-y-2">
+      <b>Inputs</b>
+      <p class="mono text-xs leading-6">d = working days after leave/holidays (0.5 steps)<br>lop = 9·(⌈d⌉−1) + 5 &nbsp;&nbsp;// 41 h for 5 or 4.5 days<br>target = max(8.5·d, lop)<br>pending = 8.5 for each zero-hour working day, from its 20:00<br>&nbsp;&nbsp;until 12:00 next working day (Fri → Mon 12:00)<br>eff = logged + pending<br>need/day = (target − eff_before_today) ÷ days left incl. today<br>&nbsp;&nbsp;// steady all day; today's own progress shows as "x h left today"<br>after 20:00 today counts as past</p>
+    </div></div>
+    <div class="card card-border bg-base-100"><div class="card-body p-5 text-sm space-y-2">
+      <b>Verdict, first match wins</b>
+      <table class="table table-xs">
+        <tbody>
+          <tr><td class="ok font-bold">DONE</td><td>logged ≥ target</td></tr>
+          <tr><td class="font-bold" style="color:#1c71d8">BILL</td><td>only "not billed yet" days stand between you and DONE</td></tr>
+          <tr><td class="hot font-bold">PAY RISK</td><td>lop out of reach at 10.5&nbsp;h/day, or the day is over under it. Names the short days.</td></tr>
+          <tr><td class="warn font-bold">SHORT</td><td>no days left, at or above lop: pay safe</td></tr>
+          <tr><td class="warn font-bold">BEHIND</td><td>need/day &gt; 10.5, pay still reachable</td></tr>
+          <tr><td class="warn font-bold">TIGHT</td><td>9.0 &lt; need/day ≤ 10.5</td></tr>
+          <tr><td class="ok font-bold">AHEAD</td><td>≥ 9&nbsp;h per past day; never on the last working day</td></tr>
+          <tr><td class="ok font-bold">ON TRACK</td><td>otherwise</td></tr>
+        </tbody>
+      </table>
+      <p>On the last working day under the LOP line, the label adds <span class="mono">· pay needs N h</span>. After the week ends: <b>DONE</b>, <b>SHORT (pay safe)</b> or <b>LOP n days</b>, computed exactly as HR does.</p>
+    </div></div>
+  </div>
+  <p class="max-w-3xl">The simulation (<span class="mono">sim4.js</span>, 18 weeks × 4 polls a day) produced these verdicts at the moments that used to go wrong:</p>
+  <div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
+    <table class="table table-sm">
+      <thead><tr><th>Week</th><th>Fri 18:30</th><th>Saturday</th><th>Draft 1 said</th></tr></thead>
+      <tbody>
+        <tr><td>9, 9, 9, 9, 4 (1&nbsp;h under the line)</td><td class="ok">ON TRACK · <b class="hot">pay needs 1.0 h</b></td><td class="hot">LOP 1 day</td><td>AHEAD while losing a day</td></tr>
+        <tr><td>Bills each day next morning</td><td class="ok">ON TRACK · pay needs 7.0 h</td><td class="ok">DONE</td><td>no flips, but blind to the gap</td></tr>
+        <tr><td>Batch-bills everything Friday 17:00</td><td class="ok">DONE</td><td class="ok">DONE</td><td>AT RISK Tue–Fri for nothing</td></tr>
+        <tr><td>Half-day leave Thu, 8.5 every day</td><td class="hot">PAY RISK · pay needs 2.5 h</td><td class="hot">LOP 0.5 day</td><td>DONE at 38.5&nbsp;h</td></tr>
+        <tr><td>Exactly 41: 9, 9, 9, 9, 5</td><td class="ok">ON TRACK</td><td class="warn">SHORT (pay safe)</td><td>SHORT, no pay context</td></tr>
+        <tr><td>Thu 3.5 entered, rest of Thu never</td><td class="hot">PAY RISK · pay needs 2.4 h · Thu 3.5 h</td><td class="hot">LOP 1 day</td><td>no pointer to the fixable day</td></tr>
+        <tr><td>Monday 0&nbsp;h (sick, no leave applied)</td><td class="hot">PAY RISK · pay needs 3.0 h · Mon 0 h</td><td class="hot">LOP 1 day</td><td>red, with no hint to apply leave</td></tr>
+        <tr><td>Holiday Monday, 8&nbsp;h × 4</td><td class="warn">TIGHT</td><td class="warn">SHORT (pay safe)</td><td>TIGHT, stale all Friday</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="grid md:grid-cols-2 gap-4 text-sm">
+    <div class="card card-border bg-base-100"><div class="card-body p-4">
+      <b>Month, per project</b>
+      <p>Billable minutes only. The lead sets each target as <b>fixed</b> (a client commitment, the default) or <b>prorated</b>: <span class="mono">eff_target = target × avail_days ÷ month_working_days</span>. Then <span class="mono">need/day = (eff_target − billed) ÷ remaining avail_days</span>, with the same bands scaled by that project's share of the day.</p>
+    </div></div>
+    <div class="card card-border bg-base-100"><div class="card-body p-4">
+      <b>Still open (hrms-api owner)</b>
+      <p>Do Saturday billings count in HR's weekly window? The window comes from the caller's <span class="mono">fromDate/toDate</span> (<span class="mono">billing-report.xlsx.ts:78-79</span>). <b>Until that's answered, Pace ignores weekend billings for pay</b>, so it can only under-promise. Simulated week 10 (8&nbsp;h × 5, then 3&nbsp;h Saturday) shows LOP 1 day, not DONE. Is a half-day leave 0.5 in <span class="mono">leave.total</span>?</p>
+    </div></div>
+  </div>
+</section>
+
+<section id="screens" class="sec space-y-10">
+  <h2 class="text-2xl font-bold">Mockups: every screen and state</h2>
+  <p class="max-w-3xl">All mocks use one example unless a state needs other numbers: <b>Thursday 29 Oct 2026, 14:10</b>. Mon–Wed billed 9.2 + 8.4 + 9.0, today 3.5 so far: 30.1 of 42.5&nbsp;h, needs 8.0&nbsp;h/day, on track. October Tweelin is 112.5 of 133&nbsp;h (prorated), behind 6.5&nbsp;h. App windows are drawn as libadwaita; panels match each desktop.</p>
+<h3 class="text-xl font-bold pt-4 border-t border-base-300">A · Getting started and account</h3>
+<style>
+  .fa-wrap { display: grid; gap: 1.5rem; }
+  .fa-wrap h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: .5rem; }
+  .fa-sp { text-align: center; padding: 22px 18px 20px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .fa-sp .t { font-size: 20px; font-weight: 800; line-height: 1.2; }
+  .fa-sp .d { font-size: 13px; opacity: .7; max-width: 300px; }
+  .fa-sp.sm { padding: 16px 14px; gap: 6px; } .fa-sp.sm .t { font-size: 16px; }
+  .fa-ico { width: 56px; height: 56px; border-radius: 50%; background: #0000000d; display: grid; place-items: center; font-size: 26px; color: #77767b; font-weight: 800; }
+  .fa-ico.warn { color: #b25e00; background: #d4a72c26; } .fa-ico.hot { color: #e01b24; background: #e01b2414; }
+  .fa-pill { display: inline-flex; align-items: center; gap: 6px; background: #3584e4; color: #fff; border-radius: 99px; padding: 8px 20px; font-weight: 700; font-size: 13px; }
+  .fa-pill.flat { background: #0000000f; color: #1f1f1f; } .fa-pill.dng { background: #e01b24; }
+  .fa-link { color: #1c71d8; font-size: 13px; font-weight: 600; text-decoration: underline; }
+  .fa-sub { font-size: 11px; opacity: .6; }
+  .fa-spin { width: 28px; height: 28px; border-radius: 50%; border: 3px solid #0000001a; border-top-color: #3584e4; animation: fa-rot 1s linear infinite; }
+  @keyframes fa-rot { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .fa-spin { animation: none; } }
+  .fa-term { background: #1e1e1e; color: #e6e6e6; border-radius: 8px; padding: 10px 12px; font-family: ui-monospace, "JetBrains Mono", monospace; font-size: 11.5px; line-height: 1.6; overflow-wrap: anywhere; }
+  .fa-term .p { color: #57e389; }
+  .fa-cardh { font-weight: 800; font-size: 14px; margin-bottom: 6px; }
+  .fa-scrim { background: #00000066; padding: 22px 14px; display: grid; place-items: center; border-radius: 0 0 12px 12px; }
+  .fa-dlg { background: #fff; border-radius: 16px; width: 100%; max-width: 340px; box-shadow: 0 8px 28px #0006; overflow: hidden; font-family: Cantarell, "Inter", system-ui, sans-serif; color: #1f1f1f; }
+  .fa-dlg .b { padding: 18px 18px 14px; text-align: center; } .fa-dlg .b .t { font-size: 17px; font-weight: 800; margin-bottom: 6px; } .fa-dlg .b p { font-size: 13px; opacity: .8; }
+  .fa-dlg .f { display: flex; border-top: 1px solid #0000001a; } .fa-dlg .f span { flex: 1; text-align: center; padding: 11px 6px; font-weight: 700; font-size: 13px; } .fa-dlg .f span + span { border-left: 1px solid #0000001a; }
+  .fa-dlg .f .s { color: #1c71d8; } .fa-dlg .f .d { color: #e01b24; }
+  .fa-dlg.sys { text-align: left; } .fa-dlg.sys .b { text-align: left; }
+  .fa-banner { background: #3584e4; color: #fff; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 12px; font-size: 13px; font-weight: 600; }
+  .fa-banner.w { background: #f6d32d; color: #3d3846; }
+  .fa-banner .bt { background: #ffffff33; border-radius: 8px; padding: 4px 12px; font-weight: 700; flex: none; } .fa-banner.w .bt { background: #00000020; }
+  .fa-tile { border-radius: 12px; background: #fff; border: 1px solid #0000001a; padding: 12px; }
+  .fa-tile .big { font-size: 26px; font-weight: 800; line-height: 1.1; }
+  .fa-grey { opacity: .5; }
+  .fa-br { border: 1px solid #0000002a; border-radius: 10px; overflow: hidden; background: #fff; font-family: Cantarell, "Inter", system-ui, sans-serif; color: #1f1f1f; box-shadow: 0 10px 30px #0000002a; }
+  .fa-br .tabs { background: #dedde0; padding: 6px 8px 0; display: flex; gap: 4px; font-size: 12px; }
+  .fa-br .tabs span { background: #f6f5f4; border-radius: 8px 8px 0 0; padding: 5px 12px; max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .fa-br .url { background: #f6f5f4; padding: 6px 8px; border-bottom: 1px solid #0000001a; }
+  .fa-br .url div { background: #fff; border-radius: 99px; border: 1px solid #0000001a; padding: 4px 12px; font-size: 12px; font-family: ui-monospace, monospace; overflow-wrap: anywhere; }
+  .fa-br .url .lock { color: #1a7f37; }
+  .fa-br .page { padding: 18px 16px; background: #f3f3f3; }
+  .fa-ms { background: #fff; max-width: 380px; margin: 0 auto; padding: 18px; box-shadow: 0 2px 8px #0002; font-family: "Segoe UI", "Noto Sans", system-ui, sans-serif; font-size: 13px; }
+  .fa-ms .acct { display: flex; gap: 10px; align-items: center; padding: 8px; border-radius: 4px; border: 1px solid #0000001a; margin: 6px 0; }
+  .fa-ms .av { width: 32px; height: 32px; border-radius: 50%; background: #5b5fc7; color: #fff; display: grid; place-items: center; font-weight: 700; flex: none; }
+  .fa-ms ul { margin: 8px 0 12px 18px; list-style: disc; } .fa-ms ul li { margin: 2px 0; }
+  .fa-ms .btn { display: inline-block; padding: 6px 22px; font-weight: 600; background: #0067b8; color: #fff; } .fa-ms .btn.g { background: #cccccc; color: #1b1b1b; }
+  .fa-sw { display: grid; grid-template-columns: repeat(2, 9px); gap: 2px; }
+  .fa-sw i { width: 9px; height: 9px; display: block; } .fa-sw i:nth-child(1){background:#f25022} .fa-sw i:nth-child(2){background:#7fba00} .fa-sw i:nth-child(3){background:#00a4ef} .fa-sw i:nth-child(4){background:#ffb900}
+  .fa-gs { background: #fafafa; border: 1px solid #0000001f; border-radius: 12px; padding: 14px; font-family: Cantarell, "Inter", system-ui, sans-serif; color: #1f1f1f; box-shadow: 0 10px 30px #0000002a; }
+  .fa-ext-ic { width: 40px; height: 40px; border-radius: 12px; background: #ebebeb; display: grid; place-items: center; flex: none; }
+  .fa-note { font-size: 12px; opacity: .7; padding: 8px 12px; }
+  .fa-top { background: #000; color: #fff; border-radius: 8px; height: 28px; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; font: 600 12px Cantarell, system-ui, sans-serif; }
+  .fa-trayarrow { color: #e5534b; font-weight: 800; }
+  .fa-two { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); }
+  .fa-two > * { min-width: 0; }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="fa-logo" viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" fill="none" stroke="#0000001a" stroke-width="8"/><circle cx="32" cy="32" r="26" fill="none" stroke="#2ea043" stroke-width="8" stroke-dasharray="120 163" transform="rotate(-90 32 32)" stroke-linecap="round"/><path d="M22 33l7 7 13-15" fill="none" stroke="#1f1f1f" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></symbol></svg>
+
+<section class="fa-wrap" id="fa-start">
+  <h2 class="text-xl font-bold">Getting started &amp; account</h2>
+
+  <!-- A1 -->
+  <div>
+    <h3>A1 · Install</h3>
+    <div class="adw-card max-w-2xl mb-4"><div class="fa-cardh">xixas/pace (private) · Releases</div>
+      <div class="flex gap-3 items-center mt-2"><svg width="40" height="40" class="shrink-0"><use href="#fa-logo"/></svg>
+        <div class="min-w-0"><div class="font-bold">Pace 0.1.0</div><div class="fa-sub">Internal release for Osmosys staff</div></div>
+        <span class="fa-pill ml-auto">Latest</span></div>
+      <ul class="mono text-xs mt-3 space-y-1 break-all"><li>pace-0.1.0-1.fc44.x86_64.rpm</li><li>pace_0.1.0_amd64.deb</li><li>Pace-0.1.0-x86_64.AppImage</li></ul></div>
+    <div class="grid gap-4 md:grid-cols-3">
+      <div class="adw-card"><div class="fa-cardh">Fedora / Nobara</div>
+        <div class="fa-term"><span class="p">$</span> sudo dnf install ./pace-0.1.0-1.fc44.x86_64.rpm</div></div>
+      <div class="adw-card"><div class="fa-cardh">Ubuntu / Debian</div>
+        <div class="fa-term"><span class="p">$</span> sudo apt install ./pace_0.1.0_amd64.deb</div></div>
+      <div class="adw-card"><div class="fa-cardh">AppImage (any distro)</div>
+        <div class="fa-term"><span class="p">$</span> chmod +x Pace-0.1.0-x86_64.AppImage<br><span class="p">$</span> ./Pace-0.1.0-x86_64.AppImage</div></div>
+    </div>
+    <p class="caption">Pace lives in a private GitHub repo: no public package repo and no app-store listing. For now Vikas shares the package file directly; install it as below.</p>
+  </div>
+
+  <div class="grid gap-6 md:grid-cols-2 items-start">
+    <!-- A2 -->
+    <div>
+      <h3>A2 · Welcome</h3>
+      <div class="adw">
+        <div class="adw-head"><span></span><span>Pace</span><span class="opacity-50">✕</span></div>
+        <div class="fa-sp" style="padding:30px 18px">
+          <svg width="72" height="72"><use href="#fa-logo"/></svg>
+          <div class="t">Know your pace before Friday</div>
+          <div class="d">Pace reads your billed hours, leave and holidays, and tells you early if the week or month is slipping.</div>
+          <span class="fa-pill mt-2">Sign in with Microsoft</span>
+          <div class="fa-sub">Opens your browser · no passwords stored</div>
+        </div>
+      </div>
+      <p class="caption">First launch. The pill button opens the system browser to the Microsoft sign-in (A4).</p>
+    </div>
+    <!-- A3 -->
+    <div>
+      <h3>A3 · Waiting for browser</h3>
+      <div class="adw">
+        <div class="adw-head"><span></span><span>Pace</span><span class="opacity-50">✕</span></div>
+        <div class="fa-sp" style="padding:34px 18px">
+          <div class="fa-spin"></div>
+          <div class="t">Finish signing in in your browser…</div>
+          <div class="d">Pace is waiting on <span class="mono">127.0.0.1:53682</span>. It gives up after 5 minutes.</div>
+          <div class="flex gap-4 items-center mt-1"><span class="fa-link">Didn't open? Copy link</span><span class="fa-pill flat">Cancel</span></div>
+        </div>
+      </div>
+      <p class="caption">Shown while the loopback listener waits. "Copy link" puts the sign-in URL on the clipboard (toast "Link copied"); Cancel stops the listener and returns to A2.</p>
+    </div>
+  </div>
+
+  <div class="grid gap-6 md:grid-cols-2 items-start">
+    <!-- A4 -->
+    <div>
+      <h3>A4 · Browser: Microsoft consent</h3>
+      <div class="fa-br">
+        <div class="tabs"><span>Sign in to your account</span></div>
+        <div class="url"><div><span class="lock">🔒</span> login.microsoftonline.com</div></div>
+        <div class="page"><div class="fa-ms">
+          <div class="flex items-center gap-2 mb-3"><span class="fa-sw"><i></i><i></i><i></i><i></i></span><b>Microsoft</b></div>
+          <div class="acct"><span class="av">VK</span><div class="min-w-0"><b>Vikas K</b><div class="fa-sub">vikas.k@osmosys.co</div></div></div>
+          <p class="mt-2"><b>Pace</b> wants to:</p>
+          <ul><li>Sign you in</li><li>Read your profile</li><li>Access DhiHRMS as you</li></ul>
+          <div class="flex gap-2"><span class="btn">Accept</span><span class="btn g">Cancel</span></div>
+        </div></div>
+      </div>
+      <p class="caption">The standard Microsoft consent screen for an Osmosys account. Accept sends the browser back to the loopback address (A5); Cancel produces failure A7a.</p>
+    </div>
+    <!-- A5 -->
+    <div>
+      <h3>A5 · Browser: loopback page</h3>
+      <div class="fa-br">
+        <div class="tabs"><span>Signed in to Pace</span></div>
+        <div class="url"><div>127.0.0.1:53682/</div></div>
+        <div class="page" style="padding:40px 16px;text-align:center">
+          <svg width="56" height="56" class="mx-auto"><use href="#fa-logo"/></svg>
+          <div class="text-xl font-bold mt-2">Signed in to Pace</div>
+          <p class="text-sm opacity-70">You can close this tab and go back to the app.</p>
+        </div>
+      </div>
+      <p class="caption">Served once by Pace's local listener, then the listener shuts down. The app window moves to A6 on its own.</p>
+    </div>
+  </div>
+
+  <div class="grid gap-6 md:grid-cols-2 items-start">
+    <!-- A6 -->
+    <div>
+      <h3>A6 · Signed in: summary</h3>
+      <div class="adw">
+        <div class="adw-head"><span></span><span>Welcome to Pace</span><span class="opacity-50">✕</span></div>
+        <div class="adw-body space-y-3">
+          <div class="adw-card p-0">
+            <div class="adw-row"><span>Signed in as</span><span class="text-right min-w-0"><b>Vikas K</b><br><span class="fa-sub">vikas.k@osmosys.co</span></span></div>
+            <div class="adw-row"><span>DhiHRMS employee</span><span class="chip ok">linked</span></div>
+            <div class="adw-row"><span>PineStem account</span><span class="chip ok">ID 2370</span></div>
+            <div class="adw-row"><span>Holidays 2026</span><span class="chip ok">14</span></div>
+            <div class="adw-row"><span>Leave this month</span><span class="chip ok">1 day</span></div>
+          </div>
+          <div class="text-right"><span class="fa-pill">Next: targets →</span></div>
+        </div>
+      </div>
+      <p class="caption">Proof that every data source resolved. Next opens the targets screen (A11).</p>
+    </div>
+    <!-- A14 -->
+    <div>
+      <h3>A14 · Sign out</h3>
+      <div class="adw">
+        <div class="adw-head"><span></span><span>Pace</span><span class="opacity-50">✕</span></div>
+        <div class="fa-scrim"><div class="fa-dlg"><div class="b"><div class="t">Sign out of Pace?</div><p>Pace will forget your sign-in on this computer. Your targets stay saved. Numbers disappear until you sign in again.</p></div>
+          <div class="f"><span>Cancel</span><span class="d">Sign out</span></div></div></div>
+      </div>
+      <p class="caption">From the main menu → Sign out. Destructive action in red; it deletes the stored token (keyring or file) and returns to A2.</p>
+    </div>
+  </div>
+
+  <!-- A7 -->
+  <div>
+    <h3>A7 · Sign-in failures</h3>
+    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div><div class="adw"><div class="fa-sp sm"><div class="fa-ico">✕</div><div class="t">You cancelled</div><div class="d">Sign-in wasn't completed, so nothing was saved.</div><span class="fa-pill mt-1">Try again</span></div></div>
+        <p class="caption">a · Consent denied: Cancel on the Microsoft page.</p></div>
+      <div><div class="adw"><div class="fa-sp sm"><div class="fa-ico warn">!</div><div class="t">Your organisation must approve Pace first</div><div class="d">An admin needs to allow Pace once for Osmosys. Ask IT.</div><span class="fa-pill mt-1">Copy message for IT</span><span class="fa-sub">Copies a ready-to-send request with the app name and permissions.</span></div></div>
+        <p class="caption">b · Admin consent required: tenant policy blocks the consent.</p></div>
+      <div><div class="adw"><div class="fa-sp sm"><div class="fa-ico warn">@</div><div class="t">Use your Osmosys account</div><div class="d">That was a personal Microsoft account. Sign in with your @osmosys.co address.</div><span class="fa-pill mt-1">Sign in again</span></div></div>
+        <p class="caption">c · Personal account: the token's tenant isn't Osmosys.</p></div>
+      <div><div class="adw"><div class="fa-sp sm"><div class="fa-ico">⏱</div><div class="t">The browser never came back</div><div class="d">Pace waited 5 minutes for the sign-in to finish.</div><span class="fa-pill mt-1">Try again</span></div></div>
+        <p class="caption">d · Timeout: the loopback listener expired.</p></div>
+      <div><div class="adw"><div class="fa-sp sm"><div class="fa-ico">⌁</div><div class="t">No network</div><div class="d">Pace can't reach Microsoft or DhiHRMS. Check your connection.</div><span class="fa-pill mt-1">Retry</span></div></div>
+        <p class="caption">e · Offline at sign-in time (once signed in, offline shows stale numbers instead, A13).</p></div>
+    </div>
+  </div>
+
+  <div class="grid gap-6 md:grid-cols-2 items-start">
+    <!-- A8 -->
+    <div>
+      <h3>A8 · No PineStem mapping</h3>
+      <div class="adw">
+        <div class="adw-head"><span></span><div class="adw-tabs"><span class="on">Week</span><span>Month</span></div><span class="opacity-50">⋮</span></div>
+        <div class="fa-banner w"><span class="min-w-0">Your DhiHRMS profile isn't linked to PineStem. Ask HR.</span><span class="bt">Dismiss</span></div>
+        <div class="adw-body space-y-3">
+          <div class="fa-two">
+            <div class="fa-tile"><div class="fa-sub">This week</div><div class="big">—</div><div class="fa-sub">no billing data</div></div>
+            <div class="fa-tile"><div class="fa-sub">Leave · Oct</div><div class="big">1 day</div><div class="fa-sub">9 Oct</div></div>
+          </div>
+          <div class="fa-tile"><div class="fa-sub">Next holiday</div><b>Sat 14 Nov</b> · Diwali <span class="fa-sub">(14 holidays loaded)</span></div>
+        </div>
+      </div>
+      <p class="caption">PineStem lookup by employee returned nothing. Pace still works for leave and holidays; hours, verdicts and notifications stay off until HR links the profile.</p>
+    </div>
+    <!-- A13 -->
+    <div>
+      <h3>A13 · Session expired</h3>
+      <div class="adw">
+        <div class="adw-head"><span></span><div class="adw-tabs"><span class="on">Week</span><span>Month</span></div><span class="opacity-50">⋮</span></div>
+        <div class="fa-banner"><span class="min-w-0">Your sign-in expired</span><span class="bt">Sign in again</span></div>
+        <div class="adw-body space-y-3 fa-grey">
+          <div class="fa-tile"><div class="flex justify-between gap-2"><b>Week · On track</b><span class="fa-sub">as of 09:40</span></div>
+            <div class="big">30.1 <span class="text-base">/ 42.5 h</span></div>
+            <div class="bar mt-2"><i class="fill-ok" style="width:67%"></i></div></div>
+          <div class="fa-tile"><div class="flex justify-between gap-2"><span>Tweelin · Oct</span><span class="fa-sub">as of 09:40</span></div><b>112.5 / 133 h</b></div>
+        </div>
+      </div>
+      <p class="caption">Refresh token rejected. Numbers stay visible but greyed with "as of"; the panel dot goes amber. Sign in again reruns A3 without the welcome step.</p>
+    </div>
+  </div>
+
+  <div class="grid gap-6 md:grid-cols-2 items-start">
+    <!-- A9 -->
+    <div>
+      <h3>A9 · No keyring</h3>
+      <div class="adw">
+        <div class="adw-head"><span></span><span>Pace</span><span class="opacity-50">✕</span></div>
+        <div class="fa-scrim"><div class="fa-dlg" style="max-width:380px"><div class="b"><div class="t">Pace can't reach a password keyring</div>
+          <p>Your desktop has no Secret Service (common on minimal KDE or COSMIC). Pace needs somewhere to keep your sign-in. You choose once.</p></div>
+          <div class="px-3 pb-3 space-y-2 text-left">
+            <div class="adw-card" style="border:2px solid #3584e4"><b class="text-sm">Store in a private file</b> <span class="chip ok">recommended here</span><div class="fa-sub">~/.local/share/pace, mode 600 — readable only by your user, not encrypted (like rclone.conf)</div></div>
+            <div class="adw-card"><b class="text-sm">Sign in every login</b><div class="fa-sub">Nothing is stored; you sign in each time you log in to the desktop</div></div>
+          </div>
+          <div class="f"><span>Not now</span><span class="s">Continue</span></div></div></div>
+      </div>
+      <p class="caption">Shown once, before the first token is saved, when the Secret Service D-Bus name is absent. The choice lives in Preferences afterwards.</p>
+    </div>
+    <!-- A12 -->
+    <div>
+      <h3>A12 · Import preset</h3>
+      <div class="adw">
+        <div class="adw-head"><span></span><span>Your targets</span><span></span></div>
+        <div class="fa-scrim"><div class="fa-dlg"><div class="b"><div class="t">Import targets?</div>
+          <p>Import targets from <span class="mono">tweelin-oct.pace-targets.json</span> (from Anand, lead)?</p>
+          <div class="adw-card mt-3 text-left text-sm" style="padding:8px 12px">Tweelin <b>140 h</b> / month, prorated for leave &amp; holidays</div></div>
+          <div class="f"><span>Cancel</span><span class="s">Import</span></div></div></div>
+      </div>
+      <p class="caption">After "Import lead's preset…" and the file chooser (GTK file dialog, <span class="mono">*.pace-targets.json</span>). Import fills the locked rows in A11.</p>
+    </div>
+  </div>
+
+  <!-- A10 -->
+  <div>
+    <h3>A10 · Show Pace in the top bar</h3>
+    <div class="grid gap-6 md:grid-cols-2 items-start">
+      <div class="space-y-3">
+        <div class="adw">
+          <div class="adw-head"><span class="opacity-50">←</span><span>Top bar (GNOME)</span><span></span></div>
+          <div class="fa-sp sm"><div class="fa-ico">▭</div><div class="t">Turn on Pace in the top bar</div>
+            <div class="d">GNOME has no system tray, so Pace ships a small panel extension inside the package. It only needs switching on.</div>
+            <span class="fa-pill mt-1">Enable</span><span class="fa-link">Skip, use the window only</span></div>
+        </div>
+        <div class="adw">
+          <div class="adw-head"><span class="opacity-50">←</span><span>Top bar (GNOME)</span><span></span></div>
+          <div class="fa-sp sm"><div class="fa-ico">✓</div><div class="t">Enabled</div>
+            <div class="d">Log out and back in once to show it. GNOME loads new extensions at login.</div>
+            <span class="fa-pill mt-1">Log out now</span><span class="fa-link">Later</span></div>
+        </div>
+      </div>
+      <div class="space-y-3">
+        <div class="adw">
+          <div class="adw-head"><span class="opacity-50">←</span><span>Top bar (KDE / COSMIC)</span><span></span></div>
+          <div class="fa-sp sm"><div class="fa-ico">✓</div><div class="t">Pace is in your system tray</div>
+            <div class="d">Left-click opens the mini widget, right-click the menu.</div>
+            <div class="fa-top" style="width:100%;max-width:300px;margin-top:6px;justify-content:flex-end;gap:10px"><span class="fa-trayarrow">↓</span><svg width="20" height="20" viewBox="0 0 32 32"><circle cx="16" cy="16" r="13" fill="none" stroke="#ffffff33" stroke-width="4"/><circle cx="16" cy="16" r="13" fill="none" stroke="#2ea043" stroke-width="4" stroke-dasharray="58 82" transform="rotate(-90 16 16)"/></svg><span>🔊</span><span>14:10</span></div>
+            <span class="fa-pill mt-2">Got it</span></div>
+        </div>
+      </div>
+    </div>
+    <p class="caption">Setup step shown once per desktop, chosen by <span class="mono">XDG_CURRENT_DESKTOP</span>. The extension lives in <span class="mono">/usr/share/gnome-shell/extensions/pace@osmosys</span> (shipped by the package); Enable runs <span class="mono">gnome-extensions enable pace@osmosys</span>. GNOME only picks it up after the next login. On KDE/COSMIC/XFCE/Cinnamon nothing is enabled: it only points at the tray icon.</p>
+  </div>
+
+  <!-- A11 -->
+  <div>
+    <h3>A11 · Targets</h3>
+    <div class="adw max-w-xl">
+      <div class="adw-head"><span class="opacity-50">←</span><span>Your targets</span><span></span></div>
+      <div class="adw-body space-y-4">
+        <div><div class="text-xs font-bold opacity-60 mb-1 uppercase">Daily</div>
+          <div class="adw-card p-0">
+            <div class="adw-row"><span class="min-w-0">Minimum average<br><span class="fa-sub">Weekly average must stay above this</span></span><span class="flex items-center gap-2 flex-none"><span class="chip mute">🔒 set by org</span><b>8.5 h</b></span></div>
+            <div class="adw-row"><span class="min-w-0">Expected<br><span class="fa-sub">What a good day looks like</span></span><b class="flex-none">9.0 h</b></div>
+            <div class="adw-row"><span class="min-w-0">Loss-of-pay line<br><span class="fa-sub">9 h = a day, 5 h leftover = +1 · 41 h / 5-day week</span></span><span class="chip mute flex-none">read-only</span></div>
+          </div></div>
+        <div><div class="text-xs font-bold opacity-60 mb-1 uppercase">Monthly by project (billable)</div>
+          <div class="adw-card p-0">
+            <div class="adw-row"><span>Tweelin <span class="mono fa-sub">TWE</span></span><span class="flex items-center gap-2 flex-none"><span class="chip mute">set by lead</span><b>140 h</b></span></div>
+            <div class="adw-row"><span class="min-w-0">Prorate for leave &amp; holidays<br><span class="fa-sub">Lead's choice for Tweelin</span></span><span class="flex items-center gap-2 flex-none"><span class="chip mute">set by lead</span><span class="sw"></span></span></div>
+            <div class="adw-row"><span>R&amp;D <span class="mono fa-sub">RES</span></span><span class="fa-sub flex-none">no target · tracked</span></div>
+            <div class="adw-row"><span style="color:#1c71d8;font-weight:700">+ Add personal target</span><span></span></div>
+          </div></div>
+        <div class="adw-card p-0"><div class="adw-row" style="background:#3584e412"><span class="min-w-0">ⓘ Pay (LOP) always counts billable + non-billable.<br><span class="fa-sub">Project targets above count billable only.</span></span></div></div>
+        <div class="flex justify-between gap-2 flex-wrap"><span class="fa-pill flat">Import lead's preset…</span><span class="fa-pill">Done</span></div>
+      </div>
+    </div>
+    <p class="caption">Lead-set values are locked and can only be raised by personal targets. There is deliberately no toggle for non-billable hours: pay always uses the total. The prorate switch is lead-set and read-only here. Import opens A12.</p>
+  </div>
+</section>
+<h3 class="text-xl font-bold pt-4 border-t border-base-300">B · Always visible: panel, tray, widget</h3>
+
+<style>
+  /* ===== Fragment B: Always visible (prefix .fb-) ===== */
+  .fb-sec { display:flex; flex-direction:column; gap:1.5rem; min-width:0; max-width:100%; }
+  .fb-sec h2 { font-size:1.5rem; font-weight:700; margin:0; }
+  .fb-h { font-size:1.25rem; font-weight:700; padding-top:.5rem; margin:0; }
+  .fb-sec p { margin:0; }
+  .fb-g2, .fb-g3, .fb-g4 { display:grid; gap:1.5rem; grid-template-columns:minmax(0,1fr); align-items:start; }
+  @media (min-width:768px) { .fb-g2 { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+  @media (min-width:640px) { .fb-g3 { grid-template-columns:repeat(2,minmax(0,1fr)); } .fb-g4 { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+  @media (min-width:1024px) { .fb-g3 { grid-template-columns:repeat(3,minmax(0,1fr)); } .fb-g4 { grid-template-columns:repeat(4,minmax(0,1fr)); } }
+  .fb-g2 > *, .fb-g3 > *, .fb-g4 > * { min-width:0; }
+  .fb-note { font-size:.875rem; max-width:48rem; overflow-wrap:anywhere; }
+
+  /* verdict colours (GNOME dark panel) */
+  .fb-green { --c:#57e389; } .fb-amber { --c:#ffbe6f; } .fb-red { --c:#ff7b63; }
+  .fb-blue { --c:#78aeed; } .fb-grey { --c:#9a9996; }
+
+  /* ----- B1 strip rows ----- */
+  .fb-rows { display:flex; flex-direction:column; gap:10px; }
+  .fb-row { display:grid; grid-template-columns:minmax(0,1fr); gap:4px; padding-bottom:10px; border-bottom:1px solid #0000001a; }
+  .fb-row:last-child { border-bottom:0; }
+  .fb-row .fb-name { font-weight:700; font-size:.8rem; letter-spacing:.02em; }
+  .fb-row .caption { margin-top:0; }
+  @media (min-width:768px) { .fb-row { grid-template-columns:104px 440px minmax(0,1fr); align-items:center; gap:14px; } }
+
+  /* top-bar slice at real size: 30 px black bar, 13 px Cantarell semibold */
+  .fb-slice { height:30px; background:#000; color:#fff; display:flex; align-items:center; justify-content:space-between; gap:8px;
+    padding:0 8px 0 12px; font:600 13px/1 Cantarell,"Inter",system-ui,sans-serif; width:440px; max-width:100%; border-radius:6px; overflow:hidden; white-space:nowrap; }
+  .fb-lab { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:99px; min-width:0; }
+  .fb-lab.fb-open { background:#ffffff2e; }
+  .fb-lab > span:last-child { overflow:hidden; text-overflow:ellipsis; }
+  .fb-lab.fb-dim { color:#c0bfbc; }
+  /* number takes the verdict colour, same palette as claude-usage (limits.js COLOURS) */
+  .fb-lab.green, .fb-lab.fb-green { color:#8ff0a4; } .fb-lab.amber, .fb-lab.fb-amber { color:#f6d32d; } .fb-lab.red, .fb-lab.fb-red { color:#ff7b63; } .fb-lab.blue, .fb-lab.fb-blue { color:#99c1f1; }
+  .fb-d { width:9px; height:9px; border-radius:50%; background:var(--c); flex:none; }
+  .fb-gl { color:var(--c); font-size:14px; line-height:1; flex:none; }
+  .fb-sys { display:inline-flex; gap:7px; align-items:center; flex:none; opacity:.92; }
+  .fb-sys i { display:block; background:#fff; }
+  .fb-sys i:nth-child(1) { width:11px; height:11px; border-radius:50%; }
+  .fb-sys i:nth-child(2) { width:11px; height:11px; border-radius:3px 3px 8px 3px; }
+  .fb-sys i:nth-child(3) { width:17px; height:9px; border-radius:2px; }
+  .fb-sys::after { content:"\25BE"; font-size:10px; }
+  .fb-clk { opacity:.92; flex:none; }
+  @media (max-width:560px) { .fb-clk .fb-cd { display:none; } }
+  .fb-ring-i { flex:none; display:block; }
+
+  /* ----- GNOME desktop wrapper for dropdowns ----- */
+  .fb-wrap .gn-top { padding:0 8px 0 14px; gap:8px; }
+  .fb-wrap .gn-top > span { white-space:nowrap; }
+  .fb-wrap .fb-r { display:inline-flex; align-items:center; gap:8px; } .fb-wrap .fb-r { min-width:0; } .fb-wrap .fb-r .fb-lab { flex:0 1 auto; overflow:hidden; }
+  .fb-wrap .gn-menu { max-width:calc(100% - 24px); margin:6px 12px 0 auto; width:344px; overflow-wrap:anywhere; line-height:1.35; }
+  @media (max-width:520px) { .fb-wrap .gn-top { justify-content:space-between; } .fb-cd { display:none; } }
+  .fb-ws { display:inline-flex; align-items:center; gap:5px; padding:6px 9px; border-radius:99px; background:#ffffff1f; flex:none; }
+  .fb-ws i { display:block; width:7px; height:7px; border-radius:50%; background:#ffffff80; }
+  .fb-ws i.on { width:20px; border-radius:6px; background:#fff; }
+  .fb-wrap .row b { min-width:0; }
+  .fb-wrap .bar > b.fb-lop { background:#ff7b63; opacity:1; width:3px; height:18px; top:-5px; box-shadow:0 0 0 3px #ff7b6340; border-radius:2px; }
+  .fb-t { font-size:15px; }
+  .fb-sm { font-size:12px; opacity:.72; }
+  .fb-gc { color:var(--c); }
+  .fb-leg { display:flex; justify-content:space-between; gap:8px; font-size:11.5px; opacity:.72; margin-top:5px; flex-wrap:wrap; }
+  .fb-leg .fb-r1 { color:#ff7b63; font-weight:700; opacity:1; }
+  .fb-days { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:4px; margin-top:6px; }
+  .fb-days > div { background:#ffffff12; border-radius:8px; padding:5px 0; text-align:center; font-size:11px; }
+  .fb-days > div b { display:block; font-size:14px; font-weight:700; }
+  .fb-days .t { outline:1.5px solid #78aeed; }
+  .fb-days .x { opacity:.5; }
+  .fb-days .s b { color:#ff7b63; }
+  .fb-btn { display:block; text-align:center; background:#3584e4; color:#fff; border-radius:9px; padding:8px 12px; font-weight:700; margin-top:10px; }
+  .fb-btn.fb-btn-red { background:#c01c28; }
+  .fb-btn.fb-btn-g { background:#ffffff1f; }
+  .fb-pill { display:inline-block; font-size:11px; font-weight:700; padding:2px 8px; border-radius:99px; background:#ffffff1f; color:#deddda; }
+  .fb-pill.fb-p-red { background:#ff7b6329; color:#ff9c8a; }
+  .fb-pill.fb-p-blue { background:#78aeed29; color:#a4c8f4; }
+  .fb-warnrow { display:flex; gap:8px; align-items:flex-start; background:#ffffff14; border-radius:10px; padding:8px 10px; margin-bottom:8px; font-size:12px; }
+  .fb-warnrow b { color:#ffbe6f; }
+  .fb-bannerrow { background:#78aeed29; margin-bottom:10px; } .fb-bannerrow b { color:#a4c8f4; } .fb-bannerrow > span:last-child { min-width:0; flex:1; }
+  .fb-menu-stale .fb-keep { opacity:.62; }
+  .fb-fb { background:#78aeed; } /* blue fill */
+  .fb-fg { background:#9a9996; } /* grey fill */
+  .fb-pair { display:grid; gap:1.5rem; grid-template-columns:minmax(0,1fr); align-items:start; }
+  @media (min-width:768px) { .fb-pair { grid-template-columns:minmax(0,420px) minmax(0,1fr); } .fb-pair > .caption { margin-top:0; padding-top:8px; font-size:.875rem; } }
+  .fb-split { display:grid; gap:1.5rem; grid-template-columns:minmax(0,1fr); }
+
+  /* ----- B7 KDE Plasma 6 ----- */
+  .fb-kde { background:linear-gradient(160deg,#1d99f3 0%,#0c4f8a 100%); border-radius:14px; overflow:hidden; font-family:"Noto Sans",system-ui,sans-serif;
+    display:flex; flex-direction:column; justify-content:flex-end; min-height:360px; padding:0 8px 8px; }
+  .fb-kpanel { height:44px; background:#eff0f1f0; border-radius:10px; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:0 8px; font-size:12px; color:#232629; box-shadow:0 2px 10px #0005; min-width:0; }
+  .fb-kpanel .fb-kl, .fb-kpanel .fb-kr { display:flex; align-items:center; gap:8px; min-width:0; }
+  .fb-kicon { width:28px; height:28px; border-radius:6px; background:#bdc3c7; flex:none; }
+  .fb-kicon.k1 { background:#3daee9; border-radius:50%; } .fb-kicon.k2 { background:#8e8e93; } .fb-kicon.k3 { background:#27ae60; }
+  .fb-kclk { text-align:right; line-height:1.15; font-size:11px; }
+  .fb-ktip { align-self:flex-end; margin:0 28px 8px 0; max-width:calc(100% - 20px); background:#fcfcfc; color:#232629; border:1px solid #bdc3c7; border-radius:6px; padding:8px 10px;
+    font-size:12px; box-shadow:0 4px 14px #0006; display:flex; gap:10px; align-items:flex-start; overflow-wrap:anywhere; }
+  .fb-kpop { align-self:flex-end; background:#fcfcfc; color:#232629; width:340px; max-width:100%; margin:0 2px 8px 0; border-radius:8px; border:1px solid #bdc3c7;
+    box-shadow:0 6px 22px #0006; font-size:13px; overflow:hidden; }
+  .fb-kpop .fb-kh { display:flex; justify-content:space-between; align-items:center; padding:8px 12px; border-bottom:1px solid #e0e3e6; background:#f0f1f2; font-weight:600; gap:8px; }
+  .fb-kpop .fb-kb { padding:12px; display:flex; flex-direction:column; gap:6px; }
+  .fb-kpop .bar { background:#0000001a; }
+  .fb-kbtns { display:flex; gap:6px; flex-wrap:wrap; margin-top:6px; }
+  .fb-kbtn { border:1px solid #bdc3c7; border-radius:4px; padding:4px 10px; font-size:12px; background:linear-gradient(#fcfcfc,#eff0f1); }
+  .fb-kbtn.fb-pri { background:#3daee9; border-color:#2c8fc4; color:#fff; font-weight:600; }
+  .fb-kr2 { display:flex; justify-content:space-between; gap:8px; font-size:13px; }
+  .fb-trays { display:grid; gap:10px; grid-template-columns:repeat(2,minmax(0,1fr)); }
+  @media (min-width:640px) { .fb-trays { grid-template-columns:repeat(5,minmax(0,1fr)); } }
+  .fb-trays > div { background:#eff0f1; color:#232629; border-radius:10px; padding:10px 6px; text-align:center; font-size:11.5px; font-family:"Noto Sans",system-ui,sans-serif; border:1px solid #0000001a; }
+  .fb-trays > div svg { display:block; margin:0 auto 6px; }
+  .fb-trays b { display:block; font-size:12px; }
+
+  /* ----- B8 COSMIC ----- */
+  .fb-cos { background:linear-gradient(135deg,#2b2d42,#5a3e6b); border-radius:14px; overflow:hidden; font-family:"Fira Sans","Open Sans",system-ui,sans-serif; min-height:400px; }
+  .fb-ctop { height:36px; background:#1b1b1d; color:#e8e8e8; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:0 10px; font-size:13px; }
+  .fb-ctop .fb-cl, .fb-ctop .fb-cr { display:flex; align-items:center; gap:10px; min-width:0; }
+  .fb-ctop .fb-capp { padding:3px 10px; border-radius:99px; background:#ffffff14; }
+  .fb-ctop .fb-cws { display:flex; gap:5px; } .fb-ctop .fb-cws i { width:8px; height:8px; border-radius:50%; background:#ffffff55; display:block; } .fb-ctop .fb-cws i.on { background:#63d0df; width:18px; border-radius:6px; }
+  .fb-ctop .fb-capplet { padding:3px 7px; border-radius:99px; background:#ffffff1f; display:inline-flex; align-items:center; }
+  .fb-cpop { background:#27272b; color:#e4e4e4; width:330px; max-width:calc(100% - 20px); margin:8px 10px 14px auto; border-radius:18px; padding:12px; font-size:13px; box-shadow:0 10px 30px #0009; border:1px solid #ffffff14; }
+  .fb-cpop .bar { background:#ffffff22; } .fb-cpop .bar > b { background:#fff; }
+  .fb-ccard { background:#323237; border-radius:12px; padding:10px 12px; margin-top:8px; }
+  .fb-chead { display:flex; align-items:center; gap:10px; padding:2px 2px 4px; }
+  .fb-citem { padding:8px 12px; border-radius:10px; display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  .fb-citem:first-of-type { background:#ffffff0f; }
+  .fb-csw { width:36px; height:20px; border-radius:99px; background:#ffffff2e; position:relative; flex:none; }
+  .fb-csw::after { content:""; position:absolute; width:14px; height:14px; border-radius:50%; background:#c4c4c4; top:3px; left:3px; }
+  .fb-cbtn { display:inline-block; background:#63d0df; color:#0b2a2e; font-weight:700; border-radius:99px; padding:6px 14px; font-size:12.5px; }
+  .fb-cbtn.fb-gh { background:#ffffff1a; color:#e4e4e4; }
+
+
+  .fb-kwin { align-self:flex-end; margin:0 70px 14px auto; max-width:calc(100% - 16px); background:#fcfcfc; color:#232629; border:1px solid #bdc3c7; border-radius:8px; box-shadow:0 6px 22px #0006; overflow:hidden; }
+  .fb-kwt { display:flex; justify-content:space-between; padding:6px 10px; background:#e3e5e7; font-size:12px; font-weight:600; }
+  .fb-kwb { padding:10px; background:#e8eaec; }
+  .fb-kmenu { align-self:flex-end; margin:0 4px 8px auto; width:290px; max-width:100%; background:#fcfcfc; color:#232629; border:1px solid #bdc3c7; border-radius:6px; box-shadow:0 6px 22px #0006; padding:4px; font-size:13px; }
+  .fb-kmenu .mi { padding:5px 14px; border-radius:3px; overflow-wrap:anywhere; }
+  .fb-kmenu .mi:nth-child(-n+3) { color:#4d5358; }
+  .fb-kmenu hr { border:0; border-top:1px solid #e0e3e6; margin:4px 2px; }
+  .fb-cwin { width:274px; max-width:calc(100% - 20px); margin:14px auto 18px 24px; background:#27272b; color:#e4e4e4; border:1px solid #ffffff1f; border-radius:14px; box-shadow:0 10px 30px #0009; overflow:hidden; }
+  .fb-cwt { display:flex; justify-content:space-between; padding:7px 12px; font-size:12px; font-weight:700; background:#1f1f23; }
+  .fb-cwb { padding:12px; display:flex; justify-content:center; }
+  .fb-cmenu { width:290px; max-width:calc(100% - 20px); margin:8px 10px 14px auto; background:#27272b; color:#e4e4e4; border:1px solid #ffffff14; border-radius:14px; padding:6px; font-size:13px; box-shadow:0 10px 30px #0009; }
+  .fb-cmenu .mi { padding:7px 12px; border-radius:8px; overflow-wrap:anywhere; }
+  .fb-cmenu .mi:nth-child(-n+3) { color:#a8a8ad; }
+  .fb-cmenu .sep { border-top:1px solid #ffffff1a; margin:5px 4px; }
+
+  /* ----- B9 XFCE / Cinnamon ----- */
+  .fb-xde { background:linear-gradient(145deg,#6d7b8d,#3a4656); border-radius:14px; overflow:hidden; min-height:380px; font-family:Cantarell,"Noto Sans",system-ui,sans-serif; }
+  .fb-xpanel { height:30px; background:#2e3436; color:#eeeeec; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:0 8px; font-size:12px; }
+  .fb-xpanel .fb-xl, .fb-xpanel .fb-xr { display:flex; align-items:center; gap:10px; min-width:0; }
+  .fb-xhl { background:#ffffff26; border-radius:4px; padding:3px 3px 2px; display:inline-flex; }
+  .fb-gtkm { background:#fff; color:#2e3436; border:1px solid #cdc7c2; border-radius:6px; box-shadow:0 4px 14px #0007; width:288px; max-width:calc(100% - 20px); margin:4px 10px 18px auto; padding:4px 0; font-size:13px; }
+  .fb-gtkm .mi { padding:5px 20px; display:flex; justify-content:space-between; gap:12px; }
+  .fb-gtkm .mi.dis { color:#8c9096; } .fb-gtkm .mi.hd { font-weight:700; color:#2e3436; }
+  .fb-gtkm .mi.hov { background:#3584e4; color:#fff; }
+  .fb-gtkm hr { border:0; border-top:1px solid #e0dcd8; margin:4px 0; }
+
+  /* ----- B10 mini widget ----- */
+  .fb-mini-grid { display:grid; gap:14px; grid-template-columns:repeat(auto-fill,minmax(min(100%,262px),1fr)); }
+  .fb-mini-bg { padding:22px 16px 14px; border-radius:16px; background:linear-gradient(135deg,#9bb5d6,#5c7fa8); display:flex; flex-direction:column; align-items:center; gap:10px; min-width:0; }
+  .fb-mini-bg.fb-bgd { background:linear-gradient(135deg,#46506a,#1e2433); }
+  .fb-mini-bg .fb-lb { font-size:11.5px; font-weight:700; color:#fff; text-shadow:0 1px 2px #0006; }
+  .fb-mini-bg .mini { max-width:100%; }
+  .fb-mini-d { background:#2b2b30ee; color:#eee; border-color:#ffffff22; }
+  .fb-mini-d .bar { background:#ffffff26; } .fb-mini-d .bar > b { background:#fff; }
+  .fb-mini-d .chip.ok { background:#2ea04338; color:#8ff0a4; } .fb-mini-d .chip.warn { background:#ffbe6f33; color:#ffbe6f; } .fb-mini-d .chip.hot { background:#e5534b38; color:#ffa198; } .fb-mini-d .chip.mute { background:#ffffff1a; color:#c0c0c0; }
+  .fb-mini-row { display:flex; justify-content:space-between; align-items:center; gap:6px; }
+  .fb-mini-sub { display:flex; justify-content:space-between; gap:6px; opacity:.72; }
+  .mini .chip.fb-cb { background:#3584e41f; color:#1c71d8; }
+  .fb-mini-d .chip.fb-cb { background:#78aeed2e; color:#a4c8f4; }
+  .fb-fillb { background:#3584e4; } .fb-fillg { background:#9a9996; }
+
+  /* ----- B11 format slices ----- */
+  .fb-fmt { display:flex; flex-direction:column; gap:6px; min-width:0; }
+  .fb-fmt .fb-slice { width:100%; }
+  .fb-fmt .caption { margin-top:0; }
+</style>
+
+<section id="fb-always" class="sec fb-sec">
+  <h2>Always visible</h2>
+  <p class="fb-note">Panel surfaces: the label or icon you glance at, and the menu behind it. Thursday 29 Oct 2026, 14:10 unless a state needs other numbers (each strip row names its own day and time). Colours come from the verdict table: green, amber, red, blue for BILL, grey for offline and leave.</p>
+
+  <h3 class="fb-h">B1 &middot; GNOME top bar: every state</h3><div class="fb-rows"><div class="fb-row"><span class="fb-name">ON TRACK</span><div class="fb-slice"><span class="fb-clk">Thu <span class="fb-cd">29 Oct </span>14:10</span><span class="fb-lab green "><i class="fb-d"></i><span>30.1 / 42.5 h</span></span><span class="fb-sys"><i></i><i></i><i></i></span></div><p class="caption">Need per day is 9.0 h or less. The normal state all week. Click opens the dropdown (B2).</p></div><div class="fb-row"><span class="fb-name">AHEAD</span><div class="fb-slice"><span class="fb-clk">Wed <span class="fb-cd">28 Oct </span>19:10</span><span class="fb-lab green "><span class="fb-gl">&#9650;</span><span>28.4 / 42.5 h</span></span><span class="fb-sys"><i></i><i></i><i></i></span></div><p class="caption">Averaging above 9 h/day so far (28.4 h in 3 days). Up-triangle instead of a dot. Never shown on the last working day.</p></div><div class="fb-row"><span class="fb-name">TIGHT</span><div class="fb-slice"><span class="fb-clk">Thu <span class="fb-cd">29 Oct </span>09:30</span><span class="fb-lab amber "><i class="fb-d"></i><span>23.0 / 42.5 h</span></span><span class="fb-sys"><i></i><i></i><i></i></span></div><p class="caption">Needs 9.8 h/day over Thu and Fri, between 9.0 and 10.5. Still reachable, amber.</p></div><div class="fb-row"><span class="fb-name">BEHIND</span><div class="fb-slice"><span class="fb-clk">Thu <span class="fb-cd">29 Oct </span>09:30</span><span class="fb-lab amber "><i class="fb-d"></i><span>21.0 / 42.5 h &middot; pay 10.0/day</span></span><span class="fb-sys"><i></i><i></i><i></i></span></div><p class="caption">42.5 is out of reach (10.8 h/day) but the 41 h pay line is not. The label switches to what pay needs.</p></div><div class="fb-row"><span class="fb-name">PAY RISK</span><div class="fb-slice"><span class="fb-clk">Fri <span class="fb-cd">30 Oct </span>11:00</span><span class="fb-lab red "><i class="fb-d"></i><span>27.1 / 42.5 h &middot; pay risk</span></span><span class="fb-sys"><i></i><i></i><i></i></span></div><p class="caption">The 41 h line needs 13.9 h today, past the 10.5 h/day limit. Names the short days in the dropdown (B4).</p></div><div class="fb-row"><span class="fb-name">BILL</span><div class="fb-slice"><span class="fb-clk">Fri <span class="fb-cd">30 Oct </span>20:30</span><span class="fb-lab blue "><span class="fb-gl">&#9676;</span><span>34.0 / 42.5 h</span></span><span class="fb-sys"><i></i><i></i><i></i></span></div><p class="caption">Only an unbilled day stands between you and DONE: Fri shows 0 h. Dotted ring, not a dot. Calm blue, not a warning (B5).</p></div><div class="fb-row"><span class="fb-name">LAST DAY GAP</span><div class="fb-slice"><span class="fb-clk">Fri <span class="fb-cd">30 Oct </span>18:30</span><span class="fb-lab green "><i class="fb-d"></i><span>40.0 / 42.5 h &middot; pay needs 1.0 h</span></span><span class="fb-sys"><i></i><i></i><i></i></span></div><p class="caption">Last working day and under 41 h: the hard gap is always in the label (B3). The week verdict is still ON TRACK, so the dot stays green; the gap shows in the label.</p></div><div class="fb-row"><span class="fb-name">DONE</span><div class="fb-slice"><span class="fb-clk">Thu <span class="fb-cd">29 Oct </span>17:40</span><span class="fb-lab green "><span class="fb-gl">&#10003;</span><span>42.5 h</span></span><span class="fb-sys"><i></i><i></i><i></i></span></div><p class="caption">Target met. Check mark, no denominator. Stays until the week rolls over.</p></div><div class="fb-row"><span class="fb-name">SHORT</span><div class="fb-slice"><span class="fb-clk">Sat <span class="fb-cd">31 Oct </span>09:00</span><span class="fb-lab amber "><i class="fb-d"></i><span>41.8 / 42.5 h &middot; pay safe</span></span><span class="fb-sys"><i></i><i></i><i></i></span></div><p class="caption">Week over with 41 &le; hours &lt; 42.5. Below target but no loss of pay.</p></div><div class="fb-row"><span class="fb-name">LOP 1 day</span><div class="fb-slice"><span class="fb-clk">Sat <span class="fb-cd">31 Oct </span>09:00</span><span class="fb-lab red "><i class="fb-d"></i><span>39.5 h &middot; LOP 1 day</span></span><span class="fb-sys"><i></i><i></i><i></i></span></div><p class="caption">Week over under the 41 h line. Names how many days of pay are lost.</p></div><div class="fb-row"><span class="fb-name">ON LEAVE</span><div class="fb-slice"><span class="fb-clk">Wed <span class="fb-cd">28 Oct </span>10:00</span><span class="fb-lab grey fb-dim"><span class="fb-gl">&#9675;</span><span>On leave</span></span><span class="fb-sys"><i></i><i></i><i></i></span></div><p class="caption">Whole week is leave or holiday. Neutral grey, no nudges, no numbers.</p></div><div class="fb-row"><span class="fb-name">OFFLINE</span><div class="fb-slice"><span class="fb-clk">Thu <span class="fb-cd">29 Oct </span>14:10</span><span class="fb-lab grey fb-dim"><span class="fb-gl">&#9675;</span><span>26.6 / 42.5 h &middot; 09:40</span></span><span class="fb-sys"><i></i><i></i><i></i></span></div><p class="caption">DhiHRMS or the network is unreachable. Last good numbers stay, greyed, with the time of the last fetch.</p></div><div class="fb-row"><span class="fb-name">SIGNED OUT</span><div class="fb-slice"><span class="fb-clk">Thu <span class="fb-cd">29 Oct </span>14:10</span><span class="fb-lab amber "><i class="fb-d"></i><span>Sign in again</span></span><span class="fb-sys"><i></i><i></i><i></i></span></div><p class="caption">Session expired. Amber dot, one notification, click opens the browser to sign in.</p></div></div><p class="fb-note">Each strip is a 30 px GNOME Shell top bar slice at real size: clock, the Pace label, then system indicators. The dot and the number take the week verdict colour (same palette as claude-usage); projects colour their own rows in the menus.</p>
+
+  <h3 class="fb-h">B2 &middot; GNOME dropdown: ON TRACK</h3><div class="fb-pair"><div class="gn-desk fb-wrap "><div class="gn-top"><span class="fb-act fb-ws"><i class="on"></i><i></i><i></i></span><span>Thu <span class="fb-cd">29 Oct </span>14:10</span><span class="fb-r"><span class="fb-lab fb-green fb-open "><i class="fb-d"></i><span>30.1 / 42.5 h</span></span><span class="fb-sys"><i></i><i></i><i></i></span></span></div><div class="gn-menu">
+  <div class="row"><b class="fb-t">Week &middot; On track</b><span class="fb-gc" style="--c:#57e389">needs 8.0 h/day</span></div>
+  <div class="fb-sm" style="margin-top:2px">4.5 h left today</div>
+  <div class="bar" style="margin:8px 0 2px"><i class="fill-ok" style="width:66.9%"></i><b style="left:91.1%"></b><b style="left:94.4%"></b><b style="left:calc(100% - 2px)"></b></div>
+  <div class="fb-leg"><span>LOP 41</span><span>target 42.5</span><span>expected 45</span></div>
+  <div class="fb-days"><div class="">Mon<b>9.2</b></div><div class="">Tue<b>8.4</b></div><div class="">Wed<b>9.0</b></div><div class="t">Thu<b>3.5</b></div><div class="">Fri<b>&ndash;</b></div></div>
+  <hr>
+  <div class="row"><b>October</b><span class="fb-sm">2 working days left</span></div>
+  <div class="row" style="margin-top:8px"><span>Tweelin</span><span class="fb-gc" style="--c:#ffbe6f">112.5 / 133 h &middot; behind 6.5</span></div>
+  <div class="bar" style="margin:6px 0"><i class="fill-warn" style="width:84.6%"></i><b style="left:89.5%"></b></div>
+  <div class="fb-sm">needs 10.3 h/day on Tweelin</div>
+  <div class="row" style="margin-top:8px"><span>R&amp;D</span><span class="fb-sm">18.4 h &middot; no target</span></div>
+  <hr><div class="item">Open dashboard</div><div class="item">Open PineStem</div><div class="item">Snooze nudges today</div><hr><div class="row fb-sm"><span>Updated 4 min ago</span><span style="color:#99c1f1;font-weight:700;opacity:1">Refresh</span></div>
+</div></div><p class="caption">The reference menu. Click the label to open it. Rows are plain menu items: Open dashboard opens the Pace window, Open PineStem opens the task list in the browser, Snooze nudges today mutes every nudge until midnight. Refresh forces a fetch.</p></div>
+
+  <h3 class="fb-h">B3 &middot; GNOME dropdown: Friday 18:30, under the pay line</h3><div class="fb-pair"><div class="gn-desk fb-wrap "><div class="gn-top"><span class="fb-act fb-ws"><i class="on"></i><i></i><i></i></span><span>Fri <span class="fb-cd">30 Oct </span>18:30</span><span class="fb-r"><span class="fb-lab fb-green fb-open "><i class="fb-d"></i><span>40.0 / 42.5 h &middot; pay needs 1.0 h</span></span><span class="fb-sys"><i></i><i></i><i></i></span></span></div><div class="gn-menu">
+  <div class="row"><b class="fb-t">Week &middot; On track</b><span class="fb-pill fb-p-red">pay needs 1.0 h</span></div>
+  <div class="fb-sm" style="margin-top:2px">Last working day &middot; 40.0 of the 41 h line</div>
+  <div class="bar" style="margin:8px 0 2px"><i class="fill-ok" style="width:88.9%"></i><b class="fb-lop" style="left:91.1%"></b><b style="left:94.4%"></b><b style="left:calc(100% - 2px)"></b></div>
+  <div class="fb-leg"><span><span class="fb-r1">LOP 41</span></span><span>target 42.5</span><span>expected 45</span></div>
+  <div class="fb-days"><div class="">Mon<b>9.2</b></div><div class="">Tue<b>8.4</b></div><div class="">Wed<b>9.0</b></div><div class="">Thu<b>9.0</b></div><div class="t">Fri<b>4.4</b></div></div>
+  <div class="fb-sm" style="margin-top:8px">1.0 h to the loss-of-pay line &middot; 2.5 h to target</div>
+  <a class="fb-btn">Bill 1 h to stay clear of loss of pay</a>
+  <hr><div class="item">Open PineStem</div><div class="item">Snooze nudges today</div><hr><div class="row fb-sm"><span>Updated 1 min ago</span><span style="color:#99c1f1;font-weight:700;opacity:1">Refresh</span></div>
+</div></div><p class="caption">Last working day, 40.0 h, still ON TRACK by the target maths, but under the 41 h line so the hard gap is spelled out. The red LOP tick is emphasised and the action button is the fix. Clicking it opens PineStem on today&rsquo;s billing form.</p></div>
+
+  <h3 class="fb-h">B4 &middot; GNOME dropdown: PAY RISK</h3><div class="fb-pair"><div class="gn-desk fb-wrap "><div class="gn-top"><span class="fb-act fb-ws"><i class="on"></i><i></i><i></i></span><span>Fri <span class="fb-cd">30 Oct </span>11:00</span><span class="fb-r"><span class="fb-lab fb-red fb-open "><i class="fb-d"></i><span>27.1 / 42.5 h &middot; pay risk</span></span><span class="fb-sys"><i></i><i></i><i></i></span></span></div><div class="gn-menu">
+  <div class="row"><b class="fb-t fb-gc" style="--c:#ff7b63">Week &middot; Pay at risk</b><span class="fb-sm">27.1 / 42.5 h</span></div>
+  <div class="fb-sm" style="margin-top:2px">Needs 13.9 h today to reach 41 h. The limit is 10.5 h/day.</div>
+  <div class="bar" style="margin:8px 0 2px"><i class="fill-hot" style="width:60.2%"></i><b class="fb-lop" style="left:91.1%"></b><b style="left:94.4%"></b><b style="left:calc(100% - 2px)"></b></div>
+  <div class="fb-leg"><span><span class="fb-r1">LOP 41</span></span><span>target 42.5</span><span>expected 45</span></div>
+  <div class="fb-days"><div class="">Mon<b>9.2</b></div><div class="">Tue<b>8.4</b></div><div class="s">Wed<b>6.0</b></div><div class="s">Thu<b>3.5</b></div><div class="t">Fri<b>0.0</b></div></div>
+  <div class="warnrow fb-warnrow" style="margin-top:10px;margin-bottom:0"><span class="fb-gc" style="--c:#ff7b63">&#9888;</span><span><b style="color:#ff9c8a">Short days: Wed 6.0 h &middot; Thu 3.5 h</b><br>Even 10.5 h today ends 3.4 h under the line, about 1 day of loss of pay.</span></div>
+  <a class="fb-btn fb-btn-red">Open PineStem to bill Fri</a>
+  <hr><div class="item">Open dashboard</div><div class="item">Snooze nudges today</div><hr><div class="row fb-sm"><span>Updated 2 min ago</span><span style="color:#99c1f1;font-weight:700;opacity:1">Refresh</span></div>
+</div></div><p class="caption">The 41 h line is out of reach even at 10.5 h/day. The short days are named so you know where hours went missing. Red title, red LOP tick. The only way to avoid it is to bill missing hours now, so the button opens PineStem.</p></div>
+
+  <h3 class="fb-h">B5 &middot; GNOME dropdown: BILL</h3><div class="fb-pair"><div class="gn-desk fb-wrap "><div class="gn-top"><span class="fb-act fb-ws"><i class="on"></i><i></i><i></i></span><span>Fri <span class="fb-cd">30 Oct </span>20:30</span><span class="fb-r"><span class="fb-lab fb-blue fb-open "><span class="fb-gl">&#9676;</span><span>34.0 / 42.5 h</span></span><span class="fb-sys"><i></i><i></i><i></i></span></span></div><div class="gn-menu">
+  <div class="row"><b class="fb-t fb-gc" style="--c:#78aeed">Week &middot; Bill your hours</b><span class="fb-sm">34.0 / 42.5 h</span></div>
+  <div style="margin-top:6px"><span class="fb-pill">Fri not billed yet</span></div>
+  <div class="bar" style="margin:8px 0 2px"><i class="fb-fb" style="width:75.6%"></i><b style="left:91.1%"></b><b style="left:94.4%"></b><b style="left:calc(100% - 2px)"></b></div>
+  <div class="fb-leg"><span>LOP 41</span><span>target 42.5</span><span>expected 45</span></div>
+  <div class="fb-days"><div class="">Mon<b>8.5</b></div><div class="">Tue<b>8.5</b></div><div class="">Wed<b>8.5</b></div><div class="">Thu<b>8.5</b></div><div class="t">Fri<b>not yet</b></div></div>
+  <div class="fb-sm" style="margin-top:10px;opacity:.85">Not a shortfall. A day with 0 h stays &ldquo;not billed yet&rdquo; from 20:00 that day until 12:00 on the next working day (Mon). Bill Fri and the week is done.</div>
+  <a class="fb-btn">Open PineStem to bill Fri</a>
+  <hr><div class="item">Open dashboard</div><div class="item">Snooze nudges today</div><hr><div class="row fb-sm"><span>Updated 3 min ago</span><span style="color:#99c1f1;font-weight:700;opacity:1">Refresh</span></div>
+</div></div><p class="caption">Calm blue, not a warning. A day with 0 h is &ldquo;not billed yet&rdquo; from 20:00 until 12:00 on the next working day, and only then becomes a shortfall. Clicking opens PineStem to bill the day.</p></div>
+
+  <h3 class="fb-h">B6 &middot; GNOME dropdown: offline or stale</h3><div class="fb-pair"><div class="gn-desk fb-wrap "><div class="gn-top"><span class="fb-act fb-ws"><i class="on"></i><i></i><i></i></span><span>Thu <span class="fb-cd">29 Oct </span>14:10</span><span class="fb-r"><span class="fb-lab fb-grey fb-dim fb-open "><span class="fb-gl">&#9675;</span><span>26.6 / 42.5 h &middot; 09:40</span></span><span class="fb-sys"><i></i><i></i><i></i></span></span></div><div class="gn-menu fb-menu-stale">
+  <div class="fb-warnrow"><span class="fb-gc" style="--c:#ffbe6f">&#9888;</span><span><b>Can't reach DhiHRMS</b><br>as of 09:40 &middot; retrying in 2 min</span></div>
+  <div class="fb-keep">
+  <div class="row"><b class="fb-t">Week &middot; On track</b><span>needs 8.0 h/day</span></div>
+  <div class="bar" style="margin:8px 0 2px"><i class="fb-fg" style="width:59.1%"></i><b style="left:91.1%"></b><b style="left:94.4%"></b><b style="left:calc(100% - 2px)"></b></div>
+  <div class="fb-leg"><span>LOP 41</span><span>target 42.5</span><span>expected 45</span></div>
+  <div class="fb-days"><div class="">Mon<b>9.2</b></div><div class="">Tue<b>8.4</b></div><div class="">Wed<b>9.0</b></div><div class="t">Thu<b>0.0</b></div><div class="">Fri<b>&ndash;</b></div></div>
+  <div class="row" style="margin-top:10px"><span>Tweelin &middot; Oct</span><span>109.0 / 133 h</span></div>
+  <div class="row" style="margin-top:4px"><span>R&amp;D</span><span>18.4 h</span></div>
+  </div>
+  <hr><div class="item">Open PineStem</div><hr><div class="row fb-sm"><span>Last updated 09:40</span><span style="color:#99c1f1;font-weight:700;opacity:1">Retry now</span></div>
+</div></div><p class="caption">Grey label, last numbers kept but dimmed, and a banner row with the reason and last fetch time. The clock reads 14:10, the data is from 09:40, so Thu still shows 0.0. No notifications while offline; Retry now forces a fetch.</p></div>
+
+  <h3 class="fb-h">B7 &middot; KDE Plasma 6: tray icon, tooltip, click and right-click</h3><div class="fb-g3"><div><h4 style="font-weight:700;margin:0 0 6px;font-size:.95rem">Hover tooltip</h4><div class="fb-kde"><div class="fb-ktip"><svg class="tray-ic fb-ring-i" viewBox="0 0 32 32" width="28" height="28" style="width:28px;height:28px"><circle cx="16" cy="16" r="13" fill="none" stroke="#0000002a" stroke-width="4"/><circle cx="16" cy="16" r="13" fill="none" stroke="#2ea043" stroke-width="4" stroke-dasharray="57.8 81.7" stroke-linecap="round" transform="rotate(-90 16 16)"/><text x="16" y="20.0" text-anchor="middle" font-size="11" font-weight="800" fill="#232629" font-family="Noto Sans,Cantarell,sans-serif">30</text></svg><div><b>Pace &mdash; Week &middot; On track</b><br>30.1 / 42.5 h &middot; needs 8.0 h/day<br>Tweelin Oct 112.5 / 133 h (&minus;6.5)</div></div><div class="fb-kpanel"><div class="fb-kl"><span class="fb-kicon k1"></span><span class="fb-kicon k2"></span><span class="fb-kicon k3"></span></div><div class="fb-kr"><span>&#8963;</span><svg class="tray-ic fb-ring-i" viewBox="0 0 32 32" width="26" height="26" style="width:26px;height:26px"><circle cx="16" cy="16" r="13" fill="none" stroke="#0000002a" stroke-width="4"/><circle cx="16" cy="16" r="13" fill="none" stroke="#2ea043" stroke-width="4" stroke-dasharray="57.8 81.7" stroke-linecap="round" transform="rotate(-90 16 16)"/><text x="16" y="20.0" text-anchor="middle" font-size="11" font-weight="800" fill="#232629" font-family="Noto Sans,Cantarell,sans-serif">30</text></svg><span class="fb-kclk">14:10<br>29/10/2026</span></div></div></div><p class="caption">Hover the ring: a Breeze tooltip with the verdict, hours and the Tweelin month gap. Panel is Plasma 6 floating style.</p></div><div><h4 style="font-weight:700;margin:0 0 6px;font-size:.95rem">Left-click: mini widget window</h4><div class="fb-kde"><div class="fb-kwin"><div class="fb-kwt"><span>Pace</span><span style="opacity:.6">&#215;</span></div><div class="fb-kwb"><div class="mini"><div class="fb-mini-row"><b>Week</b><span class="chip ok">on track</span></div><div style="margin:6px 0 2px"><div class="bar"><i class="fill-ok" style="width:66.9%"></i><b style="left:91.1%"></b><b style="left:94.4%"></b></div></div><div class="fb-mini-sub"><span>30.1 / 42.5</span><span>8.0/day</span></div><div class="fb-mini-row" style="margin-top:8px"><b>Tweelin</b><span class="chip warn">&minus;6.5 h</span></div><div class="bar" style="margin:6px 0 2px"><i class="fill-warn" style="width:84.6%"></i></div><div class="fb-mini-sub"><span>112.5 / 133</span><span>10.3/day</span></div></div></div></div><div class="fb-kpanel"><div class="fb-kl"><span class="fb-kicon k1"></span><span class="fb-kicon k2"></span><span class="fb-kicon k3"></span></div><div class="fb-kr"><span>&#8963;</span><svg class="tray-ic fb-ring-i" viewBox="0 0 32 32" width="26" height="26" style="width:26px;height:26px"><circle cx="16" cy="16" r="13" fill="none" stroke="#0000002a" stroke-width="4"/><circle cx="16" cy="16" r="13" fill="none" stroke="#2ea043" stroke-width="4" stroke-dasharray="57.8 81.7" stroke-linecap="round" transform="rotate(-90 16 16)"/><text x="16" y="20.0" text-anchor="middle" font-size="11" font-weight="800" fill="#232629" font-family="Noto Sans,Cantarell,sans-serif">30</text></svg><span class="fb-kclk">14:10<br>29/10/2026</span></div></div></div><p class="caption">A StatusNotifierItem tray icon cannot show app-drawn popups; it only gets Activate (left-click) and a DBusMenu. Left-click opens the Pace mini widget as a normal window, placed by the compositor, not anchored to the icon on Wayland.</p></div><div><h4 style="font-weight:700;margin:0 0 6px;font-size:.95rem">Right-click: native menu</h4><div class="fb-kde"><div class="fb-kmenu"><div class="mi">Week &middot; On track &mdash; 30.1 / 42.5 h</div><div class="mi">Needs 8.0 h/day &middot; 4.5 h left today</div><div class="mi">Tweelin &minus;6.5 h (Oct)</div><hr><div class="mi">Open dashboard</div><div class="mi">Open PineStem</div><div class="mi">Snooze nudges today</div><div class="mi">Refresh</div><div class="mi">Quit</div></div><div class="fb-kpanel"><div class="fb-kl"><span class="fb-kicon k1"></span><span class="fb-kicon k2"></span><span class="fb-kicon k3"></span></div><div class="fb-kr"><span>&#8963;</span><svg class="tray-ic fb-ring-i" viewBox="0 0 32 32" width="26" height="26" style="width:26px;height:26px"><circle cx="16" cy="16" r="13" fill="none" stroke="#0000002a" stroke-width="4"/><circle cx="16" cy="16" r="13" fill="none" stroke="#2ea043" stroke-width="4" stroke-dasharray="57.8 81.7" stroke-linecap="round" transform="rotate(-90 16 16)"/><text x="16" y="20.0" text-anchor="middle" font-size="11" font-weight="800" fill="#232629" font-family="Noto Sans,Cantarell,sans-serif">30</text></svg><span class="fb-kclk">14:10<br>29/10/2026</span></div></div></div><p class="caption">The DBusMenu: plain text rows drawn by Plasma in Breeze light. The first three rows are information only; the rest are actions.</p></div></div>
+  <div><h4 style="font-weight:700;margin:0 0 8px;font-size:.95rem">Tray icon states</h4><div class="fb-trays"><div><svg class="tray-ic fb-ring-i" viewBox="0 0 32 32" width="32" height="32" style="width:32px;height:32px"><circle cx="16" cy="16" r="13" fill="none" stroke="#0000002a" stroke-width="4"/><circle cx="16" cy="16" r="13" fill="none" stroke="#2ea043" stroke-width="4" stroke-dasharray="57.8 81.7" stroke-linecap="round" transform="rotate(-90 16 16)"/><text x="16" y="20.3" text-anchor="middle" font-size="12" font-weight="800" fill="#232629" font-family="Noto Sans,Cantarell,sans-serif">30</text></svg><b>ON TRACK</b>green ring, 30 h</div><div><svg class="tray-ic fb-ring-i" viewBox="0 0 32 32" width="32" height="32" style="width:32px;height:32px"><circle cx="16" cy="16" r="13" fill="none" stroke="#0000002a" stroke-width="4"/><circle cx="16" cy="16" r="13" fill="none" stroke="#d4a72c" stroke-width="4" stroke-dasharray="69.2 81.7" stroke-linecap="round" transform="rotate(-90 16 16)"/><text x="16" y="20.3" text-anchor="middle" font-size="12" font-weight="800" fill="#232629" font-family="Noto Sans,Cantarell,sans-serif">36</text></svg><b>TIGHT</b>amber ring, 36 h</div><div><svg class="tray-ic fb-ring-i" viewBox="0 0 32 32" width="32" height="32" style="width:32px;height:32px"><circle cx="16" cy="16" r="13" fill="none" stroke="#0000002a" stroke-width="4"/><circle cx="16" cy="16" r="13" fill="none" stroke="#e5534b" stroke-width="4" stroke-dasharray="51.9 81.7" stroke-linecap="round" transform="rotate(-90 16 16)"/><text x="16" y="20.3" text-anchor="middle" font-size="12" font-weight="800" fill="#232629" font-family="Noto Sans,Cantarell,sans-serif">27</text></svg><b>PAY RISK</b>red ring, 27 h</div><div><svg class="tray-ic fb-ring-i" viewBox="0 0 32 32" width="32" height="32" style="width:32px;height:32px"><circle cx="16" cy="16" r="13" fill="none" stroke="#0000002a" stroke-width="4"/><circle cx="16" cy="16" r="13" fill="none" stroke="#3584e4" stroke-width="4" stroke-dasharray="65.3 81.7" stroke-linecap="round" transform="rotate(-90 16 16)"/><text x="16" y="20.3" text-anchor="middle" font-size="12" font-weight="800" fill="#232629" font-family="Noto Sans,Cantarell,sans-serif">34</text></svg><b>BILL</b>blue ring, 34 h</div><div><svg class="tray-ic fb-ring-i" viewBox="0 0 32 32" width="32" height="32" style="width:32px;height:32px"><circle cx="16" cy="16" r="13" fill="none" stroke="#0000002a" stroke-width="4"/><circle cx="16" cy="16" r="13" fill="none" stroke="#8d9399" stroke-width="4" stroke-dasharray="51.1 81.7" stroke-linecap="round" transform="rotate(-90 16 16)"/><text x="16" y="20.3" text-anchor="middle" font-size="12" font-weight="800" fill="#232629" font-family="Noto Sans,Cantarell,sans-serif">26</text></svg><b>OFFLINE</b>grey ring, last value</div></div><p class="caption">Plasma trays do not reliably show text beside an icon, so the number is drawn inside the ring: colour is the verdict, digits are this week&rsquo;s hours. Ring fill is hours over target.</p></div>
+
+
+  <h3 class="fb-h">B8 &middot; COSMIC: tray icon, click and right-click</h3><div class="fb-g2"><div><h4 style="font-weight:700;margin:0 0 6px;font-size:.95rem">Left-click: mini widget window</h4><div class="fb-cos"><div class="fb-ctop"><div class="fb-cl"><span class="fb-cws"><i class="on"></i><i></i><i></i></span><span class="fb-capp">Applications</span></div>
+  <span>Thu 29 Oct &nbsp;14:10</span>
+  <div class="fb-cr"><span class="fb-capplet"><svg class="tray-ic fb-ring-i" viewBox="0 0 32 32" width="20" height="20" style="width:20px;height:20px"><circle cx="16" cy="16" r="13" fill="none" stroke="#ffffff33" stroke-width="4"/><circle cx="16" cy="16" r="13" fill="none" stroke="#57e389" stroke-width="4" stroke-dasharray="57.8 81.7" stroke-linecap="round" transform="rotate(-90 16 16)"/><text x="16" y="20.0" text-anchor="middle" font-size="11" font-weight="800" fill="#fff" font-family="Noto Sans,Cantarell,sans-serif">30</text></svg></span><span class="fb-capplet">&#9835; &nbsp;&#9711;</span></div></div><div class="fb-cwin"><div class="fb-cwt"><span>Pace</span><span style="opacity:.6">&#215;</span></div><div class="fb-cwb"><div class="mini fb-mini-d" style="width:100%"><div class="fb-mini-row"><b>Week</b><span class="chip ok">on track</span></div><div style="margin:6px 0 2px"><div class="bar"><i class="fill-ok" style="width:66.9%"></i><b style="left:91.1%"></b><b style="left:94.4%"></b></div></div><div class="fb-mini-sub"><span>30.1 / 42.5</span><span>8.0/day</span></div><div class="fb-mini-row" style="margin-top:8px"><b>Tweelin</b><span class="chip warn">&minus;6.5 h</span></div><div class="bar" style="margin:6px 0 2px"><i class="fill-warn" style="width:84.6%"></i></div><div class="fb-mini-sub"><span>112.5 / 133</span><span>10.3/day</span></div></div></div></div></div><p class="caption">The tray icon only gets Activate. Left-click opens the Pace mini widget as a normal window, placed by the compositor, not anchored to the icon on Wayland. The COSMIC applet API has not been verified for click events, so this needs a VM check before release.</p></div><div><h4 style="font-weight:700;margin:0 0 6px;font-size:.95rem">Right-click: native menu</h4><div class="fb-cos"><div class="fb-ctop"><div class="fb-cl"><span class="fb-cws"><i class="on"></i><i></i><i></i></span><span class="fb-capp">Applications</span></div>
+  <span>Thu 29 Oct &nbsp;14:10</span>
+  <div class="fb-cr"><span class="fb-capplet"><svg class="tray-ic fb-ring-i" viewBox="0 0 32 32" width="20" height="20" style="width:20px;height:20px"><circle cx="16" cy="16" r="13" fill="none" stroke="#ffffff33" stroke-width="4"/><circle cx="16" cy="16" r="13" fill="none" stroke="#57e389" stroke-width="4" stroke-dasharray="57.8 81.7" stroke-linecap="round" transform="rotate(-90 16 16)"/><text x="16" y="20.0" text-anchor="middle" font-size="11" font-weight="800" fill="#fff" font-family="Noto Sans,Cantarell,sans-serif">30</text></svg></span><span class="fb-capplet">&#9835; &nbsp;&#9711;</span></div></div><div class="fb-cmenu"><div class="mi">Week &middot; On track &mdash; 30.1 / 42.5 h</div><div class="mi">Needs 8.0 h/day &middot; 4.5 h left today</div><div class="mi">Tweelin &minus;6.5 h (Oct)</div><div class="sep"></div><div class="mi">Open dashboard</div><div class="mi">Open PineStem</div><div class="mi">Snooze nudges today</div><div class="mi">Refresh</div><div class="mi">Quit</div></div></div><p class="caption">The DBusMenu: plain text rows in the dark COSMIC menu style. The first three rows are information only.</p></div></div>
+
+  <h3 class="fb-h">B9 &middot; XFCE and Cinnamon: tray icon and classic menu</h3><div class="fb-pair"><div class="fb-xde"><div class="fb-xpanel"><div class="fb-xl"><span>Applications</span><span style="opacity:.6">Files</span><span style="opacity:.6">Terminal</span></div>
+  <div class="fb-xr"><span class="fb-xhl"><svg class="tray-ic fb-ring-i" viewBox="0 0 32 32" width="22" height="22" style="width:22px;height:22px"><circle cx="16" cy="16" r="13" fill="none" stroke="#ffffff40" stroke-width="4"/><circle cx="16" cy="16" r="13" fill="none" stroke="#57e389" stroke-width="4" stroke-dasharray="57.8 81.7" stroke-linecap="round" transform="rotate(-90 16 16)"/><text x="16" y="20.0" text-anchor="middle" font-size="11" font-weight="800" fill="#fff" font-family="Noto Sans,Cantarell,sans-serif">30</text></svg></span><span>&#9835;</span><span>Thu 29 Oct 14:10</span></div></div><div class="fb-gtkm">
+  <div class="mi hd"><span>Week &middot; On track</span></div>
+  <div class="mi dis"><span>30.1 / 42.5 h &middot; needs 8.0 h/day</span></div>
+  <div class="mi dis"><span>Tweelin Oct 112.5 / 133 h (&minus;6.5)</span></div>
+  <div class="mi dis"><span>R&amp;D 18.4 h</span></div>
+  <hr>
+  <div class="mi hov"><span>Open dashboard</span></div>
+  <div class="mi"><span>Open PineStem</span></div>
+  <div class="mi"><span>Show mini widget</span></div>
+  <div class="mi"><span>Snooze nudges today</span></div>
+  <div class="mi"><span>Refresh now</span><span style="opacity:.55">Updated 4 min ago</span></div>
+  <hr>
+  <div class="mi"><span>Quit Pace</span></div>
+</div></div><p class="caption">Right-click the ring for a classic GTK menu. Label text is not supported in these trays, so the number is drawn in the icon. Disabled rows show the numbers, the rest are actions. Left-click opens the mini widget, as on KDE and COSMIC.</p></div>
+
+  <h3 class="fb-h">B10 &middot; Mini widget</h3><div class="fb-split"><div class="fb-mini-grid"><div class="fb-mini-bg"><div class="mini"><div class="fb-mini-row"><b>Week</b><span class="chip ok">on track</span></div><div style="margin:6px 0 2px"><div class="bar"><i class="fill-ok" style="width:66.9%"></i><b style="left:91.1%"></b><b style="left:94.4%"></b></div></div><div class="fb-mini-sub"><span>30.1 / 42.5</span><span>8.0/day</span></div><div class="fb-mini-row" style="margin-top:8px"><b>Tweelin</b><span class="chip warn">&minus;6.5 h</span></div><div class="bar" style="margin:6px 0 2px"><i class="fill-warn" style="width:84.6%"></i></div><div class="fb-mini-sub"><span>112.5 / 133</span><span>10.3/day</span></div></div><span class="fb-lb">ON TRACK &middot; light</span></div><div class="fb-mini-bg fb-bgd"><div class="mini fb-mini-d"><div class="fb-mini-row"><b>Week</b><span class="chip ok">on track</span></div><div style="margin:6px 0 2px"><div class="bar"><i class="fill-ok" style="width:66.9%"></i><b style="left:91.1%"></b><b style="left:94.4%"></b></div></div><div class="fb-mini-sub"><span>30.1 / 42.5</span><span>8.0/day</span></div><div class="fb-mini-row" style="margin-top:8px"><b>Tweelin</b><span class="chip warn">&minus;6.5 h</span></div><div class="bar" style="margin:6px 0 2px"><i class="fill-warn" style="width:84.6%"></i></div><div class="fb-mini-sub"><span>112.5 / 133</span><span>10.3/day</span></div></div><span class="fb-lb">ON TRACK &middot; dark</span></div><div class="fb-mini-bg"><div class="mini"><div class="fb-mini-row"><b>Week</b><span class="chip hot">pay risk</span></div><div style="margin:6px 0 2px"><div class="bar"><i class="fill-hot" style="width:60.2%"></i><b style="left:91.1%"></b><b style="left:94.4%"></b></div></div><div class="fb-mini-sub"><span>27.1 / 42.5</span><span>13.9 today</span></div><div style="color:#c62828;font-weight:700;margin-top:4px">Wed 6.0 h &middot; Thu 3.5 h</div></div><span class="fb-lb">PAY RISK</span></div><div class="fb-mini-bg"><div class="mini"><div class="fb-mini-row"><b>Week</b><span class="chip fb-cb">bill</span></div><div style="margin:6px 0 2px"><div class="bar"><i class="fb-fillb" style="width:75.6%"></i><b style="left:91.1%"></b><b style="left:94.4%"></b></div></div><div class="fb-mini-sub"><span>34.0 / 42.5</span><span>Fri not billed yet</span></div></div><span class="fb-lb">BILL</span></div><div class="fb-mini-bg"><div class="mini"><div class="fb-mini-row"><b>Week</b><span class="chip mute">offline</span></div><div style="margin:6px 0 2px"><div class="bar"><i class="fb-fillg" style="width:59.1%"></i><b style="left:91.1%"></b><b style="left:94.4%"></b></div></div><div class="fb-mini-sub"><span>26.6 / 42.5</span><span>as of 09:40</span></div><div style="opacity:.72;margin-top:4px">Can&#8217;t reach DhiHRMS &middot; retrying</div></div><span class="fb-lb">OFFLINE</span></div></div><p class="caption">230 px, frameless, draggable. It remembers its position. On GNOME and KDE Wayland it cannot stay on top (there is no protocol for it), so it behaves like a sticky note on the desktop; a KDE window rule can pin it above other windows. On X11, Windows and macOS it can float on top.</p></div>
+
+  <h3 class="fb-h">B11 &middot; Panel label format options</h3><div class="fb-g3"><div class="fb-fmt"><b style="font-size:.85rem">Hours / target</b><div class="fb-slice"><span class="fb-clk">Thu <span class="fb-cd">29 Oct </span>14:10</span><span class="fb-lab fb-green "><i class="fb-d"></i><span>30.1 / 42.5 h</span></span><span class="fb-sys"><i></i><i></i><i></i></span></div><p class="caption">Default. Week hours over the week target.</p></div><div class="fb-fmt"><b style="font-size:.85rem">Percent</b><div class="fb-slice"><span class="fb-clk">Thu <span class="fb-cd">29 Oct </span>14:10</span><span class="fb-lab fb-green "><i class="fb-d"></i><span>71%</span></span><span class="fb-sys"><i></i><i></i><i></i></span></div><p class="caption">30.1 of 42.5 h. Shortest text with a progress feel.</p></div><div class="fb-fmt"><b style="font-size:.85rem">Gap on a project</b><div class="fb-slice"><span class="fb-clk">Thu <span class="fb-cd">29 Oct </span>14:10</span><span class="fb-lab fb-amber "><i class="fb-d"></i><span>&minus;6.5 h TWE</span></span><span class="fb-sys"><i></i><i></i><i></i></span></div><p class="caption">Tweelin month gap. Shown in the BEHIND amber.</p></div><div class="fb-fmt"><b style="font-size:.85rem">Left today</b><div class="fb-slice"><span class="fb-clk">Thu <span class="fb-cd">29 Oct </span>14:10</span><span class="fb-lab fb-green "><i class="fb-d"></i><span>4.5 h left today</span></span><span class="fb-sys"><i></i><i></i><i></i></span></div><p class="caption">What still has to be billed before you log off today.</p></div><div class="fb-fmt"><b style="font-size:.85rem">Icon only</b><div class="fb-slice"><span class="fb-clk">Thu <span class="fb-cd">29 Oct </span>14:10</span><span class="fb-lab"><svg class="tray-ic fb-ring-i" viewBox="0 0 32 32" width="18" height="18" style="width:18px;height:18px"><circle cx="16" cy="16" r="13" fill="none" stroke="#ffffff40" stroke-width="4"/><circle cx="16" cy="16" r="13" fill="none" stroke="#57e389" stroke-width="4" stroke-dasharray="57.8 81.7" stroke-linecap="round" transform="rotate(-90 16 16)"/><text x="16" y="20.0" text-anchor="middle" font-size="11" font-weight="800" fill="#fff" font-family="Noto Sans,Cantarell,sans-serif"></text></svg></span><span class="fb-sys"><i></i><i></i><i></i></span></div><p class="caption">Ring only, no text. For narrow panels. The tooltip and dropdown carry the numbers.</p></div></div><p class="fb-note">Chosen in Settings, Display, Panel text. All five show on the GNOME top bar; trays that cannot show text (KDE, COSMIC, XFCE) always use the drawn number.</p>
+
+  <h3 class="fb-h">B12 &middot; Monday morning, last week still open</h3><div class="fb-pair"><div class="gn-desk fb-wrap "><div class="gn-top"><span class="fb-act fb-ws"><i class="on"></i><i></i><i></i></span><span>Mon <span class="fb-cd">2 Nov </span>09:20</span><span class="fb-r"><span class="fb-lab fb-green fb-open "><i class="fb-d"></i><span>0.0 / 42.5 h</span></span><span class="fb-sys"><i></i><i></i><i></i></span></span></div><div class="gn-menu">
+  <div class="fb-warnrow fb-bannerrow"><span class="fb-gc" style="--c:#78aeed">&#9432;</span><span><b>Last week: Fri 30 Oct not billed yet</b><br>Bill by 12:00 today or it counts as 34.0 h &rarr; LOP 1 day.<a class="fb-btn" style="margin-top:8px">Open PineStem</a></span></div>
+  <div class="row"><b class="fb-t">Week &middot; On track</b><span class="fb-gc" style="--c:#57e389">needs 8.5 h/day</span></div>
+  <div class="fb-sm" style="margin-top:2px">0.0 / 42.5 h &middot; week just started</div>
+  <div class="bar" style="margin:8px 0 2px"><i class="fill-ok" style="width:0%"></i><b style="left:91.1%"></b><b style="left:94.4%"></b><b style="left:calc(100% - 2px)"></b></div>
+  <div class="fb-leg"><span>LOP 41</span><span>target 42.5</span><span>expected 45</span></div>
+  <div class="fb-days"><div class="t">Mon<b>0.0</b></div><div class="">Tue<b>&ndash;</b></div><div class="">Wed<b>&ndash;</b></div><div class="">Thu<b>&ndash;</b></div><div class="">Fri<b>&ndash;</b></div></div>
+  <hr><div class="item">Open dashboard</div><div class="item">Open PineStem</div><div class="item">Snooze nudges today</div><hr><div class="row fb-sm"><span>Updated 1 min ago</span><span style="color:#99c1f1;font-weight:700;opacity:1">Refresh</span></div>
+</div></div><p class="caption">The Friday grace runs until Monday 12:00. Until then a blue banner sits above the new week and the top-bar dot still shows only this week&rsquo;s verdict. After 12:00 last week is final: if Fri is still unbilled it stays at 34.0 h and counts as LOP 1 day.</p></div>
+</section>
+<h3 class="text-xl font-bold pt-4 border-t border-base-300">C · Dashboard, notifications, settings, leads, lifecycle</h3>
+<style>
+  .fc-grid { display: grid; gap: 1.5rem; align-items: start; grid-template-columns: minmax(0,1fr); }
+  @media (min-width: 768px) { .fc-g2 { grid-template-columns: repeat(2,minmax(0,1fr)); } .fc-g3 { grid-template-columns: repeat(3,minmax(0,1fr)); } .fc-g12 { grid-template-columns: minmax(0,1.25fr) minmax(0,1fr); } }
+  .fc-sec h3 { font-size: 1.15rem; font-weight: 700; padding-top: .75rem; }
+  .fc-sec { display: grid; gap: .75rem; min-width: 0; grid-template-columns: minmax(0,1fr); }
+  .fc-mock { min-width: 0; }
+
+  /* libadwaita 1.6 window */
+  .fc-win { background: #fafafa; color: #000c; border: 1px solid #0000001f; border-radius: 12px; overflow: hidden; font-family: Cantarell, "Noto Sans", "Inter", system-ui, sans-serif; font-size: 14px; box-shadow: 0 8px 28px #0000002e, 0 0 0 1px #0000000a; }
+  .fc-hb { height: 46px; background: #ebebeb; border-bottom: 1px solid #00000018; display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 0 6px; font-weight: 700; }
+  .fc-hb > * { flex: none; } .fc-hb > .fc-mid { flex: 0 1 auto; min-width: 0; }
+  .fc-hb .fc-title { text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fc-ib { min-width: 34px; height: 34px; border-radius: 8px; display: inline-grid; place-items: center; background: #0000000d; font-size: 14px; font-weight: 600; padding: 0 9px; white-space: nowrap; }
+  .fc-ib.fc-flat { background: none; }
+  .fc-vs { display: inline-flex; gap: 2px; background: #0000000f; padding: 2px; border-radius: 9px; font-size: 13px; font-weight: 700; }
+  .fc-vs span { padding: 5px 12px; border-radius: 7px; white-space: nowrap; } .fc-vs .on { background: #fff; box-shadow: 0 1px 2px #0003, 0 0 0 1px #0000000f; }
+  .fc-body { padding: 14px; display: grid; gap: 12px; }
+  .fc-body.fc-pad0 { padding: 0; }
+  .fc-grp-t { font-weight: 700; font-size: 13px; margin: 2px 4px 6px; } .fc-grp-d { font-size: 12px; opacity: .65; margin: -3px 4px 6px; }
+  .fc-card, .fc-list { background: #fff; border-radius: 12px; box-shadow: 0 0 0 1px #00000014; }
+  .fc-card { padding: 12px 14px; } .fc-list { overflow: hidden; }
+  .fc-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 14px; min-height: 50px; border-top: 1px solid #00000014; font-size: 14px; }
+  .fc-row:first-child { border-top: 0; }
+  .fc-row small { display: block; font-size: 12px; opacity: .62; font-weight: 400; margin-top: 1px; }
+  .fc-row > :first-child { min-width: 0; } .fc-row > :last-child { flex: none; max-width: 55%; text-align: right; }
+  .fc-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 7px 14px; border-radius: 8px; background: #0000000f; font-weight: 700; font-size: 13px; white-space: nowrap; }
+  .fc-btn.fc-s { background: #3584e4; color: #fff; } .fc-btn.fc-d { background: #c01c28; color: #fff; } .fc-btn.fc-dt { color: #c01c28; } .fc-btn.fc-pill { border-radius: 99px; padding: 8px 22px; }
+  .fc-combo { display: inline-flex; gap: 8px; align-items: center; background: #0000000f; border-radius: 8px; padding: 5px 10px; font-size: 13px; }
+  .fc-sw { width: 40px; height: 24px; border-radius: 99px; background: #3584e4; position: relative; display: inline-block; vertical-align: middle; }
+  .fc-sw::after { content: ""; position: absolute; width: 20px; height: 20px; border-radius: 50%; background: #fff; top: 2px; right: 2px; box-shadow: 0 1px 2px #0004; }
+  .fc-sw.off { background: #0000002e; } .fc-sw.off::after { right: auto; left: 2px; }
+  .fc-time { font-variant-numeric: tabular-nums; background: #0000000f; border-radius: 8px; padding: 4px 9px; font-size: 13px; margin-right: 10px; }
+  .fc-ok { color: #26a269; } .fc-wn { color: #a2690a; } .fc-ht { color: #c01c28; } .fc-bl { color: #1c71d8; }
+  .fc-pill-v { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: .03em; padding: 2px 9px; border-radius: 99px; }
+  .fc-pv-ok { background: #26a26922; color: #1a7a4c; } .fc-pv-hot { background: #e01b2422; color: #c01c28; } .fc-pv-wn { background: #e5a50a33; color: #8a5a00; } .fc-pv-mute { background: #0000000f; color: #555; }
+  .fc-bar { height: 8px; border-radius: 99px; background: #0000001a; position: relative; }
+  .fc-bar > i { position: absolute; inset: 0 auto 0 0; border-radius: 99px; } .fc-bar > b { position: absolute; top: -3px; width: 2px; height: 14px; background: #000; opacity: .5; }
+  .fc-bar > em { position: absolute; top: 14px; font-size: 9px; font-style: normal; opacity: .6; transform: translateX(-50%); white-space: nowrap; }
+  .fc-f-ok { background: #26a269; } .fc-f-wn { background: #e5a50a; } .fc-f-hot { background: #e01b24; }
+  .fc-tiles { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
+  .fc-tile { background: #fff; border-radius: 12px; box-shadow: 0 0 0 1px #00000014; padding: 10px 12px; min-width: 0; }
+  .fc-tile .fc-k { font-size: 11px; opacity: .65; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; }
+  .fc-tile .fc-v { font-size: 24px; font-weight: 800; line-height: 1.15; } .fc-tile .fc-v small { font-size: 12px; font-weight: 600; opacity: .7; }
+  .fc-tile .fc-s2 { font-size: 11.5px; opacity: .7; margin-top: 2px; }
+  .fc-days { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 6px; }
+  .fc-dc { background: #fff; border-radius: 10px; box-shadow: 0 0 0 1px #00000018; padding: 7px 4px; text-align: center; font-size: 11px; min-width: 0; position: relative; overflow: hidden; }
+  .fc-dc .fc-dn { font-weight: 700; opacity: .65; } .fc-dc .fc-dh { font-size: 17px; font-weight: 800; margin: 1px 0; } .fc-dc .fc-sp { font-size: 10px; opacity: .72; line-height: 1.35; }
+  .fc-dc.fc-today { box-shadow: 0 0 0 2px #3584e4; } .fc-dc.fc-fut { opacity: .55; }
+  .fc-dc.fc-half { background: linear-gradient(135deg,#fff 0 50%, #e9e9e9 50% 100%); background-image: linear-gradient(135deg,#fff 0 48%, transparent 48%), repeating-linear-gradient(45deg,#f0f0f0,#f0f0f0 5px,#e2e2e2 5px,#e2e2e2 10px); }
+  .fc-dc .fc-tag { display: inline-block; font-size: 9.5px; font-weight: 800; background: #e5a50a33; color: #7a4f00; border-radius: 99px; padding: 0 6px; margin-top: 2px; }
+  .fc-pc { background: #fff; border-radius: 12px; box-shadow: 0 0 0 1px #00000014; padding: 12px 14px; display: grid; gap: 6px; min-width: 0; }
+  .fc-kv { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; } .fc-kv span:last-child { text-align: right; }
+  .fc-tbl { width: 100%; border-collapse: collapse; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+  .fc-tbl th { text-align: left; font-size: 11px; opacity: .65; font-weight: 700; padding: 6px 8px; } .fc-tbl td { padding: 7px 8px; border-top: 1px solid #00000014; }
+  .fc-tbl .n { text-align: right; } .fc-tbl tr.cur td { background: #3584e414; font-weight: 700; }
+  .fc-note { font-size: 12px; opacity: .7; }
+  /* calendar */
+  .fc-cal { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); gap: 4px; }
+  .fc-cal .fc-wd { font-size: 11px; font-weight: 700; opacity: .6; text-align: center; padding: 2px 0; }
+  .fc-cc { border-radius: 8px; min-height: 52px; padding: 4px 2px; text-align: center; font-size: 10px; background: #00000008; min-width: 0; line-height: 1.25; overflow: hidden; }
+  .fc-cc b { display: block; font-size: 14px; } .fc-cc u { text-decoration: none; display: block; opacity: .7; font-size: 10px; text-align: left; padding-left: 3px; }
+  .fc-cc.we { background: transparent; opacity: .45; } .fc-cc.e { background: transparent; }
+  .fc-cc.g { background: #26a26926; } .fc-cc.a { background: #e5a50a38; } .fc-cc.r { background: #e01b2426; } .fc-cc.n { background: #0000000c; }
+  .fc-cc.hol { background: repeating-linear-gradient(45deg,#f1f1f1,#f1f1f1 5px,#e4e4e4 5px,#e4e4e4 10px); } .fc-cc.lv { background: #3584e41f; }
+  .fc-cc.t { box-shadow: inset 0 0 0 2px #3584e4; }
+  .fc-leg { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: 11.5px; } .fc-leg i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -2px; margin-right: 4px; box-shadow: 0 0 0 1px #0000001a; }
+  /* status page */
+  .fc-sp-page { text-align: center; padding: 26px 18px 30px; display: grid; gap: 8px; justify-items: center; }
+  .fc-sp-page .fc-ic { width: 84px; height: 84px; border-radius: 50%; background: #0000000d; display: grid; place-items: center; opacity: .75; }
+  .fc-sp-page h4 { font-size: 22px; font-weight: 800; line-height: 1.2; } .fc-sp-page p { font-size: 13px; opacity: .7; max-width: 24em; }
+  /* notifications */
+  .fc-nd { background: linear-gradient(135deg,#3d3846,#241f31); border-radius: 14px; padding: 14px 10px; display: grid; gap: 8px; justify-items: center; overflow: hidden; }
+  .fc-grid > *, .fc-nd > *, .fc-kde-wrap > *, .fc-nb > *, .fc-nh > div { min-width: 0; } .fc-nd, .fc-nb, .fc-kde-wrap { grid-template-columns: minmax(0,1fr); } .fc-nb .fc-nt, .fc-nb .fc-nx { overflow-wrap: anywhere; }
+  .fc-nl { font-size: 11px; color: #ffffffaa; font-family: Cantarell, system-ui, sans-serif; justify-self: start; padding-left: 4px; }
+  .fc-nb { background: #1e1e1e; color: #fff; border-radius: 18px; width: 400px; max-width: 100%; padding: 12px 14px; font-family: Cantarell, "Noto Sans", system-ui, sans-serif; font-size: 14px; box-shadow: 0 8px 26px #0009, 0 0 0 1px #ffffff1a; display: grid; gap: 8px; }
+  .fc-nb .fc-nh { display: flex; gap: 10px; align-items: flex-start; } .fc-nb .fc-ni { width: 32px; height: 32px; border-radius: 9px; flex: none; display: grid; place-items: center; background: #1c71d8; }
+  .fc-nb .fc-nt { font-weight: 700; } .fc-nb .fc-nx { font-size: 13.5px; opacity: .85; } .fc-nb .fc-nm { font-size: 11px; opacity: .55; margin-left: auto; flex: none; }
+  .fc-nb .fc-na { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px; }
+  .fc-nb .fc-na span { text-align: center; padding: 7px 4px; border-radius: 10px; background: #ffffff1f; font-weight: 700; font-size: 13px; }
+  .fc-nb.fc-warnic .fc-ni { background: #e5a50a; } .fc-nb.fc-hotic .fc-ni { background: #e01b24; } .fc-nb.fc-okic .fc-ni { background: #26a269; } .fc-nb.fc-muteic .fc-ni { background: #5e5c64; }
+  .fc-kde { background: #fcfcfc; color: #232629; border: 1px solid #bdc3c7; border-radius: 6px; width: 400px; max-width: 100%; font-family: "Noto Sans", system-ui, sans-serif; font-size: 13px; box-shadow: 0 6px 20px #0006; overflow: hidden; }
+  .fc-kde .fc-kh { display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: #eff0f1; border-bottom: 1px solid #dadcdd; font-size: 12px; } .fc-kde .fc-kh span:last-child { margin-left: auto; opacity: .6; }
+  .fc-kde .fc-kb { display: flex; gap: 10px; padding: 10px; } .fc-kde .fc-ki { width: 48px; height: 48px; border-radius: 8px; background: #3daee9; display: grid; place-items: center; flex: none; }
+  .fc-kde .fc-ka { display: flex; gap: 6px; padding: 0 10px 10px 68px; flex-wrap: wrap; } .fc-kde .fc-ka span { border: 1px solid #bdc3c7; background: #eff0f1; border-radius: 4px; padding: 3px 12px; font-size: 12px; }
+  /* json */
+  .fc-json { background: #1e1e1e; color: #d4d4d4; font: 12px/1.55 ui-monospace, "JetBrains Mono", monospace; border-radius: 10px; padding: 10px 12px; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .fc-json .k { color: #9cdcfe; } .fc-json .s { color: #ce9178; } .fc-json .m { color: #b5cea8; }
+  /* generic web admin */
+  .fc-web { background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 10px; overflow: hidden; font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 13px; color: #111827; }
+  .fc-web .fc-wtop { background: #fff; border-bottom: 1px solid #e5e7eb; padding: 10px 14px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; } .fc-web .fc-wtop b { color: #2563eb; }
+  .fc-web .fc-wtop span.l { color: #6b7280; } .fc-web .fc-wtop span.on { color: #2563eb; font-weight: 600; }
+  .fc-web .fc-wb { padding: 14px; display: grid; gap: 12px; } .fc-web .fc-wc { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; min-width: 0; }
+  .fc-web table { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 12px; } .fc-web th { text-align: left; color: #6b7280; font-weight: 600; padding: 6px 4px; border-bottom: 1px solid #e5e7eb; } .fc-web td { padding: 8px 4px; border-bottom: 1px solid #f3f4f6; }
+  .fc-web .fc-wbtn { display: inline-block; background: #2563eb; color: #fff; border-radius: 6px; padding: 6px 12px; font-weight: 600; font-size: 12px; } .fc-web .fc-wbtn.o { background: #fff; color: #2563eb; border: 1px solid #2563eb; padding: 3px 8px; }
+  .fc-web .fc-tag { font-size: 10px; background: #dbeafe; color: #1d4ed8; border-radius: 99px; padding: 1px 8px; font-weight: 600; }
+  .fc-web .fc-in { border: 1px solid #d1d5db; border-radius: 6px; padding: 4px 6px; background: #fff; }
+  .fc-ribbon { position: absolute; }
+  .fc-ws { display: inline-flex; align-items: center; gap: 4px; background: #ffffff26; border-radius: 99px; padding: 4px 9px; } .fc-ws i { display: block; width: 6px; height: 6px; border-radius: 99px; background: #ffffff80; } .fc-ws i.on { width: 18px; background: #fff; }
+  .fc-dimbg { background: linear-gradient(#0000004d,#0000004d), #dcdce0; padding: 18px 14px; border-radius: 12px; } .fc-pd { border-radius: 18px; box-shadow: 0 10px 30px #0006; max-width: 100%; }
+  .fc-banner { background: #3584e4; color: #fff; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 8px 12px; font-size: 13.5px; font-weight: 600; min-height: 46px; flex-wrap: wrap; text-align: center; }
+  .fc-banner .fc-bb { background: #ffffff2e; border-radius: 8px; padding: 5px 14px; font-weight: 700; }
+  .fc-toast { background: #333; color: #fff; border-radius: 99px; padding: 8px 8px 8px 16px; display: inline-flex; gap: 14px; align-items: center; font-size: 13px; max-width: 100%; } .fc-toast b { color: #99c1f1; padding: 0 8px; }
+  .fc-gm { background: #2e2e32; color: #fff; border-radius: 14px; width: 340px; max-width: 100%; padding: 14px; font-size: 13px; font-family: Cantarell, "Noto Sans", system-ui, sans-serif; box-shadow: 0 10px 30px #0008; display: grid; gap: 6px; }
+  .fc-gm .r { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; } .fc-gm hr { border: 0; border-top: 1px solid #ffffff1f; margin: 4px 0; } .fc-gm .it { padding: 6px 8px; border-radius: 8px; }
+  .fc-gm .fc-bar { background: #ffffff22; } .fc-gm .fc-bar > b { background: #fff; }
+  .fc-gm .snz { background: #3584e433; border-radius: 8px; padding: 7px 8px; display: flex; justify-content: space-between; gap: 8px; } .fc-gm .snz b { color: #99c1f1; }
+  .fc-ul { font-size: 13px; display: grid; gap: 4px; padding-left: 0; list-style: none; } .fc-ul li { display: flex; gap: 8px; } .fc-ul li > span:first-child { flex: none; width: 1.2em; }
+  @media (max-width: 520px) { .fc-hb .fc-lbl { display: none; } .fc-vs span { padding: 5px 8px; } .fc-days { gap: 4px; } .fc-dc .fc-dh { font-size: 15px; } .fc-row > :last-child { max-width: 60%; } .fc-body { padding: 10px; } }
+</style>
+
+<!-- ============ C1 ============ -->
+<section class="fc-sec" id="fc-c1">
+  <h3>C1 · Dashboard · Week</h3>
+  <div class="fc-grid fc-g12">
+    <div class="fc-mock">
+      <div class="fc-win">
+        <div class="fc-hb"><span class="fc-ib">⟳<span class="fc-lbl">&nbsp;4 min ago</span></span><span class="fc-vs fc-mid"><span class="on">Week</span><span>Month</span><span>Calendar</span></span><span class="fc-ib fc-flat">☰</span></div>
+        <div class="fc-body">
+          <div class="fc-tiles">
+            <div class="fc-tile"><div class="fc-k">This week</div><div class="fc-v">30.1 <small>h</small></div><div class="fc-s2"><span class="fc-pill-v fc-pv-ok">ON TRACK</span> need 8.0/day</div></div>
+            <div class="fc-tile"><div class="fc-k">Average / working day</div><div class="fc-v">8.87 <small>h</small></div><div class="fc-s2">3 finished days · 26.6 h</div></div>
+            <div class="fc-tile"><div class="fc-k">Pay line</div><div class="fc-v">41 <small>h</small></div><div class="fc-s2">10.9 h to go · 0 LOP days</div></div>
+            <div class="fc-tile"><div class="fc-k">Projected Friday</div><div class="fc-v">44.6 <small>h</small></div><div class="fc-s2">at the 9.0 h/day expected pace</div></div>
+          </div>
+          <div class="fc-card">
+            <div class="fc-kv" style="font-weight:700;margin-bottom:6px"><span>Week of 26 Oct</span><span class="fc-ok">30.1 / 42.5 h</span></div>
+            <div class="fc-bar" style="margin-bottom:10px"><i class="fc-f-ok" style="width:66.9%"></i><b style="left:91.1%"></b><b style="left:94.4%"></b><b style="left:99.7%"></b></div>
+            <div class="fc-note">Ticks: pay line 41 · target 42.5 · expected 45</div>
+          </div>
+          <div class="fc-days">
+            <div class="fc-dc"><div class="fc-dn">Mon</div><div class="fc-dh">9.2</div><div class="fc-sp">TWE 7.7<br>RES 1.5</div></div>
+            <div class="fc-dc"><div class="fc-dn">Tue</div><div class="fc-dh">8.4</div><div class="fc-sp">TWE 7.0<br>RES 1.4</div></div>
+            <div class="fc-dc"><div class="fc-dn">Wed</div><div class="fc-dh">9.0</div><div class="fc-sp">TWE 7.6<br>RES 1.4</div></div>
+            <div class="fc-dc fc-today"><div class="fc-dn" style="color:#1c71d8;opacity:1">Thu · today</div><div class="fc-dh">3.5</div><div class="fc-sp">TWE 3.5<br>4.5 left</div></div>
+            <div class="fc-dc fc-fut"><div class="fc-dn">Fri</div><div class="fc-dh">–</div><div class="fc-sp">needs<br>8.0</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="fc-note" style="font-size:.8rem;opacity:1;color:#57606a">Opens from the tray / panel "Open dashboard", or at login if enabled. Verdict, need/day and the three bar ticks come from the same core as the panel label. The refresh button re-pulls from hrms-api (otherwise every 15 min); clicking a day card opens that day's PineStem entries in the browser.</p>
+  </div>
+</section>
+
+<!-- ============ C2 ============ -->
+<section class="fc-sec" id="fc-c2">
+  <h3>C2 · Dashboard · Week with a half-day leave</h3>
+  <div class="fc-grid fc-g12">
+    <div class="fc-mock">
+      <div class="fc-win">
+        <div class="fc-hb"><span class="fc-ib">⟳<span class="fc-lbl">&nbsp;4 min ago</span></span><span class="fc-vs fc-mid"><span class="on">Week</span><span>Month</span><span>Calendar</span></span><span class="fc-ib fc-flat">☰</span></div>
+        <div class="fc-body">
+          <div class="fc-tiles">
+            <div class="fc-tile"><div class="fc-k">This week</div><div class="fc-v fc-ht">27.1 <small>h</small></div><div class="fc-s2"><span class="fc-pill-v fc-pv-hot">PAY RISK</span> pay needs 13.9 h</div></div>
+            <div class="fc-tile"><div class="fc-k">Target</div><div class="fc-v">41 <small>h</small></div><div class="fc-s2">half-day leave Thu (d = 4.5)</div></div>
+            <div class="fc-tile"><div class="fc-k">Average / working day</div><div class="fc-v">7.87 <small>h</small></div><div class="fc-s2">3 finished days · 23.6 h</div></div>
+            <div class="fc-tile"><div class="fc-k">Pay line</div><div class="fc-v fc-ht">41 <small>h</small></div><div class="fc-s2">13.9 h to go · LOP risk 1 day</div></div>
+          </div>
+          <div class="fc-card">
+            <div class="fc-kv" style="font-weight:700;margin-bottom:6px"><span>Week of 26 Oct</span><span class="fc-ht">27.1 / 41 h</span></div>
+            <div class="fc-bar" style="margin-bottom:6px"><i class="fc-f-hot" style="width:66%"></i><b style="left:100%"></b></div>
+            <div class="fc-note">HR still needs 41 h for zero loss of pay with a half-day leave, so the target is 41 h, not 38.25. Thu +1.75 h, Fri 10.5 h at most = 12.25 h: the line is out of reach. Short days (under 8.25 h): <span class="fc-wn">Mon 8.2 h</span> · <span class="fc-wn">Tue 7.4 h</span> · <span class="fc-wn">Wed 8.0 h</span>.</div>
+          </div>
+          <div class="fc-days">
+            <div class="fc-dc"><div class="fc-dn">Mon</div><div class="fc-dh fc-wn">8.2</div><div class="fc-sp">TWE 6.9<br>RES 1.3</div></div>
+            <div class="fc-dc"><div class="fc-dn">Tue</div><div class="fc-dh fc-wn">7.4</div><div class="fc-sp">TWE 6.2<br>RES 1.2</div></div>
+            <div class="fc-dc"><div class="fc-dn">Wed</div><div class="fc-dh fc-wn">8.0</div><div class="fc-sp">TWE 6.7<br>RES 1.3</div></div>
+            <div class="fc-dc fc-today fc-half"><div class="fc-dn" style="color:#1c71d8;opacity:1">Thu</div><div class="fc-dh">3.5</div><div class="fc-sp">TWE 3.5</div><span class="fc-tag">½ leave</span></div>
+            <div class="fc-dc fc-fut"><div class="fc-dn">Fri</div><div class="fc-dh">–</div><div class="fc-sp">full<br>day</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="fc-note" style="font-size:.8rem;opacity:1;color:#57606a">A half-day leave from DhiHRMS (Thu, d = 4.5) turns the Thursday card half-striped with a "½ leave" tag. This mock uses different hours than the running example so the PAY RISK rule can show. Pay risk fires because even Thu +1.75 h and Fri at 10.5 h cannot reach 41 h.</p>
+  </div>
+</section>
+
+<!-- ============ C3 ============ -->
+<section class="fc-sec" id="fc-c3">
+  <h3>C3 · Dashboard · Month</h3>
+  <div class="fc-grid fc-g12">
+    <div class="fc-mock">
+      <div class="fc-win">
+        <div class="fc-hb"><span class="fc-ib">⟳<span class="fc-lbl">&nbsp;4 min ago</span></span><span class="fc-vs fc-mid"><span>Week</span><span class="on">Month</span><span>Calendar</span></span><span class="fc-ib fc-flat">☰</span></div>
+        <div class="fc-body">
+          <div class="fc-pc">
+            <div class="fc-kv"><b>Tweelin <span class="mono" style="font-size:11px;opacity:.6">TWE</span></b><span class="fc-pill-v fc-pv-wn">BEHIND 6.5 h</span></div>
+            <div class="fc-kv"><span style="font-size:22px;font-weight:800">112.5 <span style="font-size:13px;opacity:.65">/ 133 h</span></span><span class="fc-note">140 prorated · lead's choice</span></div>
+            <div class="fc-bar" style="margin:4px 0 2px"><i class="fc-f-wn" style="width:84.6%"></i><b style="left:89.5%"></b></div>
+            <div class="fc-kv fc-note"><span>needs 10.3 h/day · 2 working days left</span><span>expected by now 119 h</span></div>
+            <svg viewBox="0 0 320 124" role="img" aria-label="Cumulative Tweelin hours, actual vs expected" style="width:100%;margin-top:4px">
+              <g stroke="#0000001a" stroke-width="1"><line x1="28" y1="10" x2="312" y2="10"/><line x1="28" y1="41" x2="312" y2="41"/><line x1="28" y1="73" x2="312" y2="73"/><line x1="28" y1="105" x2="312" y2="105"/></g>
+              <g font-size="9" fill="#666"><text x="2" y="13">133</text><text x="6" y="44">90</text><text x="6" y="76">45</text><text x="14" y="108">0</text><text x="28" y="118">1 Oct</text><text x="276" y="118">30 Oct</text></g>
+              <polyline points="28,105 298,10" fill="none" stroke="#888" stroke-width="1.5" stroke-dasharray="4 3"/>
+              <polyline points="28,105 42,100 99,80 170,62 227,43 276,25" fill="none" stroke="#e5a50a" stroke-width="2.4" stroke-linejoin="round"/>
+              <circle cx="276" cy="25" r="3.5" fill="#e5a50a"/>
+              <g font-size="9"><text x="150" y="30" fill="#777">expected: 7 h per working day</text><text x="150" y="80" fill="#a2690a">actual 112.5 h</text></g>
+            </svg>
+          </div>
+          <div class="fc-pc">
+            <div class="fc-kv"><b>R&amp;D <span class="mono" style="font-size:11px;opacity:.6">RES</span></b><span class="fc-pill-v fc-pv-mute">no target</span></div>
+            <div class="fc-kv"><span style="font-size:22px;font-weight:800">18.4 <span style="font-size:13px;opacity:.65">h</span></span><span class="fc-note">tracked only · billable</span></div>
+          </div>
+          <div>
+            <div class="fc-grp-t">October, week by week</div>
+            <div class="fc-list" style="padding:0 2px">
+              <table class="fc-tbl">
+                <thead><tr><th>Week</th><th class="n">Days</th><th class="n">TWE</th><th class="n">RES</th><th class="n">Total*</th></tr></thead>
+                <tbody>
+                  <tr><td>1–2 Oct</td><td class="n">1</td><td class="n">7.6</td><td class="n">0.6</td><td class="n">8.9</td></tr>
+                  <tr><td>5–9 Oct</td><td class="n">4</td><td class="n">28.0</td><td class="n">4.2</td><td class="n">35.2</td></tr>
+                  <tr><td>12–16</td><td class="n">5</td><td class="n">25.2</td><td class="n">5.0</td><td class="n">44.1</td></tr>
+                  <tr><td>19–23</td><td class="n">4</td><td class="n">25.9</td><td class="n">4.3</td><td class="n">35.0</td></tr>
+                  <tr class="cur"><td>26–30</td><td class="n">5</td><td class="n">25.8</td><td class="n">4.3</td><td class="n">30.1</td></tr>
+                  <tr><td><b>Month</b></td><td class="n"><b>19</b></td><td class="n"><b>112.5</b></td><td class="n"><b>18.4</b></td><td class="n"><b>153.3</b></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="fc-note" style="margin:4px 4px 0">*Total includes non-billable (used for pay). Targets use billable only. Holidays 2 and 20 Oct, leave 9 Oct.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="fc-note" style="font-size:.8rem;opacity:1;color:#57606a">One card per project. Tweelin shows the prorated target (133 h, from the lead's 140 h with one leave day) and the hard gap; the sparkline compares actual cumulative hours with the expected 7 h per working day. R&amp;D has no target so it is just a running total. Clicking a table row jumps to that week in the Week tab.</p>
+  </div>
+</section>
+
+<!-- ============ C4 ============ -->
+<section class="fc-sec" id="fc-c4">
+  <h3>C4 · Dashboard · Calendar</h3>
+  <div class="fc-grid fc-g12">
+    <div class="fc-mock">
+      <div class="fc-win">
+        <div class="fc-hb"><span class="fc-ib">⟳<span class="fc-lbl">&nbsp;4 min ago</span></span><span class="fc-vs fc-mid"><span>Week</span><span>Month</span><span class="on">Calendar</span></span><span class="fc-ib fc-flat">☰</span></div>
+        <div class="fc-body">
+          <div class="fc-kv" style="align-items:center"><span class="fc-ib fc-flat">‹</span><b style="font-size:16px">October 2026</b><span class="fc-ib fc-flat">›</span></div>
+          <div class="fc-cal">
+            <div class="fc-wd">Mon</div><div class="fc-wd">Tue</div><div class="fc-wd">Wed</div><div class="fc-wd">Thu</div><div class="fc-wd">Fri</div><div class="fc-wd">Sat</div><div class="fc-wd">Sun</div>
+            <div class="fc-cc e"></div><div class="fc-cc e"></div><div class="fc-cc e"></div>
+            <div class="fc-cc g"><u>1</u><b>8.9</b></div><div class="fc-cc hol"><u>2</u>Holiday</div><div class="fc-cc we"><u>3</u></div><div class="fc-cc we"><u>4</u></div>
+            <div class="fc-cc g"><u>5</u><b>9.0</b></div><div class="fc-cc g"><u>6</u><b>8.8</b></div><div class="fc-cc g"><u>7</u><b>8.6</b></div><div class="fc-cc g"><u>8</u><b>8.8</b></div><div class="fc-cc lv"><u>9</u>Leave</div><div class="fc-cc we"><u>10</u></div><div class="fc-cc we"><u>11</u></div>
+            <div class="fc-cc g"><u>12</u><b>9.9</b></div><div class="fc-cc r"><u>13</u><b>6.6</b></div><div class="fc-cc g"><u>14</u><b>10.2</b></div><div class="fc-cc g"><u>15</u><b>9.4</b></div><div class="fc-cc a"><u>16</u><b>8.0</b></div><div class="fc-cc we"><u>17</u></div><div class="fc-cc we"><u>18</u></div>
+            <div class="fc-cc g"><u>19</u><b>9.5</b></div><div class="fc-cc hol"><u>20</u>Holiday</div><div class="fc-cc g"><u>21</u><b>8.7</b></div><div class="fc-cc g"><u>22</u><b>8.8</b></div><div class="fc-cc a"><u>23</u><b>8.0</b></div><div class="fc-cc we"><u>24</u></div><div class="fc-cc we"><u>25</u></div>
+            <div class="fc-cc g"><u>26</u><b>9.2</b></div><div class="fc-cc a"><u>27</u><b>8.4</b></div><div class="fc-cc g"><u>28</u><b>9.0</b></div><div class="fc-cc n t"><u>29</u><b>3.5</b></div><div class="fc-cc n"><u>30</u>–</div><div class="fc-cc we"><u>31</u></div>
+          </div>
+          <div class="fc-leg"><span><i style="background:#26a26940"></i>≥ 8.5 h</span><span><i style="background:#e5a50a55"></i>7.0–8.4 h</span><span><i style="background:#e01b2440"></i>&lt; 7.0 h</span><span><i style="background:#0000000c"></i>not billed yet</span><span><i style="background:repeating-linear-gradient(45deg,#f1f1f1,#f1f1f1 3px,#ddd 3px,#ddd 6px)"></i>holiday</span><span><i style="background:#3584e433"></i>leave</span><span><i style="box-shadow:inset 0 0 0 2px #3584e4"></i>today</span></div>
+          <div class="fc-note">Colour = total billed hours that day vs the 8.5 h daily minimum. Restricted holidays only appear here when you have opted in (none this month). Weekends are never counted.</div>
+        </div>
+      </div>
+    </div>
+    <p class="fc-note" style="font-size:.8rem;opacity:1;color:#57606a">Read-only heat map of the month. Hover a day for the project split; click opens that day's entries in PineStem. Holidays come from the 14 loaded for 2026 and leave from DhiHRMS (9 Oct).</p>
+  </div>
+</section>
+
+<!-- ============ C5 ============ -->
+<section class="fc-sec" id="fc-c5">
+  <h3>C5 · Empty states (AdwStatusPage)</h3>
+  <div class="fc-grid fc-g3">
+    <div class="fc-mock"><div class="fc-win"><div class="fc-hb"><span class="fc-ib">⟳<span class="fc-lbl">&nbsp;just now</span></span><span class="fc-title fc-mid">Pace</span><span class="fc-ib fc-flat">☰</span></div>
+      <div class="fc-banner">Last week: Fri 30 Oct not billed yet. Bill by 12:00 today. <span class="fc-bb">Open PineStem</span></div>
+      <div class="fc-sp-page"><div class="fc-ic"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><h4>Nothing billed yet this week</h4><p>It is Monday morning. Hours appear here as soon as you bill them in PineStem. Target for the week is 42.5 h.</p><span class="fc-btn fc-s fc-pill">Open PineStem</span></div></div>
+      <p class="fc-note" style="margin-top:6px">Monday morning, before any billing. The banner shows while Friday is still inside its grace period (closes Monday 12:00).</p></div>
+    <div class="fc-mock"><div class="fc-win"><div class="fc-hb"><span class="fc-ib">⟳<span class="fc-lbl">&nbsp;4 min ago</span></span><span class="fc-title fc-mid">Pace</span><span class="fc-ib fc-flat">☰</span></div>
+      <div class="fc-sp-page"><div class="fc-ic"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="1.6" stroke-linecap="round"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg></div><h4>Targets start from your joining date</h4><p>You joined on Thu 15 Oct, so earlier days are not counted. That first week had 2 working days (Thu, Fri), so its target is prorated to 2 days.</p><span class="fc-pill-v fc-pv-mute">Joined 15 Oct 2026</span></div></div>
+      <p class="fc-note" style="margin-top:6px">Mid-month joiner (HR join date from DhiHRMS).</p></div>
+    <div class="fc-mock"><div class="fc-win"><div class="fc-hb"><span class="fc-ib">⟳<span class="fc-lbl">&nbsp;4 min ago</span></span><span class="fc-title fc-mid">Pace</span><span class="fc-ib fc-flat">☰</span></div>
+      <div class="fc-sp-page"><div class="fc-ic"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="1.6" stroke-linecap="round"><path d="M3 20l9-15 9 15zM12 10v4"/><circle cx="12" cy="17" r=".5"/></svg></div><h4>Enjoy your leave</h4><p>The whole week is leave or holiday, so there is no target and nothing to bill. Nudges are paused.</p><span class="fc-pill-v fc-pv-mute">ON LEAVE · 26–30 Oct</span></div></div>
+      <p class="fc-note" style="margin-top:6px">Whole week on leave / holiday.</p></div>
+  </div>
+</section>
+
+<!-- ============ C6 ============ -->
+<section class="fc-sec" id="fc-c6">
+  <h3>C6 · Notifications</h3>
+  <p class="fc-note" style="font-size:.8rem;opacity:1;color:#57606a">Native desktop notifications at real size: GNOME banner look first, KDE Plasma last. "Open PineStem" opens the portal in the browser; "Snooze today" mutes all nudges until midnight (see C12). The Daily 20:00 one is skipped on leave days and holidays.</p>
+  <div class="fc-grid fc-g2">
+    <div class="fc-nd"><div class="fc-nl">Friday 16:00</div>
+      <div class="fc-nb fc-warnic"><div class="fc-nh"><div class="fc-ni">⏱</div><div><div class="fc-nt">Friday check: 4.9 h left to reach 42.5</div><div class="fc-nx">Bill your work before you log off.</div></div><span class="fc-nm">Pace · now</span></div><div class="fc-na"><span>Open PineStem</span><span>Snooze today</span></div></div></div>
+    <div class="fc-nd"><div class="fc-nl">Daily 20:00 (Thu, pay risk)</div>
+      <div class="fc-nb fc-hotic"><div class="fc-nh"><div class="fc-ni">!</div><div><div class="fc-nt">Pay at risk this week</div><div class="fc-nx">Thursday has 3.5 h. Reaching the 41 h line needs 10.9 h on Friday, more than 10.5. Bill the rest of Thursday now.</div></div><span class="fc-nm">Pace · now</span></div><div class="fc-na"><span>Open PineStem</span><span>Snooze today</span></div></div></div>
+    <div class="fc-nd"><div class="fc-nl">Pay risk</div>
+      <div class="fc-nb fc-hotic"><div class="fc-nh"><div class="fc-ni">!</div><div><div class="fc-nt">Pay at risk: 41 h is out of reach</div><div class="fc-nx">27.1 h by Fri 11:00 needs 13.9 h today, more than 10.5. Short days: Wed 6.0 h · Thu 3.5 h. Bill missing hours now.</div></div><span class="fc-nm">Pace · now</span></div><div class="fc-na"><span>Open PineStem</span><span>Snooze today</span></div></div></div>
+    <div class="fc-nd"><div class="fc-nl">Project behind</div>
+      <div class="fc-nb fc-warnic"><div class="fc-nh"><div class="fc-ni">↘</div><div><div class="fc-nt">Tweelin is 6.5 h behind for October</div><div class="fc-nx">112.5 of 133 h. 10.3 h/day needed on Thu–Fri.</div></div><span class="fc-nm">Pace · now</span></div><div class="fc-na"><span>Open PineStem</span><span>Snooze today</span></div></div></div>
+    <div class="fc-nd"><div class="fc-nl">Zero-hour day (from 12:00 next working day)</div>
+      <div class="fc-nb fc-warnic"><div class="fc-nh"><div class="fc-ni">0</div><div><div class="fc-nt">Wednesday has 0 h billed</div><div class="fc-nx">Forgot to bill? Add it before the week closes.</div></div><span class="fc-nm">Pace · 12:00</span></div><div class="fc-na"><span>Open PineStem</span><span>Snooze today</span></div></div></div>
+    <div class="fc-nd"><div class="fc-nl">Monday 12:30 summary</div>
+      <div class="fc-nb fc-okic"><div class="fc-nh"><div class="fc-ni">✓</div><div><div class="fc-nt">Last week 43.1 h ✓</div><div class="fc-nx">Above the 42.5 h target. Tweelin 112.5 / 133 h for October.</div></div><span class="fc-nm">Pace · 12:30</span></div><div class="fc-na"><span>Open dashboard</span><span>Dismiss</span></div></div></div>
+    <div class="fc-nd"><div class="fc-nl">Session expired</div>
+      <div class="fc-nb fc-muteic"><div class="fc-nh"><div class="fc-ni">🔑</div><div><div class="fc-nt">Sign in again</div><div class="fc-nx">Your Microsoft session has expired. Numbers are paused at 09:40.</div></div><span class="fc-nm">Pace · now</span></div><div class="fc-na"><span>Sign in</span><span>Later</span></div></div></div>
+    <div class="fc-kde-wrap" style="background:linear-gradient(160deg,#1d99f3,#0c4f8a);border-radius:14px;padding:14px 10px;display:grid;gap:8px;justify-items:center;overflow:hidden">
+      <div class="fc-nl" style="justify-self:start;padding-left:4px">KDE Plasma 6 · Friday 16:00</div>
+      <div class="fc-kde"><div class="fc-kh"><span>⏱</span><span>Pace</span><span>now ✕</span></div>
+        <div class="fc-kb"><div class="fc-ki"><svg width="30" height="30" viewBox="0 0 32 32"><circle cx="16" cy="16" r="12" fill="none" stroke="#ffffff66" stroke-width="4"/><circle cx="16" cy="16" r="12" fill="none" stroke="#fff" stroke-width="4" stroke-dasharray="60 76" transform="rotate(-90 16 16)"/></svg></div><div><b>Friday check: 4.9 h left to reach 42.5</b><div style="opacity:.8">Bill your work before you log off.</div></div></div>
+        <div class="fc-ka"><span>Open PineStem</span><span>Snooze today</span></div></div></div>
+  </div>
+</section>
+
+<!-- ============ C7 ============ -->
+<section class="fc-sec" id="fc-c7">
+  <h3>C7 · Settings (AdwPreferencesDialog)</h3>
+  <div class="fc-grid fc-g12">
+    <div class="fc-mock">
+      <div class="fc-dimbg"><div class="fc-win fc-pd">
+        <div class="fc-hb"><span class="fc-ib fc-flat">🔍</span><span class="fc-title fc-mid">Preferences</span><span class="fc-ib fc-flat">✕</span></div>
+        <div class="fc-body">
+          <div><div class="fc-grp-t">Notify me when</div><div class="fc-list">
+            <div class="fc-row"><span>Friday check<small>Hours left to reach the target</small></span><span><span class="fc-time">16:00</span><span class="fc-sw"></span></span></div>
+            <div class="fc-row"><span>Daily summary<small>Skipped on leave days and holidays</small></span><span><span class="fc-time">20:00</span><span class="fc-sw"></span></span></div>
+            <div class="fc-row"><span>Pay risk<small>When the loss-of-pay line gets out of reach</small></span><span><span class="fc-time">11:00</span><span class="fc-sw"></span></span></div>
+            <div class="fc-row"><span>Project behind<small>Monthly project targets, once a day</small></span><span><span class="fc-time">10:30</span><span class="fc-sw"></span></span></div>
+            <div class="fc-row"><span>Zero-hour day<small>A working day with nothing billed</small></span><span><span class="fc-time">12:00</span><span class="fc-sw"></span></span></div>
+            <div class="fc-row"><span>Monday summary<small>How last week ended, after Friday closes at 12:00</small></span><span><span class="fc-time">12:30</span><span class="fc-sw off"></span></span></div>
+            <div class="fc-row"><span>Session expired<small>Cannot be turned off</small></span><span><span class="fc-sw" style="opacity:.4"></span></span></div></div></div>
+          <div><div class="fc-grp-t">Display</div><div class="fc-list">
+            <div class="fc-row"><span>Panel text</span><span class="fc-combo">30.1 / 42.5 h&nbsp;▾</span></div>
+            <div class="fc-row"><span>Show mini widget at login</span><span class="fc-sw off"></span></div>
+            <div class="fc-row"><span>Refresh every</span><span class="fc-combo">15 min&nbsp;▾</span></div></div></div>
+          <div><div class="fc-grp-t">Startup</div><div class="fc-list"><div class="fc-row"><span>Start Pace at login<small>Adds an autostart entry</small></span><span class="fc-sw"></span></div></div></div>
+          <div><div class="fc-grp-t">Account</div><div class="fc-list">
+            <div class="fc-row"><span>Signed in as<small>Vikas K · PineStem ID 2370</small></span><span style="font-size:13px">vikas.k@osmosys.co</span></div>
+            <div class="fc-row"><span></span><span class="fc-btn fc-dt">Sign out</span></div></div></div>
+          <div><div class="fc-grp-t">About</div><div class="fc-list">
+            <div class="fc-row"><span>Version</span><span class="mono" style="font-size:13px">0.1.0</span></div>
+            <div class="fc-row"><span>Updates<small>Updates: install the newer package file you were sent</small></span><span class="fc-btn">Download</span></div></div></div>
+        </div>
+      </div></div>
+    </div>
+    <p class="fc-note" style="font-size:.8rem;opacity:1;color:#57606a">Each rule is one switch row; the time button opens a small time picker. Defaults match the nudge rules (Friday 16:00, daily 20:00, Monday 12:30). Preferences opens as a dialog over the main window (libadwaita 1.6 AdwPreferencesDialog: rounded, close button, no separate title bar). "Remove my Pace data" lives at the bottom of this dialog, see C11.</p>
+  </div>
+</section>
+
+<!-- ============ C8 ============ -->
+<section class="fc-sec" id="fc-c8">
+  <h3>C8 · Lead, phase 1: share targets</h3>
+  <div class="fc-grid fc-g2">
+    <div class="fc-mock">
+      <div class="fc-win">
+        <div class="fc-hb"><span class="fc-ib fc-flat">Cancel</span><span class="fc-title fc-mid">Share targets</span><span class="fc-ib" style="background:#3584e4;color:#fff">Export…</span></div>
+        <div class="fc-body">
+          <div class="fc-note">Make a preset file for your team. They import it in Preferences, and its values show as "set by lead".</div>
+          <div class="fc-list">
+            <div class="fc-row"><span>Project</span><span class="fc-combo">Tweelin · TWE&nbsp;▾</span></div>
+            <div class="fc-row"><span>Monthly target<small>billable hours</small></span><span class="fc-combo">140 h&nbsp;−&nbsp;+</span></div>
+            <div class="fc-row"><span>Prorate for leave and holidays<small>Yes: 140 becomes 133 h with one leave day</small></span><span class="fc-sw"></span></div>
+          </div>
+          <div style="text-align:center"><span class="fc-btn fc-s fc-pill">Export preset…</span></div>
+          <div class="fc-note" style="text-align:center">Saves <span class="mono">tweelin-oct.pace-targets.json</span></div>
+        </div>
+      </div>
+      <div class="fc-toast" style="margin-top:10px">Saved tweelin-oct.pace-targets.json <b>Show in folder</b></div>
+    </div>
+    <div class="fc-mock">
+      <div class="fc-grp-t">tweelin-oct.pace-targets.json</div>
+      <div class="fc-json"><span class="k">{</span>
+  <span class="k">"schema"</span>: <span class="s">"pace-targets/1"</span>,
+  <span class="k">"project"</span>: { <span class="k">"code"</span>: <span class="s">"TWE"</span>, <span class="k">"name"</span>: <span class="s">"Tweelin"</span> },
+  <span class="k">"monthlyTarget"</span>: <span class="m">140</span>,
+  <span class="k">"prorate"</span>: <span class="m">true</span>,
+  <span class="k">"dailyMinimum"</span>: <span class="m">8.5</span>,
+  <span class="k">"validFrom"</span>: <span class="s">"2026-10-01"</span>,
+  <span class="k">"sharedBy"</span>: <span class="s">"Vikas K"</span>
+<span class="k">}</span></div>
+      <p class="fc-note" style="margin-top:6px">Phase 1 has no server: the lead picks a project and a number, exports this file, and sends it over chat or email. Team members import it from Preferences.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ C9 ============ -->
+<section class="fc-sec" id="fc-c9">
+  <h3>C9 · Lead, phase 2 (later): hrms-portal "Pace targets"</h3>
+  <div class="fc-grid fc-g12">
+    <div class="fc-mock">
+      <div class="fc-web">
+        <div class="fc-wtop"><b>hrms-portal</b><span class="l">Team</span><span class="on">Pace targets</span><span class="l">Leave</span><span class="fc-tag" style="margin-left:auto">later</span></div>
+        <div class="fc-wb">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><b style="font-size:16px">Pace targets</b><span class="fc-wbtn">+ Add target</span></div>
+          <div class="fc-wc">
+            <table>
+              <colgroup><col style="width:23%"><col style="width:17%"><col style="width:19%"><col style="width:15%"><col style="width:12%"><col style="width:14%"></colgroup>
+              <thead><tr><th>Name</th><th>Project</th><th>Monthly</th><th>Prorate</th><th>Daily min</th><th></th></tr></thead>
+              <tbody>
+                <tr><td>Vikas K</td><td><span class="fc-tag">TWE</span></td><td>140 h</td><td>Yes</td><td>8.5</td><td><span class="fc-wbtn o">Edit</span></td></tr>
+                <tr><td>Aarav S</td><td><span class="fc-tag">TWE</span></td><td>140 h</td><td>Yes</td><td>8.5</td><td><span class="fc-wbtn o">Edit</span></td></tr>
+                <tr><td>Meera P</td><td><span class="fc-tag">TWE</span></td><td>120 h</td><td>No</td><td>8.5</td><td><span class="fc-wbtn o">Edit</span></td></tr>
+                <tr><td>Rohan D</td><td><span class="fc-tag">RES</span></td><td>–</td><td>–</td><td>8.5</td><td><span class="fc-wbtn o">Edit</span></td></tr>
+                <tr><td>Isha N</td><td><span class="fc-tag">TWE</span></td><td>140 h</td><td>Yes</td><td>8.5</td><td><span class="fc-wbtn o">Edit</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="fc-wc" style="display:grid;gap:8px">
+            <b>Edit · Meera P</b>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><span>Monthly</span><span class="fc-in">120</span><span>Prorate</span><span class="fc-in">No ▾</span></div>
+            <div><span class="fc-wbtn">Save</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="fc-note" style="font-size:.8rem;opacity:1;color:#57606a">Phase 2, later: once hrms-portal exposes targets, leads edit them here and every Pace client picks them up from hrms-api, replacing the JSON preset of C8. Styled as a generic web admin on purpose: this is not part of the Pace app.</p>
+  </div>
+</section>
+
+<!-- ============ C10 ============ -->
+<section class="fc-sec" id="fc-c10">
+  <h3>C10 · Upgrade skew: app and extension disagree</h3>
+  <div class="fc-grid fc-g2">
+    <div class="fc-mock">
+      <div class="fc-win">
+        <div class="fc-hb"><span class="fc-ib">⟳<span class="fc-lbl">&nbsp;4 min ago</span></span><span class="fc-vs fc-mid"><span class="on">Week</span><span>Month</span><span>Calendar</span></span><span class="fc-ib fc-flat">☰</span></div>
+        <div class="fc-banner">Log out and back in to load the new panel extension <span class="fc-bb">Log out now</span></div>
+        <div class="fc-body"><div class="fc-tiles">
+          <div class="fc-tile"><div class="fc-k">This week</div><div class="fc-v">30.1 <small>h</small></div><div class="fc-s2"><span class="fc-pill-v fc-pv-ok">ON TRACK</span> need 8.0/day</div></div>
+          <div class="fc-tile"><div class="fc-k">Pay line</div><div class="fc-v">41 <small>h</small></div><div class="fc-s2">10.9 h to go</div></div></div></div>
+      </div>
+      <p class="fc-note" style="margin-top:6px">The app is newer than the installed GNOME extension: <span class="mono">status.json</span> has schema 2, the extension reads schema 1. The extension ships inside the package, but GNOME only loads new extensions at login, so the fix is to log out and back in.</p>
+    </div>
+    <div class="fc-mock">
+      <div class="gn-desk" style="padding:0 10px 14px">
+        <div class="gn-top"><span class="fc-ws"><i class="on"></i><i></i><i></i></span><span>Thu 29 Oct 14:10</span><span class="gn-pill">⚠ Pace</span></div>
+        <div class="fc-gm" style="margin:8px 0 0 auto">
+          <div class="r"><b style="font-size:15px">Pace</b><span style="opacity:.6">schema mismatch</span></div>
+          <div class="it" style="background:#ffffff14"><b>Log out and back in to show numbers</b></div>
+          <hr><div class="it">Open dashboard</div><div class="it" style="opacity:.6">Open PineStem</div>
+        </div>
+      </div>
+      <p class="fc-note" style="margin-top:6px">The opposite skew (extension newer than app): the panel pill drops to "⚠ Pace" and the dropdown shows only the update prompt, never wrong numbers.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ C11 ============ -->
+<section class="fc-sec" id="fc-c11">
+  <h3>C11 · Uninstall: what goes and what stays</h3>
+  <div class="fc-grid fc-g2">
+    <div class="fc-mock">
+      <div class="fc-card" style="font-family:Cantarell,'Noto Sans',system-ui,sans-serif;display:grid;gap:10px">
+        <b>sudo dnf remove pace</b>
+        <div><div class="fc-grp-t" style="margin:0 0 4px">Removed by dnf remove</div>
+          <ul class="fc-ul"><li><span class="fc-ok">✓</span><span>the app, <span class="mono">/usr/bin/pace</span></span></li><li><span class="fc-ok">✓</span><span>GNOME extension, <span class="mono">/usr/share/gnome-shell/extensions/pace@osmosys</span> (it lives in /usr, so it goes with the package)</span></li><li><span class="fc-ok">✓</span><span>system autostart and <span class="mono">.desktop</span> files</span></li></ul></div>
+        <div><div class="fc-grp-t" style="margin:0 0 4px">Left behind (yours)</div>
+          <ul class="fc-ul"><li><span class="fc-wn">•</span><span>login token in the keyring (Secret Service, "Pace")</span></li><li><span class="fc-wn">•</span><span><span class="mono">~/.local/state/pace/status.json</span></span></li><li><span class="fc-wn">•</span><span><span class="mono">~/.config/pace</span> (targets, settings)</span></li><li><span class="fc-wn">•</span><span><span class="mono">~/.config/autostart/pace.desktop</span> if you enabled start at login</span></li></ul></div>
+        <div class="fc-note">Packages never delete files in your home directory. Run the button on the right first for a clean slate.</div>
+      </div>
+    </div>
+    <div class="fc-mock">
+      <div class="fc-dimbg"><div class="fc-win fc-pd">
+        <div class="fc-hb"><span class="fc-ib fc-flat">🔍</span><span class="fc-title fc-mid">Preferences</span><span class="fc-ib fc-flat">✕</span></div>
+        <div class="fc-body"><div><div class="fc-grp-t">Data</div><div class="fc-list">
+          <div class="fc-row"><span>Remove my Pace data<small>Deletes the keyring entry, status.json, ~/.config/pace and the autostart entry. Cannot be undone.</small></span><span class="fc-btn fc-d">Remove…</span></div></div></div></div>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ C12 ============ -->
+<section class="fc-sec" id="fc-c12">
+  <h3>C12 · Snoozed state</h3>
+  <div class="fc-grid fc-g12">
+    <div class="fc-mock">
+      <div class="gn-desk" style="padding:0 10px 14px">
+        <div class="gn-top"><span class="fc-ws"><i class="on"></i><i></i><i></i></span><span>Thu 29 Oct 14:10</span><span class="gn-pill"><span style="color:#57e389">●</span> 30.1 / 42.5 h</span></div>
+        <div class="fc-gm" style="margin:8px 0 0 auto">
+          <div class="r"><b style="font-size:15px">Week · On track</b><span style="color:#57e389">needs 8.0 h/day</span></div>
+          <div class="fc-bar"><i class="fc-f-ok" style="width:66.9%"></i><b style="left:91.1%"></b><b style="left:94.4%"></b></div>
+          <div class="snz"><span>Nudges snoozed until midnight</span><b>Undo</b></div>
+          <hr><div class="it">Open dashboard</div><div class="it">Open PineStem</div>
+        </div>
+      </div>
+    </div>
+    <p class="fc-note" style="font-size:.8rem;opacity:1;color:#57606a">"Snooze today" on any notification (C6) mutes every nudge until 00:00 local time. The menu row says so, and Undo restores them. Numbers and colours in the panel keep updating; only notifications are held back.</p>
+  </div>
+</section>
+</section>
+
+<section id="build" class="sec space-y-4">
+  <h2 class="text-2xl font-bold">Build order</h2>
+  <p class="max-w-3xl">The app builds in eight slices, each with a check that proves it done. Slice 1 runs in hrms-api's own repo through its own session, and only on your go typed there. Slices 2–3 can start before it lands by running against recorded fixtures (saved API responses).</p>
+  <div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
+    <table class="table table-sm">
+      <thead><tr><th>#</th><th>Slice</th><th>Done when</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td><b>hrms-api</b>: <span class="mono">my-hours</span> + <span class="mono">my-days</span>, a 60 s cache and <span class="mono">?fresh=1</span> (TDD, in its repo)</td><td>For a fixed week, my-hours totals equal the HR billing report's totals. my-days returns 0.5 for a half-day and excludes restricted holidays the person didn't opt into.</td></tr>
+        <tr><td>2</td><td><b>Pace engine</b> (pure Python), ported from <span class="mono">sim/week-rules-v4.js</span></td><td>pytest replays all 18 simulated weeks and matches <span class="mono">week-rules-v4-out.txt</span> cell for cell on verdicts and need/day (display rounds minutes half-up, so 267 min shows 4.5 h where the sim prints 4.4), plus a Monday 09:00 poll while last Friday is still "not billed yet". Fable judges any new timeline before a rule changes.</td></tr>
+        <tr><td>3</td><td><b>paced</b>: sign-in (PKCE, loopback), Secret Service token, poll, <span class="mono">status.json</span></td><td>On Nobara the number reaches <span class="mono">status.json</span> within 300 ms of login. <span class="mono">ps</span> shows paced under 35 MB.</td></tr>
+        <tr><td>4</td><td><b>GNOME extension</b> <span class="mono">pace@osmosys</span> (forked from claude-usage)</td><td>All 13 label states render from fixture <span class="mono">status.json</span> files. Screenshots are reviewed by Fable.</td></tr>
+        <tr><td>5</td><td><b>Tray icon</b> (StatusNotifierItem) + notifications</td><td>A KDE Plasma 6 VM and a COSMIC VM both show the icon. Left-click opens the mini widget, and right-click shows the text menu (a tray icon gets nothing richer).</td></tr>
+        <tr><td>6</td><td><b>GTK4 UI</b>: sign-in, targets, dashboard, settings, mini widget</td><td>Every mock in sections A–C is rendered on Broadway (GTK's HTML5 display backend, used for headless screenshots) and looked at, and Fable reviews the PNGs.</td></tr>
+        <tr><td>7</td><td><b>Packaging</b>: <span class="mono">.rpm</span>, <span class="mono">.deb</span>, AppImage from GitHub Actions</td><td>A clean Fedora 44 and an Ubuntu 24.04 container install it and start paced.</td></tr>
+        <tr><td>8</td><td><b>Pilot</b>: Vikas + 2 colleagues for two weeks</td><td>Pace's verdict matched HR's LOP email every week. No colleague turned nudges off.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="text-sm max-w-3xl">Later, not in v1: the <span class="mono">my-targets</span> endpoint plus the hrms-portal targets page (mock C9), Flathub, and Windows/macOS (with this toolkit that means new UI screens; the engine and <span class="mono">status.json</span> contract carry over).</p>
+</section>
+
+<section id="risks" class="sec space-y-4">
+  <h2 class="text-2xl font-bold">Risks: Fable's pre-mortem, and the answer to each</h2>
+  <div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
+    <table class="table table-sm">
+      <thead><tr><th>If Pace fails, it will be because…</th><th>What this draft does</th></tr></thead>
+      <tbody>
+        <tr><td><b>Numbers look stale</b> right after billing, so people stop trusting them</td><td>The server cache drops to 60 s. Refresh sends <span class="mono">?fresh=1</span> (limited to once a minute). Every surface shows "as of".</td></tr>
+        <tr><td><b>Green while HR docks pay</b></td><td>Pay comes first in the rules, the half-day target rises to 41&nbsp;h, and the last day always shows "pay needs N h". Simulation plus 4 Fable rounds; the pilot compares against the real LOP email.</td></tr>
+        <tr><td><b>"Always visible" fails on stock GNOME</b>: no tray, and extensions break with each Shell release</td><td>The package ships the panel extension. Setup enables it, which needs one re-login (A10), and a version-skew banner covers upgrades (C10). Without the extension, notifications and the mini widget still work.</td></tr>
+        <tr><td><b>No keyring</b> on COSMIC or minimal KDE, so a sign-in prompt every morning</td><td>A one-time choice (A9): a file in <span class="mono">~/.local/share/pace</span> with mode 600, like <span class="mono">rclone.conf</span>, or sign in each login.</td></tr>
+        <tr><td><b>It feels like surveillance</b>: nightly nudges and locked targets</td><td>Every nudge has its own switch plus "Snooze today", the data stays on the person's machine, and leads set targets but never see the app.</td></tr>
+        <tr><td><b>Wayland can't keep the widget on top</b></td><td>The widget behaves like a sticky note. KDE users can pin it with a window rule. The panel label is the always-visible surface.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="decide" class="sec space-y-4">
+  <h2 class="text-2xl font-bold">Decisions</h2>
+  <p class="max-w-3xl">Each row has a recommendation. <b>Row 3 (who owns targets) and row 9 (fixed vs prorated) are the ones I'd defend least.</b> Pick per row and press <b>Queue answers</b>, or say "go" in the terminal.</p>
+  <form data-lavish-question="decisions" class="space-y-3" onsubmit="event.preventDefault(); const fd=new FormData(event.currentTarget); const a={}; for (const [k,v] of fd.entries()) a[k]=v; window.lavish && window.lavish.queuePrompt('Pace design decisions: '+JSON.stringify(a), {tag:'choice', text:'Decisions: '+Object.values(a).join(' · '), element:event.currentTarget, data:a});">
+    <div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
+      <table class="table table-sm">
+        <thead><tr><th>#</th><th>Decision</th><th>Choice</th><th>The fact that decides it</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Where the app gets hours</td>
+            <td><label class="flex gap-2"><input type="radio" class="radio radio-xs" name="data" value="hrms-api endpoints" checked> hrms-api endpoints (rec.)</label><label class="flex gap-2"><input type="radio" class="radio radio-xs" name="data" value="direct PineStem login"> App logs in to PineStem</label></td>
+            <td>hrms-api already holds org PineStem credentials and the user mapping (<span class="mono">pinestem.client.ts:185</span>).</td></tr>
+          <tr><td>2</td><td>Entra registration</td>
+            <td><label class="flex gap-2"><input type="radio" class="radio radio-xs" name="entra" value="new Pace registration" checked> New "Pace" public client (rec.)</label><label class="flex gap-2"><input type="radio" class="radio radio-xs" name="entra" value="reuse dhihrms-mcp"> Reuse dhihrms-mcp's</label></td>
+            <td>hrms-api checks only <span class="mono">aud</span> + <span class="mono">access_as_user</span> (<span class="mono">microsoft-sso.service.ts:64-71</span>). A separate app gets its own consent screen and its own revocation.</td></tr>
+          <tr><td>3</td><td>Who owns targets</td>
+            <td><label class="flex gap-2"><input type="radio" class="radio radio-xs" name="targets" value="lead preset file now, hrms-portal later" checked> Lead's preset file now, portal later (rec.)</label><label class="flex gap-2"><input type="radio" class="radio radio-xs" name="targets" value="local only"> Each person sets their own</label></td>
+            <td>Targets differ per person and that's the lead's call. A preset file needs no hrms-portal work for v1.</td></tr>
+          <tr><td>4</td><td>Toolkit</td>
+            <td><label class="flex gap-2"><input type="radio" class="radio radio-xs" name="stack" value="Python GTK4 libadwaita (Lifeboat stack)" checked> Python + GTK4/libadwaita, as Lifeboat (rec.)</label><label class="flex gap-2"><input type="radio" class="radio radio-xs" name="stack" value="Tauri v2"> Tauri v2</label></td>
+            <td>The first users are all on Linux. Tauri only imitates GTK in a webview (80–150 MB per window). Windows/macOS later means about 6 new screens; the engine carries over.</td></tr>
+          <tr><td>5</td><td>Repo home</td>
+            <td><label class="flex gap-2"><input type="radio" class="radio radio-xs" name="repo" value="personal GitHub private" checked> Personal GitHub (xixas), private ✓</label><label class="flex gap-2"><input type="radio" class="radio radio-xs" name="repo" value="Osmosys GitLab"> Osmosys GitLab</label></td>
+            <td>Pace is Vikas's personal project (decided 2026-10-28). Private for now; packages shared by hand when needed.</td></tr>
+          <tr><td>6</td><td>Packages</td>
+            <td><label class="flex gap-2"><input type="radio" class="radio radio-xs" name="dist" value="GitHub private release rpm+deb+AppImage" checked> .rpm + .deb + AppImage on private GitHub releases ✓</label><label class="flex gap-2"><input type="radio" class="radio radio-xs" name="dist" value="COPR"> Public COPR, as Lifeboat</label></td>
+            <td>The repo is private, so its releases are too: Vikas shares the files by hand for now. No COPR, no extensions.gnome.org. The GNOME extension ships inside the package.</td></tr>
+          <tr><td>7</td><td>Week rules</td>
+            <td><label class="flex gap-2"><input type="radio" class="radio radio-xs" name="rules" value="v4" checked> Rules v4, pay first (rec.)</label><label class="flex gap-2"><input type="radio" class="radio radio-xs" name="rules" value="draft 1"> Draft 1 bands</label></td>
+            <td>Draft 1 showed AHEAD at 40&nbsp;h on a Friday that cost a day's pay. v4 came back clean from Fable on round 4.</td></tr>
+          <tr><td>8</td><td>No keyring available</td>
+            <td><label class="flex gap-2"><input type="radio" class="radio radio-xs" name="keyring" value="file mode 600 fallback" checked> Offer a file with mode 600 (rec.)</label><label class="flex gap-2"><input type="radio" class="radio radio-xs" name="keyring" value="keyring required"> Require a keyring</label></td>
+            <td>Without it, COSMIC and minimal KDE users sign in every morning. It's the same trade-off <span class="mono">rclone.conf</span> already makes.</td></tr>
+          <tr><td>9</td><td>Project targets during leave</td>
+            <td><label class="flex gap-2"><input type="radio" class="radio radio-xs" name="prorate" value="lead picks per target, default fixed" checked> Lead picks per target, default fixed (rec.)</label><label class="flex gap-2"><input type="radio" class="radio radio-xs" name="prorate" value="always prorate"> Always prorate</label></td>
+            <td>Prorating Tweelin 140 → 133 hides a real 7&nbsp;h gap if 140 is the client's number.</td></tr>
+          <tr><td>10</td><td>Name</td>
+            <td><input class="input input-xs w-36" name="name" value="Pace"></td>
+            <td>Short and verb-like, and it reads well in a tray tooltip.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <button class="btn btn-primary btn-sm" type="submit">Queue answers</button>
+  </form>
+  <div class="alert alert-soft alert-warning text-sm"><span><b>Before slice 1:</b> type your go in the <span class="mono">hrms-api</span> session's own window (a relayed go doesn't count). Ask its owner the two open questions: do Saturday hours count, and is a half-day 0.5 in <span class="mono">leave.total</span>? An Azure admin creates the "Pace" Entra registration.</span></div>
+</section>
+
+<footer class="text-xs opacity-60 pb-10">Sources: <span class="mono">hrms-api</span> <span class="mono">dev</span> v7.34.0 (<span class="mono">src/modules/billing-report/lop-calculator.ts</span>, <span class="mono">billing-report.xlsx.ts:78-79,303-331</span>), <span class="mono">lifeboat.spec</span> (GTK4 + libadwaita ≥ 1.5), simulation <span class="mono">/home/vikas/work/osmosys/pace/sim/week-rules-v4.js</span>, Fable pre-mortem and 4 timeline review rounds on 2026-10-28. Draft 1 is kept at <span class="mono">design-draft1.html</span>. Unverified until a VM test: COSMIC tray click behaviour.</footer>
+</main>
+</body></html>
