@@ -5,14 +5,12 @@ Panel text follows the B1 mockup in docs/design.html. Bump VERSION on any breaki
 
 from __future__ import annotations
 
-import json
-import os
 import re
-import tempfile
 from datetime import datetime
 from pathlib import Path
 
 from pace.engine import Verdict, hours
+from pace.files import state_dir, write_json
 
 VERSION = 1
 
@@ -81,16 +79,5 @@ def lop_text(n: float) -> str:
     return f"LOP {n:g} {'day' if n <= 1 else 'days'}"
 
 
-def state_dir() -> Path:
-    return Path(os.environ.get("XDG_STATE_HOME") or Path.home() / ".local" / "state") / "pace"
-
-
 def write_status(s: dict) -> Path:
-    """Replace status.json atomically, so a reader never sees half a file."""
-    path = state_dir() / "status.json"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    fd, tmp = tempfile.mkstemp(dir=path.parent, prefix=".status-")
-    with os.fdopen(fd, "w") as f:
-        json.dump(s, f, indent=1)
-    os.replace(tmp, path)
-    return path
+    return write_json(state_dir() / "status.json", s)
