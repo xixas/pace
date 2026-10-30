@@ -41,9 +41,12 @@ def record(ledger: dict, rows: list[dict], now: datetime, polled: tuple[date, da
 
 
 def entries(ledger: dict, monday: date) -> list[Entry]:
+    """The ledger's entries for the Mon..Sun week starting at monday."""
     out = []
     for d, parts in ledger.items():
         for_day = (date.fromisoformat(d) - monday).days
+        if not 0 <= for_day < 7:
+            continue
         for seen_iso, minutes in parts:
             seen = datetime.fromisoformat(seen_iso)
             out.append(Entry(for_day, (seen.date() - monday).days, seen.hour + seen.minute / 60, minutes))

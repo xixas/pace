@@ -1,6 +1,6 @@
 """hrms-api responses → engine inputs. Shapes from hrms-api feat/pace-my-hours-my-days (2026-10-30)."""
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 from pace.engine import Entry
 from pace.hrms import entries, record, work_days
@@ -56,7 +56,15 @@ def test_poll_shrinks_a_day_billed_down_or_deleted_but_keeps_days_outside_the_ra
     ledger = record(ledger, [hours("2026-10-26", 1, 510), hours("2026-10-27", 1, 120)], datetime(2026, 10, 27, 10, 0))
     ledger = record(ledger, [hours("2026-10-26", 1, 400)], datetime(2026, 10, 27, 11, 0), polled=(MON, date(2026, 10, 27)))
     # Mon edited 510 → 400: the latest 210 shrinks to 100. Tue deleted: gone. Last Friday was not polled: kept.
-    assert entries(ledger, MON) == [Entry(-3, 0, 13.0, 510), Entry(0, 0, 13.0, 300), Entry(0, 1, 10.0, 100)]
+    assert entries(ledger, MON) == [Entry(0, 0, 13.0, 300), Entry(0, 1, 10.0, 100)]
+    assert entries(ledger, MON - timedelta(7)) == [Entry(4, 7, 13.0, 510)]
+
+
+def test_entries_returns_only_the_asked_for_week():
+    ledger = record(
+        {}, [hours("2026-10-25", 1, 60), hours("2026-10-26", 1, 510), hours("2026-11-02", 1, 120)], datetime(2026, 11, 2, 9, 0)
+    )
+    assert entries(ledger, MON) == [Entry(0, 7, 9.0, 510)]
 
 
 def test_half_hourly_polls_reproduce_sim_scenario_2_billed_next_morning():

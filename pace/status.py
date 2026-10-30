@@ -37,6 +37,8 @@ def status(v: Verdict | None, as_of: datetime | None, problem: str | None = None
     """v and as_of are the last good fetch. problem: "offline" (keep the numbers, greyed) or "signed_out"."""
     if problem == "signed_out":
         state, colour, icon, text = "signed_out", "amber", "dot", "Sign in again"
+    elif v is None:  # offline before the first good fetch
+        state, colour, icon, text = "offline", "grey", "circle", "Offline"
     else:
         head = v.label.split(" · ")[0]
         state, colour, icon = LOOK["LOP" if head.startswith("LOP ") else head]
@@ -62,8 +64,7 @@ def panel_text(state: str, v: Verdict) -> str:
     if state == "done":
         return f"{hours(v.logged)} h"
     if state == "lop":
-        n = v.label.split(" · ")[0].removeprefix("LOP ").removesuffix("d")
-        return f"{hours(v.logged)} h · LOP {n} {'day' if float(n) <= 1 else 'days'}"
+        return f"{hours(v.logged)} h · {lop_text(float(v.label.split(' · ')[0].removeprefix('LOP ').removesuffix('d')))}"
     text = f"{hours(v.logged)} / {hours(v.target)} h"
     if state == "behind":
         return f"{text} · pay {hours(v.lop_need)}/day"
@@ -74,6 +75,10 @@ def panel_text(state: str, v: Verdict) -> str:
     if m := PAY_NEEDS.search(v.label):  # last working day under the pay line: the gap is always in the label
         return f"{text} · {m.group(1)}"
     return text
+
+
+def lop_text(n: float) -> str:
+    return f"LOP {n:g} {'day' if n <= 1 else 'days'}"
 
 
 def state_dir() -> Path:

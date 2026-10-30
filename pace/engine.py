@@ -35,6 +35,7 @@ class Verdict:
     need: float | None = None  # minutes per working day to reach the target
     lop_need: float | None = None  # minutes per working day to stay clear of LOP
     target: float | None = None  # the week's target in minutes; None on a week of leave
+    pending: tuple[int, ...] = ()  # working days with nothing billed yet, still inside their grace (0 = Mon)
 
 
 def lop_count(total: float, d: float) -> float:
@@ -75,9 +76,9 @@ def week_verdict(work: Sequence[float], entries: Sequence[Entry], day: int, hour
         nw = next_work(i)
         if closed and (day < nw or (day == nw and hour < GRACE_UNTIL)):
             credit += T * work[i]
-            pending.append(DAYS[i])
+            pending.append(i)
     eff = logged + credit
-    tag = f" · {','.join(pending)} not billed yet" if pending else ""
+    tag = f" · {','.join(DAYS[i] for i in pending)} not billed yet" if pending else ""
 
     if day > last_work:
         n = lop_count(eff, d)
@@ -85,6 +86,7 @@ def week_verdict(work: Sequence[float], entries: Sequence[Entry], day: int, hour
             ("DONE" if logged >= target else "BILL" if eff >= target else f"LOP {n:g}d" if n > 0 else "SHORT (pay safe)") + tag,
             logged,
             target=target,
+            pending=tuple(pending),
         )
 
     after_eod = hour >= EOD
@@ -120,12 +122,12 @@ def week_verdict(work: Sequence[float], entries: Sequence[Entry], day: int, hour
     short_days = [
         f"{DAYS[i]} {hours(for_day(i), trim=True)} h"
         for i in range(day + 1)
-        if work[i] and (i < day or after_eod) and DAYS[i] not in pending and for_day(i) < T * work[i] - 15
+        if work[i] and (i < day or after_eod) and i not in pending and for_day(i) < T * work[i] - 15
     ]
     if label.startswith("PAY RISK") and short_days:
         label += " · " + ", ".join(short_days)
     label += tag
-    return Verdict(label, logged, today_left, need, lop_need, target)
+    return Verdict(label, logged, today_left, need, lop_need, target, tuple(pending))
 
 
 def hours(minutes: float, trim: bool = False) -> str:
