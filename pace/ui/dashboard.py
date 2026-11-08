@@ -188,7 +188,7 @@ class Dashboard(Adw.Bin):
             button = (empty["button"], lambda: open_uri(self, s.get("pinestem_url") or PINESTEM)) if empty.get("button") else None
             self.week_body.append(status_page(empty["icon"], empty["title"], empty["body"], empty.get("pill"), button))
             return
-        view = model.week_view(s, self._expected_h(), model.week_split(self.week_rows))
+        view = model.week_view(s, self._expected_h(), model.week_split(self.week_rows), stale=stale)
         if view is None:
             msg = (s.get("problem") or {}).get("message") or "Waiting for the first numbers from Pace."
             self.week_body.append(status_page("preferences-system-time-symbolic", "No numbers yet", msg))
@@ -196,7 +196,9 @@ class Dashboard(Adw.Bin):
         if stale and (as_of := model.parse_dt(s.get("as_of"))):
             head = view["stats"][0]
             head["label"] = f"Week · {s.get('title') or 'This week'} as of {as_of:%H:%M}"
-        self.week_body.append(box(*(self._stat(st) for st in view["stats"]), vertical=False, spacing=12, homogeneous=True))
+        self.week_body.append(
+            box(*(self._stat(st, view["colour"]) for st in view["stats"]), vertical=False, spacing=12, homogeneous=True)
+        )
         bar = WeekBar()
         bar.set_data(view["bar"], view["colour"])
         self.week_body.append(
@@ -217,12 +219,12 @@ class Dashboard(Adw.Bin):
             self.week_body.append(warn)
         self.week_body.append(box(*(self._day(c) for c in view["cards"]), vertical=False, spacing=10, homogeneous=True))
 
-    def _stat(self, st: dict) -> Gtk.Box:
+    def _stat(self, st: dict, colour: str) -> Gtk.Box:
         head = box(label(st["label"], "caption", "dim-label", hexpand=True), vertical=False, spacing=6)
         card = box(head, label(st["value"], "pace-value"), classes=("card", "pace-tile"), spacing=2)
         sub = box(vertical=False, spacing=8)
         if st["badge"]:
-            sub.append(pill(st["badge"], self.status.get("colour") or "grey"))
+            sub.append(pill(st["badge"], colour))
         if st["sub"]:
             sub.append(label(st["sub"], "pace-sub", wrap=True))
         card.append(sub)
@@ -258,14 +260,6 @@ class Dashboard(Adw.Bin):
             for t, v, sub in cards
         ]
         self.week_body.append(box(*tiles, vertical=False, spacing=12, homogeneous=True))
-        self.week_body.append(
-            label(
-                "PineStem lookup by employee returned nothing. Pace still works for leave and holidays; hours, verdicts and "
-                "notifications stay off until HR links the profile.",
-                "dim-label",
-                wrap=True,
-            )
-        )
 
     # ---- month and calendar ----------------------------------------------------------------------------------------
 
@@ -370,7 +364,13 @@ class Dashboard(Adw.Bin):
         series = [(d, v) for d, v in period.cumulative(self.rows, p["code"]) if d <= today]
         expected = period.expected_line(self.rows, p["target_min"])
         spark = Sparkline()
-        spark.set_data([v for _, v in series], [v for _, v in expected], max(p["target_min"], p["billed_min"]), colour)
+        spark.set_data(
+            [v for _, v in series],
+            [v for _, v in expected],
+            max(p["target_min"], p["billed_min"]),
+            colour,
+            *period.axis_labels(p["target_min"], self.rows),
+        )
         by_now = next((v for d, v in reversed(expected) if d <= today), 0)
         facts = " · ".join(x for x in (p.get("need_text"), f"expected by now {model.hours(by_now)} h") if x)
         card.append(label(facts, "pace-sub"))

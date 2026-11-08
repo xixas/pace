@@ -91,7 +91,7 @@ def status_pay_risk_half_leave() -> dict:
         target_min=2460,
         lines={"lop_min": 2460, "target_min": 2460, "expected_min": 2700},
         warning="Short days (under 8.25 h): Mon 8.2 h · Tue 7.4 h · Wed 8.0 h",
-        warning_detail="HR still needs 41 h for zero loss of pay with a half-day leave, so the target is 41 h, not 38.25.",
+        warning_detail="Thu +1.75 h and Fri 10.5 h at most make 12.25 h, short of the 13.9 h still needed.",
         days=[
             day("2026-10-26", "Mon", 492, "short", "8.2"),
             day("2026-10-27", "Tue", 444, "short", "7.4"),
@@ -110,36 +110,52 @@ def status_pay_risk_half_leave() -> dict:
     return s
 
 
-def history_rows(first: date, last: date, today: date) -> list[dict]:
-    """Mon-Fri 8-9 h of TWE/RES, the 2nd a holiday, the 9th leave, nothing after today."""
+# One dataset for every screen: October 2026 from the design (C1 week, C3 table and cards, C4 heat map).
+# date -> (TWE, RES, non-billable) in tenths of an hour. 2 and 20 Oct are holidays, 9 Oct is leave.
+WORK = {
+    "2026-10-01": (76, 6, 7),
+    "2026-10-05": (72, 10, 8), "2026-10-06": (70, 11, 7), "2026-10-07": (68, 10, 8), "2026-10-08": (70, 11, 7),
+    "2026-10-12": (54, 10, 35), "2026-10-13": (36, 10, 20), "2026-10-14": (56, 10, 36), "2026-10-15": (56, 10, 28),
+    "2026-10-16": (50, 10, 20),
+    "2026-10-19": (72, 11, 12), "2026-10-21": (64, 11, 12), "2026-10-22": (66, 10, 12), "2026-10-23": (57, 11, 12),
+    "2026-10-26": (77, 15, 0), "2026-10-27": (70, 14, 0), "2026-10-28": (76, 14, 0), "2026-10-29": (35, 0, 0),
+}  # fmt: skip
+# C2 (half-day leave Thursday) deliberately uses other hours, as in the design, so the PAY RISK rule can show.
+WORK_C2 = {
+    "2026-10-26": (69, 13, 0), "2026-10-27": (62, 12, 0), "2026-10-28": (67, 13, 0), "2026-10-29": (35, 0, 0),
+}  # fmt: skip
+HOLIDAYS, LEAVE = {"2026-10-02", "2026-10-20"}, {"2026-10-09"}
+
+
+def history_rows(first: date, last: date, today: date, work: dict | None = None, half_leave: str | None = None) -> list[dict]:
+    """pace.history.load() shape. Weekdays without an entry (and after today) are working days with nothing billed."""
+    work = {**WORK, **(work or {})}
     rows, d = [], first
     while d <= last:
-        kind, working, bill, non = "working", 1.0, 0, 0
+        iso = d.isoformat()
+        kind, working, projects, non = "working", 1.0, [], 0
         if d.weekday() >= 5:
             kind, working = "weekend", 0
-        elif d.day == 2:
+        elif iso in HOLIDAYS:
             kind, working = "holiday", 0
-        elif d.day == 9:
+        elif iso in LEAVE:
             kind, working = "leave", 0
-        elif d <= today:
-            bill, non = 450 + (d.day % 5) * 20, 20
-        projects = (
-            [
-                {"code": "TWE", "name": "Tweelin", "billable_min": bill - 80, "non_billable_min": 0},
-                {"code": "RES", "name": "R&D", "billable_min": 80, "non_billable_min": non},
-            ]
-            if bill
-            else []
-        )
+        elif iso == half_leave:
+            kind, working = "half_leave", 0.5
+        if iso in work and d <= today and kind in ("working", "half_leave"):
+            twe, res, nb = work[iso]
+            non = nb * 6
+            projects = [{"code": "TWE", "name": "Tweelin", "billable_min": twe * 6, "non_billable_min": 0}]
+            if res:
+                projects.append({"code": "RES", "name": "R&D", "billable_min": res * 6, "non_billable_min": non})
+            elif non:
+                projects[0]["non_billable_min"] = non
+        bill = sum(p["billable_min"] for p in projects)
         rows.append(
             {
-                "date": d.isoformat(),
-                "type": kind,
-                "working": working,
-                "billable_min": bill,
-                "non_billable_min": non,
-                "projects": projects,
+                "date": iso, "type": kind, "working": working,
+                "billable_min": bill, "non_billable_min": non, "projects": projects,
             }
-        )
+        )  # fmt: skip
         d += timedelta(days=1)
     return rows

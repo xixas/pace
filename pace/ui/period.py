@@ -178,8 +178,14 @@ def _sum_projects(rows: list[dict]) -> list[dict]:
 def month_projects(rows, targets, month: date, status: dict, today: date, core="auto") -> list[dict]:
     """month.projects[] for any month: core's maths if it exists, status.json for the month it describes, else plain sums."""
     core = core_month() if core == "auto" else core
-    if core is not None:
-        return core(rows, rows, targets, month)
+    if core is not None:  # core wants my-hours rows and my-days rows, not the merged history rows
+        hours_rows = [
+            {"date": r["date"], "project_name": p["name"], "billable_min": p.get("billable_min") or 0}
+            for r in rows
+            for p in r.get("projects", [])
+        ]
+        days = [{"date": r["date"], "working": r["working"]} for r in rows]
+        return core(hours_rows, days, targets, month, today)
     if month == today.replace(day=1) and (status.get("month") or {}).get("projects"):
         return status["month"]["projects"]
     return _sum_projects(rows)
@@ -207,11 +213,12 @@ def no_mapping_cards(rows: list[dict], today: date) -> list[tuple[str, str, str]
     days = sum(1.0 if r["type"] == "leave" else 0.5 for r in leave)
     leave_val = "none" if not days else f"{days:g} day" + ("s" if days > 1 else "")
     leave_sub = ", ".join(f"{parse_dt(r['date']).day} {parse_dt(r['date']):%b}" for r in leave)
-    nxt = next((parse_dt(r["date"]).date() for r in rows if r["type"] == "holiday" and r["date"] >= today.isoformat()), None)
+    hol = next((r for r in rows if r["type"] == "holiday" and r["date"] >= today.isoformat()), None)
+    nxt = parse_dt(hol["date"]).date() if hol else None
     return [
         ("This week", "—", "no billing data"),
         (f"Leave · {today:%b}", leave_val, leave_sub),
-        ("Next holiday", f"{nxt:%a} {nxt.day} {nxt:%b}" if nxt else "none soon", ""),
+        ("Next holiday", f"{nxt:%a} {nxt.day} {nxt:%b}" if nxt else "none soon", hol.get("name", "") if hol else ""),
     ]
 
 
@@ -233,3 +240,11 @@ def footnote(rows: list[dict]) -> str:
         parts.append(f"leave {_day_list(leave)}")
     text = ", ".join(parts)
     return (text[0].upper() + text[1:] + ".") if text else ""
+
+
+def axis_labels(target_min: int, rows: list[dict]) -> tuple[list[str], str, str]:
+    """C3 sparkline: y labels top to bottom (target, two thirds, one third, 0 in hours, nearest 5) and the first and last day."""
+    top = target_min / 60
+    ys = [f"{top:g}", *(str(int(round(top * f / 5) * 5)) for f in (2 / 3, 1 / 3)), "0"]
+    days = [parse_dt(r["date"]) for r in rows if r["working"]]
+    return ys, f"{days[0].day} {days[0]:%b}", f"{days[-1].day} {days[-1]:%b}"

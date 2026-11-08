@@ -30,7 +30,7 @@ def pill_button(text: str, suggested: bool = True, destructive: bool = False) ->
 
 
 def page(icon: str, title: str, body: str, *children: Gtk.Widget) -> Adw.StatusPage:
-    sp = Adw.StatusPage(icon_name=icon, title=title, description=body, vexpand=True)
+    sp = Adw.StatusPage(icon_name=icon, title=title, description=body, vexpand=True, css_classes=["compact"])
     if children:
         sp.set_child(box(*children, spacing=12, halign=Gtk.Align.CENTER))
     return sp
@@ -58,9 +58,11 @@ class Onboarding(Adw.Bin):
         self.services, self.host = services, host
         self.desktop = os.environ.get("XDG_CURRENT_DESKTOP", "") if desktop is None else desktop
         self.stack = Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE)
-        self.set_child(self.stack)
+        self.set_child(Gtk.ScrolledWindow(child=self.stack, hscrollbar_policy=Gtk.PolicyType.NEVER))
         self.attempt, self.redirect, self.url, self.after = 0, None, None, "summary"
-        self.waiting = Adw.StatusPage(icon_name="web-browser-symbolic", title="Finish signing in in your browser…", vexpand=True)
+        self.waiting = Adw.StatusPage(
+            icon_name="web-browser-symbolic", title="Finish signing in in your browser…", vexpand=True, css_classes=["compact"]
+        )
         self.failure_holder = Adw.Bin()
         self.summary_holder = Adw.Bin()
         for name, widget in (
@@ -97,13 +99,21 @@ class Onboarding(Adw.Bin):
     # ---- A3 --------------------------------------------------------------------------------------------------------
 
     def _waiting(self) -> Adw.StatusPage:
-        copy, cancel = Gtk.Button(label="Copy link"), Gtk.Button(label="Cancel")
+        copy, cancel = Gtk.Button(label="Copy link", css_classes=["link"]), Gtk.Button(label="Cancel")
         copy.connect("clicked", self._copy_link)
         cancel.connect("clicked", lambda *_: self._cancel())
         self.waiting.set_child(
             box(
                 Gtk.Spinner(spinning=True, width_request=32, height_request=32),
-                box(copy, cancel, vertical=False, spacing=12, halign=Gtk.Align.CENTER),
+                box(
+                    label("Didn't open?", "dim-label"),
+                    copy,
+                    cancel,
+                    vertical=False,
+                    spacing=12,
+                    halign=Gtk.Align.CENTER,
+                    valign=Gtk.Align.CENTER,
+                ),
                 spacing=16,
                 halign=Gtk.Align.CENTER,
             )
@@ -207,6 +217,7 @@ class Onboarding(Adw.Bin):
             icon_name="dialog-password-symbolic",
             title="Pace can't reach a password keyring",
             vexpand=True,
+            css_classes=["compact"],
             description="Your desktop has no Secret Service (common on minimal KDE or COSMIC). Pace needs somewhere to keep your sign-in. You choose once.",
         )
         sp.set_child(

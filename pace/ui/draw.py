@@ -83,30 +83,48 @@ class WeekBar(Gtk.DrawingArea):
 
 
 class Sparkline(Gtk.DrawingArea):
-    """Actual cumulative hours (solid) against the expected line (dashed), 1st to last of the month."""
+    """Actual cumulative hours (solid) against the expected line (dashed), with hour labels on the left and dates below."""
+
+    LEFT, BOTTOM = 34, 16
 
     def __init__(self):
-        super().__init__(content_height=84, hexpand=True)
+        super().__init__(content_height=104, hexpand=True)
         self.actual, self.expected, self.top, self.colour = [], [], 1, "amber"
+        self.ylabels, self.first, self.last = [], "", ""
         self.set_draw_func(self._draw)
 
-    def set_data(self, actual: list[float], expected: list[float], top: float, colour: str):
+    def set_data(self, actual, expected, top, colour, ylabels=(), first="", last=""):
         self.actual, self.expected, self.top, self.colour = actual, expected, max(top, 1), colour
+        self.ylabels, self.first, self.last = list(ylabels), first, last
         self.queue_draw()
 
     def _line(self, cr, values, w, h, n):
+        plot_w, plot_h = w - self.LEFT - 2, h - self.BOTTOM - 6
         for i, v in enumerate(values):
-            x = 0 if n < 2 else i * (w - 2) / (n - 1)
-            y = h - 2 - (h - 6) * v / self.top
-            (cr.line_to if i else cr.move_to)(x + 1, y)
+            x = self.LEFT + (0 if n < 2 else i * plot_w / (n - 1))
+            y = 3 + plot_h * (1 - v / self.top)
+            (cr.line_to if i else cr.move_to)(x, y)
 
     def _draw(self, area, cr, w, h):
         n = len(self.expected)
         if not n:
             return
-        cr.set_source_rgba(*_fg(area, 0.12))
-        cr.rectangle(0, h - 1, w, 1)
-        cr.fill()
+        plot_h = h - self.BOTTOM - 6
+        cr.select_font_face("sans-serif")
+        cr.set_font_size(10)
+        for i, text in enumerate(self.ylabels):
+            y = 3 + plot_h * i / max(len(self.ylabels) - 1, 1)
+            cr.set_source_rgba(*_fg(area, 0.10))
+            cr.rectangle(self.LEFT, y, w - self.LEFT, 1)
+            cr.fill()
+            cr.set_source_rgba(*_fg(area, 0.6))
+            cr.move_to(0, y + 3)
+            cr.show_text(text)
+        cr.set_source_rgba(*_fg(area, 0.6))
+        cr.move_to(self.LEFT, h - 2)
+        cr.show_text(self.first)
+        cr.move_to(w - cr.text_extents(self.last).x_advance, h - 2)
+        cr.show_text(self.last)
         cr.set_line_width(1.5)
         cr.set_dash([4, 3])
         cr.set_source_rgba(*_fg(area, 0.55))

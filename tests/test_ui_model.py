@@ -129,3 +129,23 @@ def test_ui_entry_point_is_importable_without_loading_gtk():
     import pace.ui
 
     assert callable(pace.ui.main)
+
+
+def test_badge_is_the_verdict_word_only():
+    s = status_pay_risk_half_leave()
+    s["verdict"] = "PAY RISK · pay needs 13.9 h · Mon 0 h"
+    v = model.week_view(s, 9.0)
+    assert v["stats"][0]["badge"] == "PAY RISK" and v["stats"][0]["sub"] == "pay needs 13.9 h"
+    assert v["colour"] == "red"
+
+
+def test_colour_class_covers_every_status_colour_and_greys_unknowns():
+    for c in ("green", "amber", "red", "blue", "grey"):
+        assert model.colour_class(c) == c
+    assert model.colour_class(None) == "grey" and model.colour_class("purple") == "grey"
+    bill = {**status_on_track(), "state": "bill", "colour": "blue"}
+    assert model.widget_view(bill)["colour"] == "blue"
+
+
+def test_stale_week_is_grey():
+    assert model.week_view(status_on_track(), 9.0, stale=True)["colour"] == "grey"

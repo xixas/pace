@@ -56,6 +56,19 @@ def skew(status: dict) -> str | None:
     return "app_old" if v > KNOWN_VERSION else "service_old"
 
 
+COLOURS = ("green", "amber", "red", "blue", "grey")
+
+
+def colour_class(colour: str | None) -> str:
+    """status.json colour → the CSS class of pills, bars and dots; anything unknown reads as grey."""
+    return colour if colour in COLOURS else "grey"
+
+
+def badge_text(status: dict) -> str:
+    """The verdict word: "PAY RISK" from "PAY RISK · pay needs 13.9 h · Mon 0 h"."""
+    return (status.get("verdict") or status.get("title") or "").split(" · ")[0].upper()
+
+
 def _stat(label, value, sub="", badge=None):
     return {"label": label, "value": value, "sub": sub, "badge": badge}
 
@@ -85,7 +98,7 @@ def _projected(status: dict, expected_daily_h: float):
     return last, total
 
 
-def week_view(status: dict, expected_daily_h: float, split: dict | None = None) -> dict | None:
+def week_view(status: dict, expected_daily_h: float, split: dict | None = None, stale: bool = False) -> dict | None:
     """C1/C2. split: {iso date: [(code, "7.7"), ...]} from pace.history, optional."""
     if status.get("logged_min") is None:
         return None
@@ -106,7 +119,7 @@ def week_view(status: dict, expected_daily_h: float, split: dict | None = None) 
             "This week",
             f"{hours(logged)} h",
             status.get("subtitle") or "",
-            (status.get("verdict") or status.get("title") or "").upper(),
+            badge_text(status),
         ),
         _stat(
             "Average / working day",
@@ -151,7 +164,7 @@ def week_view(status: dict, expected_daily_h: float, split: dict | None = None) 
         "cards": cards,
         "warning": status.get("warning"),
         "warning_detail": status.get("warning_detail"),
-        "colour": status.get("colour") or "grey",
+        "colour": "grey" if stale else colour_class(status.get("colour")),
     }
 
 
@@ -236,4 +249,4 @@ def widget_view(status: dict) -> dict:
             "project": None,
             "colour": "grey",
         }
-    return {**w, "colour": status.get("colour") or "grey"}
+    return {**w, "colour": colour_class(status.get("colour"))}

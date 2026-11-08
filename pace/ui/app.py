@@ -21,11 +21,12 @@ from pace.ui.style import CSS  # noqa: E402
 from pace.ui.targets_ui import TargetsPage, share_dialog  # noqa: E402
 
 APP_ID = "io.github.xixas.Pace.App"
+SIZES = {"onboarding": (560, 700), "dashboard": (820, 720)}
 
 
 class MainWindow(Adw.ApplicationWindow):
     def __init__(self, app: PaceApp):
-        super().__init__(application=app, title="Pace", default_width=820, default_height=720)
+        super().__init__(application=app, title="Pace", default_width=560, default_height=700)
         self.app, self.services = app, app.services
         self._status: dict = {}
         self.toasts = Adw.ToastOverlay()
@@ -55,6 +56,11 @@ class MainWindow(Adw.ApplicationWindow):
             self.add_action(act)
         self.refresh()
 
+    def _page(self, name: str) -> None:
+        """Switch between onboarding and dashboard, with a window size that suits each."""
+        self.stack.set_visible_child_name(name)
+        self.set_default_size(*SIZES[name])
+
     # ---- state -----------------------------------------------------------------------------------------------------
 
     def status(self) -> dict:
@@ -68,7 +74,7 @@ class MainWindow(Adw.ApplicationWindow):
                 self.go_dashboard()
         elif self.stack.get_visible_child_name() != "onboarding":
             self.onboarding.show("welcome")
-            self.stack.set_visible_child_name("onboarding")
+            self._page("onboarding")
         elif self.onboarding.stack.get_visible_child_name() is None:
             self.onboarding.show("welcome")
 
@@ -81,7 +87,7 @@ class MainWindow(Adw.ApplicationWindow):
         self._status = self.services.status()
         self.dashboard.set_status(self._status)
         self.nav.pop_to_tag("main")
-        self.stack.set_visible_child_name("dashboard")
+        self._page("dashboard")
 
     def show_dashboard(self) -> None:
         self.present()
@@ -131,7 +137,7 @@ class MainWindow(Adw.ApplicationWindow):
     def show_topbar(self) -> None:
         self.onboarding.after = "topbar"
         self.onboarding.show_topbar()
-        self.stack.set_visible_child_name("onboarding")
+        self._page("onboarding")
 
     def show_about(self) -> None:
         from pace.ui.services import version
@@ -155,17 +161,17 @@ class MainWindow(Adw.ApplicationWindow):
         except Exception as e:
             return self.toast(f"Couldn't sign out: {e}")
         self.onboarding.show("welcome")
-        self.stack.set_visible_child_name("onboarding")
+        self._page("onboarding")
 
     def after_data_removed(self) -> None:
         self._status = {}
         self.onboarding.show("welcome")
-        self.stack.set_visible_child_name("onboarding")
+        self._page("onboarding")
         self.toast("Your Pace data is gone")
 
     def sign_in_again(self) -> None:
         self.onboarding.begin("dashboard")
-        self.stack.set_visible_child_name("onboarding")
+        self._page("onboarding")
 
     def skew_action(self) -> None:
         if self.dashboard.status.get("version", 0) > 1:

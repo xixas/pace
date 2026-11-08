@@ -91,7 +91,7 @@ def test_month_projects_uses_core_when_present_else_status_for_current_month():
     assert [p["code"] for p in cur] == ["TWE", "RES"] and cur[0]["text"].startswith("112.5 / 133")
     calls = []
 
-    def fake(r, days, targets, month):
+    def fake(r, days, targets, month, today=None):
         calls.append(month)
         return [
             {
@@ -146,3 +146,52 @@ def test_footnote_names_holidays_and_leave():
     r[19]["type"] = "holiday"  # 20 Oct is a Tuesday
     assert period.footnote(r) == "Holidays 2 and 20 Oct, leave 9 Oct."
     assert period.footnote([x for x in r if x["type"] == "working"]) == ""
+
+
+def test_dataset_week_table_matches_the_design():
+    t = period.week_table(rows(), date(2026, 10, 1))
+    got = [(w["label"], w["days"], w["by_code"]["TWE"] / 60, w["by_code"]["RES"] / 60, w["total_min"] / 60) for w in t["weeks"]]
+    assert [(a, b) for a, b, *_ in got] == [("1–2 Oct", 1), ("5–9 Oct", 4), ("12–16 Oct", 5), ("19–23 Oct", 4), ("26–30 Oct", 5)]
+    assert [round(x[2], 1) for x in got] == [7.6, 28.0, 25.2, 25.9, 25.8]
+    assert [round(x[3], 1) for x in got] == [0.6, 4.2, 5.0, 4.3, 4.3]
+    assert [round(x[4], 1) for x in got] == [8.9, 35.2, 44.1, 35.0, 30.1]
+    tot = t["total"]
+    assert (
+        tot["days"],
+        round(tot["by_code"]["TWE"] / 60, 1),
+        round(tot["by_code"]["RES"] / 60, 1),
+        round(tot["total_min"] / 60, 1),
+    ) == (19, 112.5, 18.4, 153.3)
+
+
+def test_dataset_agrees_with_status_and_calendar_and_footnote():
+    s = status_on_track()
+    month = {p["code"]: p["billed_min"] for p in s["month"]["projects"]}
+    t = period.week_table(rows(), date(2026, 10, 1))["total"]["by_code"]
+    assert month == t
+    by_date = {r["date"]: r for r in rows()}
+    for d in s["days"][:4]:
+        assert period.total_min(by_date[d["date"]]) == d["min"]
+    assert by_date["2026-10-20"]["type"] == "holiday"
+    grid = period.calendar_grid(rows(), date(2026, 10, 1), TODAY, 8.5)
+    assert grid[3][1]["label"] == "Holiday"
+    assert period.footnote(rows()) == "Holidays 2 and 20 Oct, leave 9 Oct."
+
+
+def test_axis_labels_for_the_sparkline():
+    ys, first, last = period.axis_labels(7980, rows())
+    assert ys == ["133", "90", "45", "0"]
+    assert (first, last) == ("1 Oct", "30 Oct")
+
+
+def test_month_projects_hands_core_my_hours_and_days_shapes():
+    seen = {}
+
+    def fake(hours_rows, days, targets, month, today=None):
+        seen.update(hours=hours_rows, days=days, today=today)
+        return []
+
+    period.month_projects(rows(), {"projects": []}, date(2026, 10, 1), status_on_track(), TODAY, core=fake)
+    assert {"date", "project_name", "billable_min"} <= set(seen["hours"][0])
+    assert seen["hours"][0]["project_name"] == "Tweelin"
+    assert {"date", "working"} <= set(seen["days"][0]) and len(seen["days"]) == 31 and seen["today"] == TODAY
