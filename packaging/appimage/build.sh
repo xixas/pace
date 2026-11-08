@@ -17,12 +17,15 @@ install -m755 "$here/AppRun" "$appdir/AppRun"
 cp "$src/data/io.github.xixas.Pace.desktop" "$appdir/"
 cp "$src/data/io.github.xixas.Pace.svg" "$appdir/"
 cp "$src/data/io.github.xixas.Pace.svg" "$appdir/.DirIcon"
-tool=${APPIMAGETOOL:-appimagetool}
-if ! command -v "$tool" >/dev/null 2>&1; then
-    curl -fsSL -o "$work/appimagetool" \
-        https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
-    chmod +x "$work/appimagetool"
-    tool="$work/appimagetool --appimage-extract-and-run"
-fi
+
+# Pinned release (not the moving "continuous" tag), verified before it is made executable.
+# To bump: download the new release once, run sha256sum on it and update both lines.
+AIT_VERSION=1.9.1
+AIT_SHA256=ed4ce84f0d9caff66f50bcca6ff6f35aae54ce8135408b3fa33abfc3cb384eb0
+curl -fsSL -o "$work/appimagetool" \
+    "https://github.com/AppImage/appimagetool/releases/download/$AIT_VERSION/appimagetool-x86_64.AppImage"
+echo "$AIT_SHA256  $work/appimagetool" | sha256sum -c -
+chmod +x "$work/appimagetool"
+
 mkdir -p "$out"
-ARCH=x86_64 $tool "$appdir" "$out/Pace-$version-x86_64.AppImage"
+ARCH=x86_64 "$work/appimagetool" --appimage-extract-and-run "$appdir" "$out/Pace-$version-x86_64.AppImage"
