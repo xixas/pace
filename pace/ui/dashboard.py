@@ -1,0 +1,481 @@
+"""The dashboard window content: Week (C1, C2, C5, A8, A13), Month (C3) and Calendar (C4) behind one header (mock C1)."""
+
+from __future__ import annotations
+
+from datetime import date, datetime, timedelta
+
+import gi
+
+gi.require_version("Gtk", "4.0")
+gi.require_version("Adw", "1")
+from gi.repository import Adw, GLib, Gtk  # noqa: E402
+
+from pace.ui import config, model, period  # noqa: E402
+from pace.ui.draw import Sparkline, WeekBar  # noqa: E402
+from pace.ui.widgets import box, clear, label, open_uri, pill, run_async  # noqa: E402
+
+PINESTEM = "https://pinestem.com/dashboard.html#/tasks"
+
+
+def status_page(
+    icon: str, title: str, body: str = "", pill_text: str | None = None, button: tuple | None = None
+) -> Adw.StatusPage:
+    page = Adw.StatusPage(icon_name=icon, title=title, description=body, vexpand=True)
+    holder = box(spacing=12, halign=Gtk.Align.CENTER)
+    if pill_text:
+        holder.append(pill(pill_text, "grey"))
+    if button:
+        b = Gtk.Button(label=button[0], halign=Gtk.Align.CENTER, css_classes=["pill", "suggested-action"])
+        b.connect("clicked", lambda *_: button[1]())
+        holder.append(b)
+    if pill_text or button:
+        page.set_child(holder)
+    return page
+
+
+class Dashboard(Adw.Bin):
+    def __init__(self, services, window, now=datetime.now):
+        super().__init__()
+        self.toolbar = Adw.ToolbarView()
+        self.set_child(self.toolbar)
+        self.services, self.window, self.now = services, window, now
+        self.status: dict = {}
+        self.month_first = now().date().replace(day=1)
+        self.rows: list[dict] | None = None
+        self.rows_error: str | None = None
+        self.week_rows: list[dict] = []
+        self.ahead_rows: list[dict] = []
+        self._banner_kind = None
+        self._dismissed: set[str] = set()
+        self._week_gen = self._month_gen = 0
+
+        self.ago = label("", "dim-label", "caption")
+        self.refresh_btn = Gtk.Button(icon_name="view-refresh-symbolic", tooltip_text="Refresh now")
+        self.refresh_btn.connect("clicked", self._on_refresh)
+        header = Adw.HeaderBar()
+        header.pack_start(box(self.refresh_btn, self.ago, vertical=False, spacing=6, valign=Gtk.Align.CENTER))
+        self.stack = Adw.ViewStack()
+        self.week_body, self.month_body, self.cal_body = (box(spacing=16) for _ in range(3))
+        for name, title, body in (
+            ("week", "Week", self.week_body),
+            ("month", "Month", self.month_body),
+            ("calendar", "Calendar", self.cal_body),
+        ):
+            self.stack.add_titled(self._scroller(body), name, title)
+        header.set_title_widget(Adw.InlineViewSwitcher(stack=self.stack, display_mode=Adw.InlineViewSwitcherDisplayMode.LABELS))
+        menu = Gtk.MenuButton(
+            icon_name="open-menu-symbolic", menu_model=window.build_menu(), primary=True, tooltip_text="Main menu"
+        )
+        header.pack_end(menu)
+        self.toolbar.add_top_bar(header)
+        self.skew_banner = Adw.Banner(revealed=False, use_markup=False)
+        self.skew_banner.connect("button-clicked", lambda *_: window.skew_action())
+        self.banner = Adw.Banner(revealed=False, use_markup=False)
+        self.banner.connect("button-clicked", self._on_banner)
+        self.toolbar.add_top_bar(self.skew_banner)
+        self.toolbar.add_top_bar(self.banner)
+        self.toolbar.set_content(self.stack)
+        self.stack.connect("notify::visible-child-name", lambda *_: self._ensure_month())
+        GLib.timeout_add_seconds(20, self._tick)
+
+    @staticmethod
+    def _scroller(body: Gtk.Box) -> Gtk.ScrolledWindow:
+        clamp = Adw.Clamp(
+            maximum_size=820,
+            tightening_threshold=600,
+            child=body,
+            margin_top=18,
+            margin_bottom=24,
+            margin_start=16,
+            margin_end=16,
+        )
+        return Gtk.ScrolledWindow(child=clamp, hscrollbar_policy=Gtk.PolicyType.NEVER, vexpand=True)
+
+    # ---- updates -------------------------------------------------------------------------------------------------
+
+    def set_status(self, status: dict) -> None:
+        self.status = status
+        self._tick()
+        self._render_banners()
+        self.render_week()
+        self._load_week_rows()
+        if self.rows is not None:
+            self.render_month()
+            self.render_calendar()
+
+    def _tick(self) -> bool:
+        now = self.now()
+        if self.status.get("state") == "signed_out" or model.is_stale(self.status, now):
+            as_of = model.parse_dt(self.status.get("as_of"))
+            self.ago.set_label(f"as of {as_of:%H:%M}" if as_of else "never")
+        else:
+            self.ago.set_label(model.as_of_text(self.status, now))
+        return True
+
+    def _expected_h(self) -> float:
+        return config.load_settings()["expected_daily_h"]
+
+    def _is_stale(self) -> bool:
+        return self.status.get("state") == "signed_out" or model.is_stale(self.status, self.now())
+
+    def _render_banners(self) -> None:
+        kind = model.skew(self.status)
+        self.skew_banner.set_revealed(bool(kind))
+        if kind == "service_old":
+            self.skew_banner.set_title("Log out and back in to load the new panel extension")
+            self.skew_banner.set_button_label("Log out now")
+        elif kind == "app_old":
+            self.skew_banner.set_title("Pace was updated. Close and reopen it to load the new version")
+            self.skew_banner.set_button_label("Quit")
+        b = model.banner(self.status)
+        if b and b["kind"] in self._dismissed:
+            b = None
+        self._banner_kind = b["kind"] if b else None
+        self._banner = b
+        self.banner.set_revealed(bool(b))
+        if b:
+            self.banner.set_title(b["text"])
+            self.banner.set_button_label(b["button"] or "")
+
+    def _on_banner(self, *_):
+        kind = self._banner_kind
+        if kind == "signed_out":
+            self.window.sign_in_again()
+        elif kind == "no_mapping":
+            self._dismissed.add(kind)
+            self._render_banners()
+        elif kind == "last_week":
+            open_uri(self, self._banner.get("url") or PINESTEM)
+
+    def _on_refresh(self, *_):
+        self.refresh_btn.set_sensitive(False)
+
+        def done(ok):
+            self.refresh_btn.set_sensitive(True)
+            if not ok:
+                self.window.toast("Pace isn't running")
+
+        self.services.refresh(done)
+
+    # ---- week ----------------------------------------------------------------------------------------------------
+
+    def _load_week_rows(self) -> None:
+        if not self.services.has_history():
+            return
+        today = self.now().date()
+        monday, sunday = model.week_bounds(today)
+        want_ahead = self.status.get("state") == "no_mapping" or (self.status.get("problem") or {}).get("kind") == "no_mapping"
+        start = today.replace(day=1) if want_ahead else monday
+        end = today + timedelta(days=60) if want_ahead else sunday
+        gen = self._week_gen = self._week_gen + 1
+
+        def done(rows, error):
+            if error or gen != self._week_gen:
+                return
+            self.week_rows, self.ahead_rows = rows, (rows if want_ahead else [])
+            self.render_week()
+
+        run_async(lambda: self.services.history(start, end), done)
+
+    def render_week(self) -> None:
+        clear(self.week_body)
+        s = self.status
+        stale = self._is_stale()
+        (self.week_body.add_css_class if stale else self.week_body.remove_css_class)("pace-stale")
+        if s.get("state") == "no_mapping" or (s.get("problem") or {}).get("kind") == "no_mapping":
+            return self._render_no_mapping()
+        if empty := model.empty_state(s):
+            button = (empty["button"], lambda: open_uri(self, s.get("pinestem_url") or PINESTEM)) if empty.get("button") else None
+            self.week_body.append(status_page(empty["icon"], empty["title"], empty["body"], empty.get("pill"), button))
+            return
+        view = model.week_view(s, self._expected_h(), model.week_split(self.week_rows))
+        if view is None:
+            msg = (s.get("problem") or {}).get("message") or "Waiting for the first numbers from Pace."
+            self.week_body.append(status_page("preferences-system-time-symbolic", "No numbers yet", msg))
+            return
+        if stale and (as_of := model.parse_dt(s.get("as_of"))):
+            head = view["stats"][0]
+            head["label"] = f"Week · {s.get('title') or 'This week'} as of {as_of:%H:%M}"
+        self.week_body.append(box(*(self._stat(st) for st in view["stats"]), vertical=False, spacing=12, homogeneous=True))
+        bar = WeekBar()
+        bar.set_data(view["bar"], view["colour"])
+        self.week_body.append(
+            box(
+                box(
+                    label(view["week_label"], "heading", hexpand=True),
+                    label(view["bar_text"], "heading", "numeric"),
+                    vertical=False,
+                ),
+                bar,
+                spacing=6,
+            )
+        )
+        if view["warning"]:
+            warn = box(label(view["warning"], "heading", wrap=True), classes=("pace-warning",), spacing=2)
+            if view["warning_detail"]:
+                warn.append(label(view["warning_detail"], "caption", wrap=True))
+            self.week_body.append(warn)
+        self.week_body.append(box(*(self._day(c) for c in view["cards"]), vertical=False, spacing=10, homogeneous=True))
+
+    def _stat(self, st: dict) -> Gtk.Box:
+        head = box(label(st["label"], "caption", "dim-label", hexpand=True), vertical=False, spacing=6)
+        card = box(head, label(st["value"], "pace-value"), classes=("card", "pace-tile"), spacing=2)
+        sub = box(vertical=False, spacing=8)
+        if st["badge"]:
+            sub.append(pill(st["badge"], self.status.get("colour") or "grey"))
+        if st["sub"]:
+            sub.append(label(st["sub"], "pace-sub", wrap=True))
+        card.append(sub)
+        return card
+
+    def _day(self, c: dict) -> Gtk.Button:
+        inner = box(spacing=2, halign=Gtk.Align.CENTER)
+        inner.append(label(c["dow"] + (" · today" if c["today"] else ""), "caption", "dim-label", xalign=0.5))
+        inner.append(label(c["text"], "pace-day-text", xalign=0.5))
+        for code, h in c["split"]:
+            inner.append(label(f"{code} {h}", "pace-sub", xalign=0.5))
+        if c["foot"]:
+            inner.append(label(c["foot"], "pace-sub", xalign=0.5))
+        btn = Gtk.Button(child=inner, css_classes=["card", "pace-day", c["kind"]] + (["today"] if c["today"] else []))
+        btn.set_tooltip_text("Open PineStem")
+        btn.connect("clicked", lambda *_: open_uri(self, self.status.get("pinestem_url") or PINESTEM))
+        return btn
+
+    def _render_no_mapping(self) -> None:
+        cards = (
+            period.no_mapping_cards(self.ahead_rows, self.now().date())
+            if self.ahead_rows
+            else [("This week", "—", "no billing data")]
+        )
+        tiles = [
+            box(
+                label(t, "caption", "dim-label"),
+                label(v, "pace-value-sm"),
+                label(sub, "pace-sub"),
+                classes=("card", "pace-tile"),
+                spacing=2,
+            )
+            for t, v, sub in cards
+        ]
+        self.week_body.append(box(*tiles, vertical=False, spacing=12, homogeneous=True))
+        self.week_body.append(
+            label(
+                "PineStem lookup by employee returned nothing. Pace still works for leave and holidays; hours, verdicts and "
+                "notifications stay off until HR links the profile.",
+                "dim-label",
+                wrap=True,
+            )
+        )
+
+    # ---- month and calendar ----------------------------------------------------------------------------------------
+
+    def _ensure_month(self) -> None:
+        if self.stack.get_visible_child_name() in ("month", "calendar") and self.rows is None and self.rows_error is None:
+            self.load_month()
+
+    def load_month(self) -> None:
+        first, last = period.month_bounds(self.month_first)
+        self.rows, self.rows_error = None, None
+        self._render_loading()
+        gen = self._month_gen = self._month_gen + 1
+
+        def done(rows, error):
+            if gen != self._month_gen:
+                return
+            self.rows = rows if not error else None
+            self.rows_error = None if not error else self._history_error(error)
+            self.render_month()
+            self.render_calendar()
+
+        if not self.services.has_history():
+            self.rows_error = "History isn't available yet in this build."
+            return self._after_error()
+        run_async(lambda: self.services.history(first, last), done)
+
+    def _after_error(self):
+        self.render_month()
+        self.render_calendar()
+
+    @staticmethod
+    def _history_error(error: BaseException) -> str:
+        from pace.client import Offline, SignedOut
+
+        if isinstance(error, Offline):
+            return "Can't reach DhiHRMS. Month and calendar need a connection."
+        if isinstance(error, SignedOut):
+            return "Your sign-in expired. Sign in again to load the month."
+        return f"Couldn't load the month: {error}"
+
+    def _render_loading(self) -> None:
+        for body in (self.month_body, self.cal_body):
+            clear(body)
+            body.append(Gtk.Spinner(spinning=True, halign=Gtk.Align.CENTER, margin_top=60, width_request=32, height_request=32))
+
+    def _nav(self) -> Gtk.Box:
+        prev = Gtk.Button(icon_name="go-previous-symbolic", css_classes=["flat", "circular"], tooltip_text="Previous month")
+        nxt = Gtk.Button(icon_name="go-next-symbolic", css_classes=["flat", "circular"], tooltip_text="Next month")
+        prev.connect("clicked", lambda *_: self._go(-1))
+        nxt.connect("clicked", lambda *_: self._go(1))
+        title = label(f"{self.month_first:%B %Y}", "title-3", xalign=0.5, hexpand=True)
+        return box(prev, title, nxt, vertical=False, spacing=6)
+
+    def _go(self, delta: int) -> None:
+        self.month_first = period.shift_month(self.month_first, delta)
+        self.load_month()
+
+    def _problem(self, body: Gtk.Box) -> bool:
+        if self.rows is None:
+            clear(body)
+            body.append(self._nav())
+            body.append(status_page("network-offline-symbolic", "Nothing to show", self.rows_error or ""))
+            return True
+        return False
+
+    def render_month(self) -> None:
+        body = self.month_body
+        if self.rows is None and self.rows_error is None:
+            return
+        if self._problem(body):
+            return
+        clear(body)
+        body.append(self._nav())
+        targets, today = config.load_targets(), self.now().date()
+        for p in period.month_projects(self.rows, targets, self.month_first, self.status, today):
+            body.append(self._project_card(p, targets, today))
+        table = period.week_table(self.rows, self.month_first)
+        body.append(self._table(table))
+        if note := period.footnote(self.rows):
+            body.append(
+                label(f"*Total includes non-billable (used for pay). Targets use billable only. {note}", "pace-sub", wrap=True)
+            )
+
+    def _project_card(self, p: dict, targets: dict, today: date) -> Gtk.Box:
+        text, colour = period.project_badge(p)
+        badge = pill(text, colour)
+        badge.set_margin_start(6)
+        head = box(label(p["name"], "heading"), label(p["code"], "caption", "dim-label"), badge, vertical=False, spacing=8)
+        card = box(head, classes=("card", "pace-tile"), spacing=6)
+        if p.get("target_min"):
+            card.append(
+                box(
+                    label(f"{model.hours(p['billed_min'])} / {model.h_short(p['target_min'])} h", "pace-value", hexpand=True),
+                    label(period.target_note(targets, p["code"]), "pace-sub", valign=Gtk.Align.END),
+                    vertical=False,
+                )
+            )
+        else:
+            card.append(label(f"{model.hours(p['billed_min'])} h", "pace-value"))
+            card.append(label("tracked only · billable", "pace-sub"))
+            return card
+        series = [(d, v) for d, v in period.cumulative(self.rows, p["code"]) if d <= today]
+        expected = period.expected_line(self.rows, p["target_min"])
+        spark = Sparkline()
+        spark.set_data([v for _, v in series], [v for _, v in expected], max(p["target_min"], p["billed_min"]), colour)
+        by_now = next((v for d, v in reversed(expected) if d <= today), 0)
+        facts = " · ".join(x for x in (p.get("need_text"), f"expected by now {model.hours(by_now)} h") if x)
+        card.append(label(facts, "pace-sub"))
+        card.append(spark)
+        working = sum(r["working"] for r in self.rows) or 1
+        card.append(
+            box(
+                label(f"expected: {p['target_min'] / working / 60:g} h per working day", "pace-sub", hexpand=True),
+                label(f"actual {model.hours(p['billed_min'])} h", "pace-sub"),
+                vertical=False,
+            )
+        )
+        return card
+
+    def _table(self, t: dict) -> Gtk.Box:
+        cols = ["Week", "Days", *t["codes"], "Total*"]
+        sizes = [Gtk.SizeGroup(mode=Gtk.SizeGroupMode.HORIZONTAL) for _ in cols]
+
+        def row(cells, classes=()):
+            r = box(vertical=False, spacing=8, classes=classes)
+            for i, text in enumerate(cells):
+                lab = label(text, *(c for c in classes if c != "pace-table-row"), xalign=0 if i == 0 else 1, hexpand=i == 0)
+                if i:
+                    lab.add_css_class("numeric")
+                sizes[i].add_widget(lab)
+                r.append(lab)
+            return r
+
+        card = box(classes=("card", "pace-tile"), spacing=2)
+        card.append(label(f"{self.month_first:%B}, week by week", "heading", margin_bottom=6))
+        card.append(row(cols, ("pace-table-head",)))
+        monday = model.week_bounds(self.now().date())[0].isoformat()
+        for w in t["weeks"]:
+            cells = [
+                w["label"],
+                f"{w['days']:g}",
+                *(model.hours(w["by_code"].get(c, 0)) for c in t["codes"]),
+                model.hours(w["total_min"]),
+            ]
+            r = row(cells, ("pace-table-row",))
+            if w["monday"] == monday:
+                btn = Gtk.Button(child=r, css_classes=["flat"], tooltip_text="Show this week")
+                btn.connect("clicked", lambda *_: self.stack.set_visible_child_name("week"))
+                card.append(btn)
+            else:
+                card.append(r)
+        tot = t["total"]
+        card.append(
+            row(
+                [
+                    "Month",
+                    f"{tot['days']:g}",
+                    *(model.hours(tot["by_code"][c]) for c in t["codes"]),
+                    model.hours(tot["total_min"]),
+                ],
+                ("pace-table-total",),
+            )
+        )
+        return card
+
+    def render_calendar(self) -> None:
+        body = self.cal_body
+        if self.rows is None and self.rows_error is None:
+            return
+        if self._problem(body):
+            return
+        clear(body)
+        body.append(self._nav())
+        floor = config.load_targets()["dailyMinimum"]
+        grid = Gtk.Grid(row_spacing=6, column_spacing=6, column_homogeneous=True)
+        for i, dow in enumerate(("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")):
+            grid.attach(label(dow, "caption", "dim-label", xalign=0.5), i, 0, 1, 1)
+        for r, week in enumerate(period.calendar_grid(self.rows, self.month_first, self.now().date(), floor), start=1):
+            for c, cell in enumerate(week):
+                grid.attach(self._cell(cell), c, r, 1, 1)
+        body.append(grid)
+        low = floor - 1.5
+        legend = box(vertical=False, spacing=14, halign=Gtk.Align.CENTER, margin_top=6)
+        for cls, text in (
+            ("heat-ok", f"≥ {floor:g} h"),
+            ("heat-mid", f"{low:g}–{floor - 0.1:.1f} h"),
+            ("heat-low", f"< {low:g} h"),
+            ("heat-pending", "not billed yet"),
+            ("heat-holiday", "holiday"),
+            ("heat-leave", "leave"),
+        ):
+            sw = Gtk.Box(css_classes=["swatch", cls], valign=Gtk.Align.CENTER)
+            legend.append(box(sw, label(text, "pace-sub"), vertical=False, spacing=5))
+        body.append(legend)
+        body.append(
+            label(
+                f"Colour = total billed hours that day vs the {floor:g} h daily minimum. Weekends are never counted.",
+                "pace-sub",
+                wrap=True,
+                xalign=0.5,
+            )
+        )
+
+    def _cell(self, cell: dict) -> Gtk.Widget:
+        if cell["day"] is None:
+            return Gtk.Box(css_classes=["heat-cell", "heat-none"])
+        inner = box(label(str(cell["day"]), "heat-day"), label(cell["label"], "heat-val"), spacing=2)
+        btn = Gtk.Button(child=inner, css_classes=["flat", "heat-cell", cell["cls"]] + (["today"] if cell["today"] else []))
+        if cell["tip"]:
+            btn.set_tooltip_text(cell["tip"])
+        if cell["cls"] not in ("heat-off",):
+            btn.connect("clicked", lambda *_: open_uri(self, self.status.get("pinestem_url") or PINESTEM))
+        return btn
