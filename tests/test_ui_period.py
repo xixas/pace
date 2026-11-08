@@ -17,9 +17,11 @@ def test_month_bounds_and_navigation():
 
 
 def test_heat_classes():
-    cell = lambda **kw: period.heat_class(
-        {"date": "2026-10-20", "type": "working", "billable_min": 0, "non_billable_min": 0, **kw}, TODAY, 8.5
-    )  # noqa: E731
+    def cell(**kw):
+        return period.heat_class(
+            {"date": "2026-10-20", "type": "working", "billable_min": 0, "non_billable_min": 0, **kw}, TODAY, 8.5
+        )  # noqa: E731
+
     assert cell(billable_min=510) == "heat-ok"
     assert cell(billable_min=450) == "heat-mid"  # 7.5 h
     assert cell(billable_min=300) == "heat-low"
