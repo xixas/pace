@@ -1,0 +1,471 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Week progress: four directions</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daisyui@5.5.19/daisyui.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daisyui@5.5.19/themes.css">
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.2.4/dist/index.global.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :where(.grid, .flex) > * { min-width: 0; }
+  :where(p, h1, h2, h3, h4, li, dd, td, th, .badge, .label) { overflow-wrap: anywhere; }
+  html { background: #f6f6f4; color: #1f2328; }
+  body { margin: 0; background: #f6f6f4; color: #1f2328; font-family: Inter, "Adwaita Sans", Cantarell, system-ui, sans-serif; }
+
+  /* ---- page-level mockup grid ---- */
+  .slices { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 22px 18px; }
+  @media (max-width: 400px) { .slices { grid-template-columns: 1fr; } }
+  .slice .lab { display: flex; justify-content: space-between; align-items: baseline; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: #57606a; margin: 0 2px 5px; }
+  .slice .lab b { color: #1f2328; font-weight: 700; }
+  .slice .lab i { font-style: normal; text-transform: none; letter-spacing: 0; color: #6e7781; }
+
+  /* ---- GNOME dropdown slice, real size ---- */
+  .gn { width: 340px; max-width: 100%; background: #2e2e32; color: #fff; border-radius: 12px; padding: 12px 14px 13px;
+        font: 13px/1.35 "Adwaita Sans", Cantarell, "Noto Sans", Inter, system-ui, sans-serif; font-feature-settings: "tnum";
+        box-shadow: 0 8px 24px #0005, 0 0 0 1px #0003; }
+  .gn .row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .gn .t { font-weight: 700; font-size: 15px; }
+  .gn .sm { font-size: 12px; color: rgba(255,255,255,.72); }
+  .gn .cap { display: flex; justify-content: space-between; gap: 10px; font-size: 12px; color: rgba(255,255,255,.72); margin-top: 7px; }
+  .gn .cap > span:first-child { white-space: nowrap; }
+  .gn .cap > span:last-child { text-align: right; }
+  .gn .r { color: #ff7b63; font-weight: 700; }
+  .gn .ok { color: #8ff0a4; font-weight: 700; }
+  .gn .bl { color: #99c1f1; font-weight: 700; }
+  .gn .am { color: #ffbe6f; font-weight: 700; }
+  .gn.dim .t, .gn.dim .sm, .gn.dim .cap, .gn.dim .big { color: rgba(255,255,255,.5); }
+
+  /* current element (reference) */
+  .cur .bar { position: relative; height: 8px; border-radius: 99px; background: rgba(255,255,255,.13); margin-top: 10px; }
+  .cur .bar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 99px; background: #57e389; }
+  .cur .bar b { position: absolute; top: -3px; width: 2px; height: 14px; background: #fff; opacity: .55; }
+  .cur .leg { display: flex; justify-content: space-between; font-size: 11.5px; color: rgba(255,255,255,.72); margin-top: 5px; }
+
+  /* A: thin line + caption */
+  .ln { position: relative; height: 3px; border-radius: 2px; background: rgba(255,255,255,.14); margin-top: 12px; }
+  .ln i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 2px; }
+  .ln b { position: absolute; top: -3px; width: 2px; height: 9px; border-radius: 1px; margin-left: -1px; }
+
+  /* B: segmented days */
+  .seg { position: relative; margin-top: 11px; }
+  .seg .cells { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; }
+  .seg .cell { position: relative; height: 8px; border-radius: 4px; background: rgba(255,255,255,.12); overflow: hidden; }
+  .seg .cell i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; }
+  .seg .cell.today { box-shadow: inset 0 0 0 1px #78aeed; }
+  .seg .cell.pending { background: transparent; border: 1px dashed #78aeed; }
+  .seg .cell.leave { background: repeating-linear-gradient(135deg, rgba(255,255,255,.22) 0 2px, transparent 2px 5px); }
+  .seg .notch { position: absolute; top: -3px; width: 2px; height: 14px; margin-left: -1px; border-radius: 1px; }
+  .seg .dows { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; font-size: 10px; color: rgba(255,255,255,.5); margin-top: 4px; text-align: center; }
+  .seg .dows .today { color: #99c1f1; }
+
+  /* C: number only */
+  .big { display: flex; align-items: baseline; gap: 8px; margin-top: 4px; }
+  .big .dot { width: 10px; height: 10px; border-radius: 5px; align-self: center; flex: none; }
+  .big .n { font-size: 28px; font-weight: 800; line-height: 1.1; letter-spacing: -.01em; }
+  .big .u { font-size: 14px; color: rgba(255,255,255,.72); }
+  .big .g { font-size: 18px; font-weight: 800; }
+  .gn .l2 { font-size: 12px; color: rgba(255,255,255,.72); margin-top: 3px; }
+
+  /* D: runway with buffer band */
+  .rw { position: relative; height: 6px; border-radius: 3px; background: rgba(255,255,255,.12); margin-top: 12px; }
+  .rw .band { position: absolute; top: 0; bottom: 0; right: 0; border-radius: 0 3px 3px 0; background: rgba(255,255,255,.2); border-left: 1px solid rgba(255,255,255,.55); }
+  .rw .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; }
+  .rw .ghost { position: absolute; top: 0; bottom: 0; border: 1px dashed #78aeed; border-radius: 3px; }
+  .rw .ghost.was { border-color: #ffbe6f; }
+  .seg .cell.short { box-shadow: inset 0 0 0 1px #ff7b63; }
+  .seg .cell.changed { box-shadow: inset 0 0 0 1px #ffbe6f; }
+  .seg .cell.holiday { background: repeating-linear-gradient(135deg, rgba(255,255,255,.22) 0 2px, transparent 2px 5px); }
+  .seg .cell.half { background: repeating-linear-gradient(135deg, rgba(255,255,255,.22) 0 2px, transparent 2px 5px) right / 50% 100% no-repeat, rgba(255,255,255,.12); }
+
+  /* edge cases */
+  .edge { margin-bottom: 30px; padding-top: 18px; border-top: 1px solid #e3e3df; }
+  .edge h3 { font-size: 16px; font-weight: 700; margin: 0 0 6px; }
+  .edge .dayline { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 0 0 4px; font-size: 12px; font-feature-settings: "tnum"; }
+  .edge .dayline span { background: #e9e9e5; border-radius: 6px; padding: 2px 8px; }
+  .edge .dayline span.x { background: #f3dcd8; }
+  .edge .dayline span.p { background: #dbe7f6; }
+  .edge .dayline span.l { background: #ececec; color: #6e7781; }
+  .edge .dayline em { font-style: normal; font-weight: 700; margin-left: 4px; }
+  .edge .hr { font-size: 13px; color: #57606a; margin: 0 0 12px; max-width: 60rem; }
+  .edge .hr b { color: #1f2328; }
+  .edge .best { font-size: 13px; margin-top: 12px; max-width: 60rem; }
+  .edge .best b { font-weight: 700; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 13px; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 5px; margin-right: 6px; vertical-align: -1px; }
+  .note dt { font-weight: 700; margin-top: 8px; }
+  .note dd { margin: 2px 0 0; }
+  .rulelab { font-size: 12px; font-weight: 700; color: #57606a; text-transform: uppercase; letter-spacing: .06em; margin: 18px 0 8px; }
+</style>
+</head>
+<body>
+<main class="mx-auto max-w-6xl px-4 py-8 lg:px-8 lg:py-10">
+
+  <header class="mb-8">
+    <p class="text-sm text-base-content/60 mb-1">Pace · GNOME dropdown and dashboard</p>
+    <h1 class="text-3xl font-bold">Week progress: four directions</h1>
+    <p class="mt-3 max-w-3xl">The decision: which shape the week element takes in the dropdown (and, in the same style, the dashboard card), and whether it takes the week&rsquo;s verdict colour. Every slice is drawn at the real dropdown width (340&nbsp;px, dark Shell card) with the design&rsquo;s example numbers from B1&ndash;B6. Each direction has to answer two questions in one glance: <b>how far am I</b> and <b>how close is the pay line</b>, without the three cramped ticks.</p>
+  </header>
+
+  <section class="mb-10">
+    <h2 class="text-xl font-bold mb-3">Today, for reference</h2>
+    <div class="grid gap-6 md:grid-cols-[340px_1fr] items-start">
+      <div class="slice"><div class="lab"><b>ON TRACK</b><i>Thu 29 Oct · 14:10</i></div>
+        <div class="gn cur">
+          <div class="row"><b class="t">Week · On track</b><span class="sm">needs 8.0 h/day</span></div>
+          <div class="bar"><i style="width:66.9%"></i><b style="left:91.1%"></b><b style="left:94.4%"></b><b style="left:calc(100% - 2px)"></b></div>
+          <div class="leg"><span>LOP 41</span><span>target 42.5</span><span>expected 45</span></div>
+        </div>
+      </div>
+      <dl class="note text-sm">
+        <dt>What it gets wrong</dt>
+        <dd>8&nbsp;px of saturated green is the loudest thing in the menu on a normal day. The track runs to 45&nbsp;h (&ldquo;expected&rdquo;), so the three ticks land inside the last 9&nbsp;% of it, 11&nbsp;px apart, and need a legend row to be read at all. The legend repeats numbers the user already knows.</dd>
+        <dt>What every direction below keeps</dt>
+        <dd>The track ends at the target (42.5&nbsp;h), not at 45. &ldquo;Expected 45&rdquo; is a Settings fact, not a weekly question. The only line that matters mid-week is the pay line (41&nbsp;h), and the hours-to-pay number is always printed, never only drawn.</dd>
+        <dt>Palette (B1)</dt>
+        <dd class="legend mt-1">
+          <span><i style="background:#57e389"></i>green: on track, ahead, done</span>
+          <span><i style="background:#ffbe6f"></i>amber: tight, behind, short</span>
+          <span><i style="background:#ff7b63"></i>red: pay risk, LOP</span>
+          <span><i style="background:#78aeed"></i>blue: bill your hours, today</span>
+          <span><i style="background:#9a9996"></i>grey: offline, leave</span>
+        </dd>
+      </dl>
+    </div>
+  </section>
+
+  <section class="mb-12" id="dir-a">
+    <h2 class="text-xl font-bold">A · Thin line and a caption</h2>
+    <dl class="note text-sm max-w-3xl mb-5">
+      <dt>Communicates</dt><dd>Progress as a 3&nbsp;px line to the target, one 2&nbsp;px notch at the pay line, and a caption that prints the two gaps (&ldquo;10.9 h to pay line · 12.4 to target&rdquo;). The notch is a landmark; the caption is the answer.</dd>
+      <dt>Colour rule</dt><dd>Line takes the verdict colour every time (same palette as the top-bar dot). The notch is white at 45&nbsp;% until pay is in play, then red.</dd>
+      <dt>Trade-off</dt><dd>Quietest and closest to what the dashboard already moved to. But the 41 &rarr; 42.5 gap is 3.5&nbsp;% of the track (11&nbsp;px), so between SHORT and DONE the line alone cannot tell you which side of the pay line you are on; the caption has to.</dd>
+    </dl>
+    <div class="slices" data-dir="A"></div>
+  </section>
+
+  <section class="mb-12" id="dir-b">
+    <h2 class="text-xl font-bold">B · Segmented five-day bar</h2>
+    <dl class="note text-sm max-w-3xl mb-5">
+      <dt>Communicates</dt><dd>One cell per working day, filled to that day&rsquo;s share of the target (8.5&nbsp;h). The shape of the week is visible: where hours went missing, which day is today (blue outline), which day is not billed yet (dashed blue), leave (hatched). The pay line is a notch 1.5&nbsp;h before the end of the last cell. This bar can replace the five day chips underneath, saving a row.</dd>
+      <dt>Colour rule</dt><dd>Only on risk. Billed days are neutral white; a short day is red; the notch turns red when pay is in play. Blue marks today and &ldquo;not billed yet&rdquo;, as it does in the chips now.</dd>
+      <dt>Trade-off</dt><dd>Richest picture, least arithmetic. The notch reads as &ldquo;a position on Friday&rdquo;, which is only true when every day is about 8.5&nbsp;h; a 9.6-h Monday is capped at a full cell, so the bar under-reports AHEAD. The caption carries the real numbers.</dd>
+    </dl>
+    <div class="slices" data-dir="B"></div>
+  </section>
+
+  <section class="mb-12" id="dir-c">
+    <h2 class="text-xl font-bold">C · Number first, no bar</h2>
+    <dl class="note text-sm max-w-3xl mb-5">
+      <dt>Communicates</dt><dd>The hours as a 28&nbsp;px figure with a 10&nbsp;px verdict dot, then two text lines: the gaps (&ldquo;10.9 h to pay line · 12.4 h to target&rdquo;) and the pace (&ldquo;needs 8.0 h/day · 4.5 h left today&rdquo;). Nothing to decode.</dd>
+      <dt>Colour rule</dt><dd>The dot only. Text stays white; the gap line goes red when pay is in play, blue for BILL, green for DONE.</dd>
+      <dt>Trade-off</dt><dd>Most honest: a bar in which 41 and 42.5 are 11&nbsp;px apart was never going to show the pay margin. But there is no &ldquo;how far along&rdquo; feel; 30.1 needs a moment of mental division, and the day chips below carry all of the shape.</dd>
+    </dl>
+    <div class="slices" data-dir="C"></div>
+  </section>
+
+  <section class="mb-12" id="dir-d">
+    <h2 class="text-xl font-bold">D · Runway with a buffer band</h2>
+    <dl class="note text-sm max-w-3xl mb-5">
+      <dt>Communicates</dt><dd>A 6&nbsp;px track to the target whose last 1.5&nbsp;h (41 &rarr; 42.5) is a lighter band: the &ldquo;short but pay safe&rdquo; zone the rules actually define. Fill reaching the band = pay safe; fill covering it = done. No tick, no legend: the zone is the pay line. BILL shows the unbilled day as a dashed ghost ahead of the fill, so &ldquo;bill Fri and the week is done&rdquo; is drawn, not said.</dd>
+      <dt>Colour rule</dt><dd>Monochrome fill (white at 82&nbsp;%) on a normal week; red only for PAY RISK and LOP; green only for DONE; grey when offline. The last-day gap keeps a white fill (the verdict is still ON TRACK, as in B1) and shows the gap in a red band edge and caption. The verdict colour otherwise lives in the title and the top-bar dot.</dd>
+      <dt>Trade-off</dt><dd>The band is a convention the user learns once (a tooltip on first hover covers it). On a 340&nbsp;px menu it is 11&nbsp;px wide, enough to see but not to read a number off; the caption still prints the gap.</dd>
+    </dl>
+    <div class="slices" data-dir="D"></div>
+  </section>
+
+  <section class="mb-12" id="edge">
+    <h2 class="text-xl font-bold">Edge cases</h2>
+    <p class="text-sm max-w-3xl mt-2">Every direction on the awkward weeks: a long day covering a short one, a flat week that still loses a day, half days, holidays, a weekend rescue, overtime, a correction that lowers the total, and a week that has not been billed at all. Hours per day are labelled above each row; the HR line is the rule from &ldquo;Pace rules v4&rdquo;: <code>d</code> = working days after leave and holidays, pay line = 9·(&lceil;d&rceil;&minus;1)+5, target = max(8.5·d, pay line), credited days = &lfloor;total/9&rfloor; + (remainder &ge; 5 ? 1 : 0), LOP = d &minus; credited. A zero-hour day is &ldquo;not billed yet&rdquo; from 20:00 until 12:00 the next working day, then a shortfall.</p>
+    <div id="edge-cases"></div>
+  </section>
+
+  <section class="mb-12" id="colour">
+    <h2 class="text-xl font-bold">Colour rule, isolated</h2>
+    <p class="text-sm max-w-3xl mt-2">Shape and colour are independent choices. Direction D under the three rules, on the four stages where they differ most. (A takes the same three rules the same way; B and C only have the &ldquo;risk&rdquo; and &ldquo;dot&rdquo; variants shown above.)</p>
+    <div class="rulelab">By state: fill always takes the verdict colour</div>
+    <div class="slices" data-rule="state"></div>
+    <div class="rulelab">Only on risk: white fill, red when pay is in play, green when done</div>
+    <div class="slices" data-rule="risk"></div>
+    <div class="rulelab">Never: element is monochrome, colour lives in the title and top-bar dot only</div>
+    <div class="slices" data-rule="never"></div>
+  </section>
+
+  <section class="mb-12">
+    <h2 class="text-xl font-bold">Recommendation</h2>
+    <p class="mt-2 max-w-3xl"><b>D, with colour only on risk.</b> The band answers &ldquo;how close to the pay line&rdquo; without a tick or a legend and matches how the rules work (41&ndash;42.5 is a zone, not a point), while a white fill keeps a normal week quiet. Red then appears only when pay is actually in play, which is the one moment this element must be loud, and the verdict colour stays where it already is: the top-bar dot and the title.</p>
+    <p class="mt-2 max-w-3xl">The edge cases do not change the shape choice, but they sharpen it: in seven of the twelve awkward weeks (1, 2, 6, 7, 12 and partly 5, 11) what the user needs is <i>which day</i>, and that is exactly what the five day chips under the bar already carry. So the recommendation is <b>D plus the existing day chips</b>, with short days red and pending days dashed in the chips as they are now. The three cases a bar cannot express (half-day line stays 41, overflow size, a correction) are handled by D&rsquo;s caption and ghost, not by drawing. If the chips are ever dropped to save a row, switch the bar to B.</p>
+    <p class="mt-2 text-sm text-base-content/70 max-w-3xl">Second choice: A with the same colour rule and the same chips.</p>
+  </section>
+
+  <section class="card card-border bg-base-100 max-w-3xl">
+    <div class="card-body">
+      <h2 class="card-title">Your call</h2>
+      <form data-lavish-question="week-progress" class="flex flex-col gap-5" onsubmit="event.preventDefault(); const fd = new FormData(event.currentTarget); const dir = fd.get('direction'); const col = fd.get('colour'); const notes = (fd.get('notes') || '').trim(); if (!dir && !col && !notes) return; const text = 'Direction: ' + (dir || '-') + ' · Colour by state: ' + (col || '-') + (notes ? ' · Notes: ' + notes : ''); if (window.lavish && window.lavish.queuePrompt) { window.lavish.queuePrompt('Week progress element: implement direction ' + (dir || '(not chosen)') + ' with colour rule \'' + (col || 'not chosen') + '\' in the GNOME dropdown and the dashboard.' + (notes ? ' Notes: ' + notes : ''), { tag: 'choice', text, element: event.currentTarget, data: { direction: dir, colour: col, notes } }); } const st = event.currentTarget.querySelector('[data-status]'); st.textContent = 'Queued: ' + text;">
+        <fieldset class="fieldset">
+          <legend class="fieldset-legend">Which direction?</legend>
+          <div class="flex flex-wrap gap-4">
+            <label class="label cursor-pointer gap-2"><input type="radio" name="direction" value="A" class="radio radio-sm"> A · thin line</label>
+            <label class="label cursor-pointer gap-2"><input type="radio" name="direction" value="B" class="radio radio-sm"> B · segmented days</label>
+            <label class="label cursor-pointer gap-2"><input type="radio" name="direction" value="C" class="radio radio-sm"> C · number first</label>
+            <label class="label cursor-pointer gap-2"><input type="radio" name="direction" value="D" class="radio radio-sm"> D · runway with band</label>
+          </div>
+        </fieldset>
+        <fieldset class="fieldset">
+          <legend class="fieldset-legend">Colour by state?</legend>
+          <div class="flex flex-wrap gap-4">
+            <label class="label cursor-pointer gap-2"><input type="radio" name="colour" value="yes" class="radio radio-sm"> yes, always</label>
+            <label class="label cursor-pointer gap-2"><input type="radio" name="colour" value="only on risk" class="radio radio-sm"> only on risk</label>
+            <label class="label cursor-pointer gap-2"><input type="radio" name="colour" value="never" class="radio radio-sm"> never</label>
+          </div>
+        </fieldset>
+        <fieldset class="fieldset">
+          <legend class="fieldset-legend">Notes (optional)</legend>
+          <textarea name="notes" class="textarea w-full" rows="3" placeholder="Anything to change in the chosen direction"></textarea>
+        </fieldset>
+        <div class="flex flex-wrap items-center gap-3">
+          <button type="submit" class="btn btn-primary btn-sm">Queue this answer</button>
+          <span data-status class="text-sm text-base-content/70" role="status" aria-live="polite"></span>
+        </div>
+      </form>
+      <div class="mt-2 flex flex-wrap items-center gap-3">
+        <button type="button" class="btn btn-sm btn-ghost" onclick="(async (btn) => {
+    const qs = [...document.querySelectorAll('[data-lavish-question]')];
+    const status = btn.parentElement.querySelector('[data-lavish-copy-all-status]');
+    const out = [];
+    for (const q of qs) {
+      const key = q.getAttribute('data-lavish-question') || 'Question';
+      const lines = [];
+      for (const el of q.querySelectorAll('input, select, textarea')) {
+        const isChoice = el.matches('input[type=checkbox], input[type=radio]');
+        if (isChoice && !el.checked) continue;
+        const v = el.value.trim();
+        if (!v) continue;
+        lines.push('  ' + el.name + ': ' + v);
+      }
+      if (lines.length) out.push(key + ':\n' + lines.join('\n'));
+    }
+    const text = out.join('\n\n');
+    if (!text) { status.textContent = 'No answers to copy yet.'; return; }
+    try { await navigator.clipboard.writeText(text); status.textContent = 'Answers copied.'; return; } catch {}
+    const tmp = document.createElement('textarea'); tmp.value = text; tmp.readOnly = true; tmp.style.position = 'fixed'; tmp.style.left = '-10000px';
+    document.body.append(tmp); tmp.select(); let ok = false; try { ok = document.execCommand('copy'); } catch {} tmp.remove();
+    status.textContent = ok ? 'Answers copied.' : 'Clipboard unavailable: ' + text;
+  })(this)">Copy answers as text</button>
+        <span data-lavish-copy-all-status role="status" aria-live="polite" class="text-sm text-base-content/70"></span>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+(function () {
+  const C = { green: '#57e389', amber: '#ffbe6f', red: '#ff7b63', blue: '#78aeed', grey: '#9a9996' };
+  const T = 42.5, PAY = 41, SHARE = 8.5;
+  // title colour follows the dropdown convention (B2-B6): white for green/grey states, verdict colour otherwise
+  const stages = [
+    { name: 'ON TRACK', clock: 'Thu 29 Oct · 14:10', state: 'green', title: 'Week · On track', h: 30.1,
+      need: 'needs 8.0 h/day', pay: '10.9 h to pay line · 12.4 to target', pace: 'needs 8.0 h/day · 4.5 h left today',
+      days: [['Mon', 9.2], ['Tue', 8.4], ['Wed', 9.0], ['Thu', 3.5, 'today'], ['Fri', null]] },
+    { name: 'AHEAD', clock: 'Wed 28 Oct · 19:10', state: 'green', title: 'Week · Ahead', h: 28.4,
+      need: 'needs 7.1 h/day', pay: '12.6 h to pay line · 14.1 to target', pace: 'needs 7.1 h/day · averaging 9.5',
+      days: [['Mon', 9.5], ['Tue', 9.4], ['Wed', 9.5, 'today'], ['Thu', null], ['Fri', null]] },
+    { name: 'TIGHT', clock: 'Thu 29 Oct · 09:30', state: 'amber', title: 'Week · Tight', h: 23.0,
+      need: 'needs 9.8 h/day', pay: '18.0 h to pay line · 19.5 to target', pace: 'needs 9.8 h/day over Thu and Fri',
+      days: [['Mon', 8.0], ['Tue', 7.5], ['Wed', 7.5], ['Thu', 0.0, 'today'], ['Fri', null]] },
+    { name: 'BEHIND', clock: 'Thu 29 Oct · 09:30', state: 'amber', title: 'Week · Behind', h: 21.0,
+      need: 'pay needs 10.0 h/day', pay: '20.0 h to pay line · target out of reach', pace: 'pay needs 10.0 h/day · target 10.8',
+      days: [['Mon', 7.5], ['Tue', 7.0], ['Wed', 6.5], ['Thu', 0.0, 'today'], ['Fri', null]] },
+    { name: 'PAY RISK', clock: 'Fri 30 Oct · 11:00', state: 'red', title: 'Week · Pay at risk', h: 27.1, risk: true,
+      need: 'needs 13.9 h today', pay: '13.9 h to pay line · limit is 10.5', pace: 'short: Wed 6.0 h · Thu 3.5 h',
+      days: [['Mon', 9.2], ['Tue', 8.4], ['Wed', 6.0, 'short'], ['Thu', 3.5, 'short'], ['Fri', 0.0, 'today']] },
+    { name: 'BILL', clock: 'Fri 30 Oct · 20:30', state: 'blue', title: 'Week · Bill your hours', h: 34.0, bill: true,
+      need: 'Fri not billed yet', pay: '7.0 h to pay line · bill Fri to finish', pace: 'Fri not billed yet · grace until Mon 12:00',
+      days: [['Mon', 8.5], ['Tue', 8.5], ['Wed', 8.5], ['Thu', 8.5], ['Fri', null, 'pending']] },
+    { name: 'LAST DAY GAP', clock: 'Fri 30 Oct · 18:30', state: 'green', title: 'Week · On track', h: 40.0, risk: true,
+      need: 'last working day', pay: 'pay needs 1.0 h · 2.5 to target', pace: 'last working day · 40.0 of the 41 h line',
+      days: [['Mon', 9.2], ['Tue', 8.4], ['Wed', 9.0], ['Thu', 9.0], ['Fri', 4.4, 'today']] },
+    { name: 'DONE', clock: 'Thu 29 Oct · 17:40', state: 'green', title: 'Week · Done', h: 42.5, done: true,
+      need: '', pay: 'target met', pace: 'stays until the week rolls over',
+      days: [['Mon', 10.5], ['Tue', 10.5], ['Wed', 11.0], ['Thu', 10.5, 'today'], ['Fri', null]] },
+    { name: 'SHORT', clock: 'Sat 31 Oct · 09:00', state: 'amber', title: 'Week · Short, pay safe', h: 41.8, safe: true,
+      need: 'week over', pay: 'pay safe · 0.7 h under target', pace: 'week over · no loss of pay',
+      days: [['Mon', 8.4], ['Tue', 8.4], ['Wed', 8.4], ['Thu', 8.4], ['Fri', 8.2]] },
+    { name: 'LOP 1 DAY', clock: 'Sat 31 Oct · 09:00', state: 'red', title: 'Week · LOP 1 day', h: 39.5, risk: true,
+      need: 'week over', pay: '1.5 h under the pay line', pace: 'short: Wed 6.0 h · Thu 7.5 h',
+      days: [['Mon', 9.2], ['Tue', 8.4], ['Wed', 6.0, 'short'], ['Thu', 7.5, 'short'], ['Fri', 8.4]] },
+    { name: 'OFFLINE', clock: 'Thu 29 Oct · 14:10', state: 'grey', title: 'Week · On track', h: 26.6, dim: true,
+      need: 'as of 09:40', pay: '14.4 h to pay line · 15.9 to target', pace: "can't reach DhiHRMS · retrying",
+      days: [['Mon', 9.2], ['Tue', 8.4], ['Wed', 9.0], ['Thu', 0.0, 'today'], ['Fri', null]] },
+    { name: 'ON LEAVE', clock: 'Wed 28 Oct · 10:00', state: 'grey', title: 'Week · On leave', h: null, dim: true,
+      need: '28 Oct – 1 Nov', pay: 'no target this week', pace: 'whole week is leave',
+      days: [['Mon', null, 'leave'], ['Tue', null, 'leave'], ['Wed', null, 'leave'], ['Thu', null, 'leave'], ['Fri', null, 'leave']] },
+  ];
+
+  const titleCol = s => (s.state === 'green' || s.state === 'grey') ? null : C[s.state];
+  const tone = s => s.risk ? 'r' : s.bill ? 'bl' : s.done ? 'ok' : s.safe ? 'am' : '';
+  const hours = s => s.h == null ? '—' : s.h.toFixed(1) + ' h';
+  const tgt = s => s.T ?? T, line = s => s.PAY ?? PAY;
+  const pct = s => s.h == null ? 0 : Math.min(100, s.h / tgt(s) * 100);
+  const payLeft = s => (line(s) / tgt(s) * 100).toFixed(2) + '%';
+  const pendingN = s => s.days.filter(d => d[2] === 'pending').length;
+  const titleRow = (s, right) => `<div class="row"><b class="t"${titleCol(s) ? ` style="color:${titleCol(s)}"` : ''}>${s.title}</b><span class="sm">${right}</span></div>`;
+  const cap = (s, left, right) => `<div class="cap"><span>${left}</span><span class="${tone(s)}">${right}</span></div>`;
+
+  // fill colour under a given colour rule
+  function fillCol(s, rule) {
+    if (s.state === 'grey') return C.grey;
+    if (rule === 'state') return C[s.state];
+    if (rule === 'risk') return s.state === 'red' ? C.red : s.done ? C.green : 'rgba(255,255,255,.82)';
+    return 'rgba(255,255,255,.82)';
+  }
+
+  const A = s => titleRow(s, s.need) +
+    `<div class="ln"><i style="width:${pct(s)}%;background:${C[s.state]}"></i>` +
+    `<b style="left:${payLeft(s)};background:${s.risk ? C.red : 'rgba(255,255,255,.45)'}"></b></div>` +
+    cap(s, hours(s), s.pay);
+
+  function B(s) {
+    const n = s.days.length;
+    const cells = s.days.map(([dow, h, kind]) => {
+      kind = kind || (h == null ? 'future' : 'billed');
+      let fill = '';
+      if (h != null && h > 0) {
+        const col = kind === 'short' ? C.red : 'rgba(255,255,255,.78)';
+        fill = `<i style="width:${Math.min(100, h / SHARE * 100)}%;background:${col}"></i>`;
+      }
+      return `<div class="cell ${kind}">${fill}</div>`;
+    }).join('');
+    const dows = s.days.map(([dow, h, kind]) => `<span class="${kind === 'today' ? 'today' : ''}">${dow}</span>`).join('');
+    // the notch sits where the pay line falls if every cell were 8.5 h (clamped: a half-day week cannot reach 41 at 8.5/day)
+    const np = Math.min(100, (s.notchH ?? line(s)) / (n * SHARE) * 100).toFixed(2) + '%';
+    const notch = s.h == null ? '' : `<span class="notch" style="left:${np};background:${s.risk ? C.red : 'rgba(255,255,255,.45)'}"></span>`;
+    return titleRow(s, s.need) +
+      `<div class="seg"><div class="cells" style="grid-template-columns:repeat(${n},1fr)">${cells}</div>${notch}<div class="dows" style="grid-template-columns:repeat(${n},1fr)">${dows}</div></div>` +
+      cap(s, hours(s), s.pay).replace('class="cap"', 'class="cap" style="margin-top:4px"');
+  }
+
+  function C_(s) {
+    const n = s.h == null ? '<span class="g">On leave</span>' : `<span class="n">${s.h.toFixed(1)}</span><span class="u">h${s.done ? ' ✓' : ' of ' + tgt(s)}</span>`;
+    return titleRow(s, s.need) +
+      `<div class="big"><i class="dot" style="background:${C[s.state]}"></i>${n}</div>` +
+      `<div class="l2 ${tone(s)}">${s.pay}</div><div class="l2">${s.pace}</div>`;
+  }
+
+  function D(s, rule = 'risk') {
+    const p = pct(s), Tt = tgt(s);
+    let ghost = '';
+    const pend = pendingN(s);
+    if (pend && p < 100) ghost += `<span class="ghost" style="left:${p}%;width:${Math.min(100 - p, pend * SHARE / Tt * 100)}%"></span>`;
+    if (s.was != null && s.was > s.h) ghost += `<span class="ghost was" style="left:${p}%;width:${(Math.min(100, s.was / Tt * 100) - p).toFixed(2)}%"></span>`;
+    const band = `<span class="band" style="width:${(100 - line(s) / Tt * 100).toFixed(2)}%${s.risk ? `;background:rgba(255,123,99,.28);border-color:${C.red}` : ''}"></span>`;
+    const fill = s.h == null ? '' : `<span class="fill" style="width:${p}%;background:${fillCol(s, rule)}"></span>`;
+    return titleRow(s, s.need) + `<div class="rw">${band}${ghost}${fill}</div>` + cap(s, hours(s), s.pay);
+  }
+
+  const renderers = { A, B, C: C_, D };
+
+  function slice(s, inner) {
+    return `<div class="slice"><div class="lab"><b>${s.name}</b><i>${s.clock}</i></div><div class="gn${s.dim ? ' dim' : ''}">${inner}</div></div>`;
+  }
+
+  for (const grid of document.querySelectorAll('.slices[data-dir]')) {
+    const r = renderers[grid.dataset.dir];
+    grid.innerHTML = stages.map(s => slice(s, r(s))).join('');
+  }
+  const pick = ['ON TRACK', 'TIGHT', 'PAY RISK', 'DONE'];
+  for (const grid of document.querySelectorAll('.slices[data-rule]')) {
+    const rule = grid.dataset.rule;
+    grid.innerHTML = stages.filter(s => pick.includes(s.name)).map(s => {
+      let inner = D(s, rule);
+      if (rule === 'never') inner = inner.replace(/<span class="(r|ok)">/, '<span class="sm">');
+      return slice(s, inner);
+    }).join('');
+  }
+
+  // ---- edge cases: every direction, same week ----
+  // day kinds: billed (default), short, today, pending, future, leave, holiday, half, zero (past 0 h, not in play), changed
+  const edge = [
+    { n: 1, name: 'Uneven but safe', clock: 'Sat 31 Oct · 09:00', state: 'green', title: 'Week · Done', h: 43.0, done: true,
+      need: '', pay: 'target met · +0.5 h', pace: 'Mon 12.0 h covered Tue 4.0 h',
+      days: [['Mon', 12], ['Tue', 4], ['Wed', 9], ['Thu', 9], ['Fri', 9]],
+      hr: '43 h: &lfloor;43/9&rfloor; = 4, remainder 7 &ge; 5 &rarr; <b>5 days credited, LOP 0</b>; 43 &ge; 42.5 &rarr; <b>DONE</b>. HR counts the total, so the 12-h Monday covers the 4-h Tuesday.',
+      best: '<b>B</b>: it is the only one that shows the dip and the day that paid for it. A, C and D say &ldquo;done&rdquo; and nothing else, which is also correct, and quieter.' },
+    { n: 2, name: 'Uneven, short', clock: 'Sat 31 Oct · 09:00', state: 'red', title: 'Week · LOP 1 day', h: 40.0, risk: true,
+      need: 'week over', pay: '1.0 h under the pay line', pace: 'short: Tue 3.0 h',
+      days: [['Mon', 11], ['Tue', 3, 'short'], ['Wed', 8], ['Thu', 9], ['Fri', 9]],
+      hr: '40 h: &lfloor;40/9&rfloor; = 4, remainder 4 &lt; 5 &rarr; <b>4 days credited, LOP 1</b>. No day is zero; the 11-h Monday did not quite cover the 3-h Tuesday.',
+      best: '<b>B</b>: Tuesday is red, so the fix (bill 1 h against Tue, if it was real work) is pointed at. D shows the fill stopping 8 px before the band, which is visible but needs the caption.' },
+    { n: 3, name: 'Flat 8 h', clock: 'Sat 31 Oct · 09:00', state: 'red', title: 'Week · LOP 1 day', h: 40.0, risk: true,
+      need: 'week over', pay: '1.0 h under the pay line', pace: 'no short day · the total is short',
+      days: [['Mon', 8], ['Tue', 8], ['Wed', 8], ['Thu', 8], ['Fri', 8]],
+      hr: '40 h: same arithmetic as case 2 &rarr; <b>LOP 1</b>, although every day was a full day under 9 h. There is no &ldquo;short day&rdquo; to name; the caption has to say &ldquo;the total is short&rdquo;.',
+      best: '<b>D</b> (or C): a flat week under the line is a property of the total, not of a day. B has nothing to colour and looks fine, which is the misleading case for a per-day bar.' },
+    { n: 4, name: 'Exactly the line', clock: 'Sat 31 Oct · 09:00', state: 'amber', title: 'Week · Short, pay safe', h: 41.0, safe: true,
+      need: 'week over', pay: 'pay safe · 1.5 h under target', pace: 'on the line exactly',
+      days: [['Mon', 9], ['Tue', 9], ['Wed', 9], ['Thu', 9], ['Fri', 5]],
+      hr: '41 h: &lfloor;41/9&rfloor; = 4, remainder 5 &ge; 5 &rarr; <b>5 credited, LOP 0</b>; 41 &lt; 42.5 &rarr; <b>SHORT (pay safe)</b>. This is where the 41 comes from.',
+      best: '<b>D</b>: the fill touches the band edge, which is exactly the fact. A&rsquo;s notch and the fill tip coincide at 1 px; C and the caption carry it for everyone.' },
+    { n: 5, name: 'Front-loaded, seen Wednesday night', clock: 'Wed 28 Oct · 20:30', state: 'green', title: 'Week · On track', h: 26.0,
+      need: 'needs 4.0 h/day', pay: '15.0 h to pay line · Wed not billed yet', pace: 'Wed not billed yet · grace until Thu 12:00',
+      days: [['Mon', 13], ['Tue', 13], ['Wed', 0, 'pending'], ['Thu', null], ['Fri', null]],
+      hr: '26 h logged + 8.5 h pending for Wed = 34.5 effective; need (42.5 &minus; 34.5) &divide; 2 = <b>4.0 h/day &rarr; ON TRACK</b>. Not AHEAD: after 20:00 Wed is a past day at 0 h, so the past-day average is 8.7 h. If Wed stays unbilled past Thu 12:00 it becomes a short day.',
+      best: '<b>D</b>: the dashed ghost shows the week is really at 34.5 h once Wed is billed, and that 13-h days do not show as overflow anywhere. B shows which day is the gap; A and C say &ldquo;not billed yet&rdquo; in text only.' },
+    { n: 6, name: 'Back-loaded, seen Friday 18:00', clock: 'Fri 30 Oct · 18:00', state: 'green', title: 'Week · On track', h: 42.0,
+      need: 'last working day', pay: 'pay safe · 0.5 h to target', pace: 'Mon 0 h · Tue 0 h, covered by 14-h days',
+      days: [['Mon', 0, 'zero'], ['Tue', 0, 'zero'], ['Wed', 14], ['Thu', 14], ['Fri', 14, 'today']],
+      hr: '42 h: &lfloor;42/9&rfloor; = 4, remainder 6 &ge; 5 &rarr; <b>5 credited, LOP 0</b>. Pay safe despite two zero days (the brief guessed pay risk; HR&rsquo;s rule is weekly). Last working day over the line, under target &rarr; <b>ON TRACK, 0.5 h to target</b>.',
+      best: '<b>B</b>: two empty cells and three full ones is the whole story. The others show a nearly full bar, which is true but hides that Mon and Tue were never billed (a lead reading the sheet will ask).' },
+    { n: 7, name: 'Weekend rescue', clock: 'Sun 1 Nov · 09:00', state: 'green', title: 'Week · Done', h: 43.0, done: true,
+      need: '', pay: 'target met · +0.5 h incl. Sat 3.0', pace: 'Sat 3.0 h counted',
+      days: [['Mon', 8], ['Tue', 8], ['Wed', 8], ['Thu', 8], ['Fri', 8], ['Sat', 3, 'weekend']],
+      hr: '40 h Mon&ndash;Fri + 3 h Sat = 43: &lfloor;43/9&rfloor; = 4, remainder 7 &rarr; <b>5 credited, LOP 0 &rarr; DONE</b>, because the rule is a weekly total and weekends count. Pace counts weekend hours too (hrms-api confirmed it), so the panel shows DONE.',
+      best: '<b>B</b>: a sixth, narrower cell makes the rescue visible. A, C and D absorb the 3 h into the total, which is correct but leaves &ldquo;why is Friday 8 h a done week?&rdquo; to the caption.' },
+    { n: 8, name: 'Half-day leave Thursday', clock: 'Sat 31 Oct · 09:00', state: 'red', title: 'Week · LOP ½ day', h: 36.0, risk: true, T: 41, PAY: 41, notchH: 41,
+      need: 'd = 4.5', pay: '5.0 h under the pay line (41)', pace: 'half-day leave does not lower the line',
+      days: [['Mon', 9], ['Tue', 9], ['Wed', 9], ['Thu ½', 0, 'half'], ['Fri', 9]],
+      hr: 'd = 4.5: pay line = 9·(&lceil;4.5&rceil;&minus;1)+5 = <b>41 h, not 36.5</b>; target = max(38.25, 41) = 41. 36 h: &lfloor;36/9&rfloor; = 4, remainder 0 &rarr; 4 credited of 4.5 &rarr; <b>LOP 0.5 day</b>. The half day is only worth 4.5 h if the other days average 9.1 h.',
+      best: '<b>C</b>: only text can say &ldquo;the line is still 41&rdquo;. For A and D the band collapses to zero width (line = target), so they show plain &ldquo;short&rdquo;. B&rsquo;s notch is clamped to the end: at 8.5 h per cell the line is unreachable, which is itself the lesson.' },
+    { n: 9, name: 'Holiday Monday', clock: 'Sat 31 Oct · 09:00', state: 'green', title: 'Week · Done', h: 36.0, done: true, T: 34, PAY: 32, notchH: 40.5,
+      need: 'd = 4', pay: 'target met · +2.0 h', pace: '4-day week · line 32, target 34',
+      days: [['Mon', null, 'holiday'], ['Tue', 9], ['Wed', 9], ['Thu', 9], ['Fri', 9]],
+      hr: 'd = 4: pay line = 9·3+5 = <b>32 h</b>, target = 8.5·4 = <b>34 h</b>. 36 h: &lfloor;36/9&rfloor; = 4 &rarr; 4 credited of 4 &rarr; <b>LOP 0, DONE</b>. (The design&rsquo;s sim with 8 h &times; 4 = 32 lands exactly on the line: SHORT, pay safe.)',
+      best: '<b>D</b>: the band widens to 2 h of a 34-h track (5.9 %), so the shorter week is visible without a number. B shows the hatched holiday; A and C need the caption to say the line moved.' },
+    { n: 10, name: 'Overtime', clock: 'Sat 31 Oct · 09:00', state: 'green', title: 'Week · Done', h: 55.0, done: true,
+      need: '', pay: 'target met · +12.5 h over', pace: '11 h every day',
+      days: [['Mon', 11], ['Tue', 11], ['Wed', 11], ['Thu', 11], ['Fri', 11]],
+      hr: '55 h: &lfloor;55/9&rfloor; = 6 &rarr; 6 &ge; 5 &rarr; <b>LOP 0, DONE</b>. Bars are capped at the target; the overflow is printed, never drawn (a bar that grows past its own track reads as a layout bug).',
+      best: '<b>C</b>: &ldquo;55.0 h &check;&rdquo; with &ldquo;+12.5 h over&rdquo; is the only place the size of the overshoot is prominent. A and D show a full green line; B shows five full cells and a 13-h day looks the same as an 8.5-h one.' },
+    { n: 11, name: 'A late correction', clock: 'Thu 29 Oct · 14:10', state: 'amber', title: 'Week · Behind', h: 23.5, was: 30.5,
+      need: 'pay needs 10.5 h/day', pay: '17.5 h to pay line · −7.0 h since 13:40', pace: 'Tue edited 9.0 → 2.0',
+      days: [['Mon', 9], ['Tue', 2, 'changed'], ['Wed', 9], ['Thu', 3.5, 'today'], ['Fri', null]],
+      hr: 'Tue was 9.0 h at 13:40, now 2.0 h: 30.5 &rarr; 23.5 h. Need before today = (42.5 &minus; 20) &divide; 2 = <b>11.3 h/day &gt; 10.5 &rarr; BEHIND</b>; pay (41 &minus; 20) &divide; 2 = 10.5 h/day, reachable at the limit. Ten minutes ago this was ON TRACK at 7.8 h/day.',
+      best: '<b>D</b>: the amber dashed ghost shows the 7 h that disappeared and where the fill used to sit. B outlines the edited cell; A only changes length, so the drop is invisible unless you remember the old bar; C prints the delta.' },
+    { n: 12, name: 'Nothing billed yet, Thursday morning', clock: 'Thu 29 Oct · 11:00', state: 'red', title: 'Week · Pay at risk', h: 0.0, risk: true,
+      need: 'needs 16.3 h/day', pay: '41.0 h to pay line · limit 10.5', pace: 'short: Mon 0 h · Tue 0 h · Wed not billed yet',
+      days: [['Mon', 0, 'short'], ['Tue', 0, 'short'], ['Wed', 0, 'pending'], ['Thu', 0, 'today'], ['Fri', null]],
+      hr: '0 h logged + 8.5 h pending (Wed, until 12:00) = 8.5 effective; 41 needs (41 &minus; 8.5) &divide; 2 = <b>16.3 h/day &gt; 10.5 &rarr; PAY RISK</b>. Best case 2 &times; 10.5 = 21 h &rarr; 2 credited &rarr; LOP 3 days. Under the grace rule only the most recent zero day can be &ldquo;pending&rdquo;; Mon and Tue are already short, so &ldquo;several pending days at once&rdquo; cannot occur.',
+      best: '<b>B</b>: red-outlined empty cells for Mon and Tue, a dashed Wed, an outlined Thu: the week is legible in one row. D&rsquo;s ghost shows the only hours still recoverable without a conversation; A and C are text.' },
+  ];
+
+  const dayChip = ([dow, h, kind]) => {
+    const cls = kind === 'short' ? 'x' : kind === 'pending' ? 'p' : (kind === 'leave' || kind === 'holiday' || kind === 'half') ? 'l' : '';
+    const v = kind === 'holiday' ? 'holiday' : kind === 'pending' ? 'not billed' : h == null ? '–' : h + ' h';
+    return `<span class="${cls}">${dow}<em>${v}</em></span>`;
+  };
+  const dirLabels = { A: 'A · thin line', B: 'B · segmented days', C: 'C · number first', D: 'D · runway' };
+  document.getElementById('edge-cases').innerHTML = edge.map(s => {
+    const total = s.days.reduce((a, d) => a + (d[1] || 0), 0);
+    const four = Object.entries(renderers).map(([k, r]) =>
+      `<div class="slice"><div class="lab"><b>${dirLabels[k]}</b><i>${s.clock}</i></div><div class="gn${s.dim ? ' dim' : ''}">${r(s)}</div></div>`).join('');
+    return `<div class="edge" id="edge-${s.n}"><h3>${s.n} · ${s.name}</h3>` +
+      `<div class="dayline">${s.days.map(dayChip).join('')}<span style="background:none;font-weight:700">= ${total} h${s.T ? ' · target ' + s.T + ' · line ' + s.PAY : ''}</span></div>` +
+      `<p class="hr">${s.hr}</p><div class="slices">${four}</div><p class="best">Reads best: ${s.best}</p></div>`;
+  }).join('');
+})();
+</script>
+</body>
+</html>

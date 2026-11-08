@@ -264,7 +264,7 @@
     </div></div>
     <div class="card card-border bg-base-100"><div class="card-body p-4">
       <b>Still open (hrms-api owner)</b>
-      <p>Do Saturday billings count in HR's weekly window? The window comes from the caller's <span class="mono">fromDate/toDate</span> (<span class="mono">billing-report.xlsx.ts:78-79</span>). <b>Until that's answered, Pace ignores weekend billings for pay</b>, so it can only under-promise. Simulated week 10 (8&nbsp;h × 5, then 3&nbsp;h Saturday) shows LOP 1 day, not DONE. Is a half-day leave 0.5 in <span class="mono">leave.total</span>?</p>
+      <p>Do Saturday billings count in HR's weekly window? The window comes from the caller's <span class="mono">fromDate/toDate</span> (<span class="mono">billing-report.xlsx.ts:78-79</span>). <b>Answered (hrms-api, 2026-10-30): weekend hours count</b>, and Pace counts them too. Simulated week 10 (8&nbsp;h × 5, then 3&nbsp;h Saturday) is DONE. Is a half-day leave 0.5 in <span class="mono">leave.total</span>?</p>
     </div></div>
   </div>
 </section>
