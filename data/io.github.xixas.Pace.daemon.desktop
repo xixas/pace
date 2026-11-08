@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Pace background service
+Comment=Polls PineStem hours and keeps the panel label current
+Exec=paced
+Icon=io.github.xixas.Pace
+Terminal=false
+NoDisplay=true
+X-GNOME-Autostart-enabled=true
