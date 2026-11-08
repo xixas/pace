@@ -83,7 +83,7 @@ def test_half_leave_week_has_target_card_and_warning():
     assert v["warning"].startswith("Short days")
     pay = next(s for s in v["stats"] if s["label"] == "Pay line")
     assert pay["sub"] == "13.9 h to go · LOP risk"
-    assert v["cards"][3]["foot"] == "½ leave"
+    assert v["cards"][3]["foot"] == "½ leave" and v["cards"][3]["text"] == "3.5"
 
 
 def test_week_view_none_without_numbers():

@@ -130,11 +130,12 @@ def week_view(status: dict, expected_daily_h: float, split: dict | None = None) 
             "holiday": "Holiday",
             "leave": "Leave",
         }.get(d["kind"], "")
+        text = hours(d["min"]) if d["kind"] == "half_leave" and d["min"] else d["text"]  # the tag says "½ leave"
         cards.append(
             {
                 "date": d["date"],
                 "dow": d["dow"],
-                "text": d["text"],
+                "text": text,
                 "kind": d["kind"],
                 "foot": foot,
                 "today": d["kind"] == "today",

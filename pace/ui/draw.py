@@ -63,7 +63,7 @@ class WeekBar(Gtk.DrawingArea):
         cr.fill()
         cr.select_font_face("sans-serif")
         cr.set_font_size(11)
-        for key, name in (("lop", "pay line"), ("target", "target"), ("expected", "expected")):
+        for key in ("lop", "target", "expected"):
             minutes = b[key]
             if not minutes:
                 continue

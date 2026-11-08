@@ -139,3 +139,10 @@ def test_no_mapping_cards_leave_and_next_holiday():
     assert cards[0] == ("This week", "—", "no billing data")
     assert cards[1] == ("Leave · Oct", "1 day", "9 Oct")
     assert cards[2] == ("Next holiday", "Mon 2 Nov", "")
+
+
+def test_footnote_names_holidays_and_leave():
+    r = rows()
+    r[19]["type"] = "holiday"  # 20 Oct is a Tuesday
+    assert period.footnote(r) == "Holidays 2 and 20 Oct, leave 9 Oct."
+    assert period.footnote([x for x in r if x["type"] == "working"]) == ""

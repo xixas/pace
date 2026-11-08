@@ -82,6 +82,7 @@ def status_pay_risk_half_leave() -> dict:
     s = status_on_track()
     s.update(
         state="pay_risk",
+        verdict="PAY RISK",
         colour="red",
         title="Pay at risk",
         subtitle="pay needs 13.9 h",

@@ -213,3 +213,23 @@ def no_mapping_cards(rows: list[dict], today: date) -> list[tuple[str, str, str]
         (f"Leave · {today:%b}", leave_val, leave_sub),
         ("Next holiday", f"{nxt:%a} {nxt.day} {nxt:%b}" if nxt else "none soon", ""),
     ]
+
+
+def _day_list(rows: list[dict]) -> str:
+    days = [parse_dt(r["date"]) for r in rows]
+    nums = [str(d.day) for d in days]
+    head = nums[0] if len(nums) == 1 else ", ".join(nums[:-1]) + " and " + nums[-1]
+    return f"{head} {days[-1]:%b}"
+
+
+def footnote(rows: list[dict]) -> str:
+    """C3 footer: the days that are not working days, in words."""
+    parts = []
+    holidays = [r for r in rows if r["type"] == "holiday" and parse_dt(r["date"]).weekday() < 5]
+    leave = [r for r in rows if r["type"] in ("leave", "half_leave")]
+    if holidays:
+        parts.append(f"Holidays {_day_list(holidays)}")
+    if leave:
+        parts.append(f"leave {_day_list(leave)}")
+    text = ", ".join(parts)
+    return (text[0].upper() + text[1:] + ".") if text else ""
