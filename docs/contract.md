@@ -56,11 +56,22 @@ Added keys (all may be `null` when there is no data, e.g. signed out):
 
 - `stale_after` = `as_of` + 3 × refresh interval. A frontend shows the stale look (grey, time appended)
   once now > `stale_after`. Absent → fall back to 15 min.
-- `days[].kind` ∈ billed, today, future, off (weekend/holiday/leave; `text` "off" or "½ off"), pending
-  (not billed yet; `text` "not yet"), short (a past working day under 8.5 h counted in `warning`).
-  Mon–Fri always present; Sat/Sun only when they have hours.
+- `days[].kind` ∈ billed, today, future, pending (not billed yet; `text` "not yet"), short (a past
+  working day under 8.5 h, counted in `warning`), holiday, leave, half_leave (`text` "½ leave" or the
+  hours), weekend. Mon–Fri always present; Sat/Sun only when they have hours.
+- `last_week` (B12): `null`, or `{"text": "Last week: Fri 30 Oct not billed yet", "detail": "Bill by 12:00
+  today or it counts as 34.0 h → LOP 1 day.", "url": pinestem_url}`.
+- `tray` (B7–B9), built by core so every tray shows identical text:
+  `{"number": "30", "tooltip_title": "Pace — Week · On track", "tooltip_lines": ["30.1 / 42.5 h · needs 8.0 h/day",
+  "Tweelin Oct 112.5 / 133 h (−6.5)"], "info_rows": ["Week · On track — 30.1 / 42.5 h", "Needs 8.0 h/day · 4.5 h left today",
+  "Tweelin −6.5 h (Oct)"], "fill": 0.71}` (`fill` = logged ÷ target, capped at 1, for the ring).
+- `widget` (B10): `{"title": "Week on track", "big": "30.1 / 42.5", "side": "8.0/day", "lines": ["Wed 6.0 h · Thu 3.5 h"],
+  "project": {"title": "Tweelin −6.5 h", "big": "112.5 / 133", "side": "10.3/day"} | null}`.
+- Offline: paced already appends the fetch time to `text`; frontends add the stale suffix only when
+  `state` is not `offline`.
 - `month.projects[]` order: projects with targets first, then by billed desc. Billable minutes only.
-- `problem.kind` ∈ offline, signed_out, no_mapping, skew (C10). `null` when healthy.
+- `problem.kind` ∈ offline, signed_out, no_mapping. `null` when healthy. Version skew (C10) is
+  detected by each frontend itself (`version` ≠ the one it knows), never by paced.
 - B2–B6/B12 menus, B7–B9 tray tooltip/menu and B10 widget are all rendered from these keys.
 
 ## 2. `$XDG_CONFIG_HOME/pace/settings.json` (written by the GTK app, read by paced)
@@ -72,14 +83,25 @@ Added keys (all may be `null` when there is no data, e.g. signed out):
   "start_at_login": true,
   "expected_daily_h": 9.0,
   "notify": {
-    "pay_risk":  {"on": true},
-    "friday":    {"on": true, "at": "16:00"},
-    "daily":     {"on": true, "at": "20:00"},
-    "monday":    {"on": true, "at": "12:30"},
-    "signed_out":{"on": true}
-  }
+    "pay_risk":       {"on": true, "at": "11:00"},
+    "friday":         {"on": true, "at": "16:00"},
+    "daily":          {"on": true, "at": "20:00"},
+    "monday":         {"on": true, "at": "12:30"},
+    "zero_hour":      {"on": true, "at": "12:00"},
+    "project_behind": {"on": true, "at": "10:30"},
+    "signed_out":     {"on": true}
+  },
+  "widget_at_login": false,
+  "token_store": "keyring"
 }
 ```
+
+`token_store` ∈ keyring, file, none (A9). The exact rule behind each nudge is in design C6.
+
+Start at login uses XDG autostart, which works on every desktop. Packaging ships
+`/etc/xdg/autostart/io.github.xixas.Pace.daemon.desktop` (`Exec=paced`). When `start_at_login` is
+false, the app writes `~/.config/autostart/io.github.xixas.Pace.daemon.desktop` with `Hidden=true`,
+and deletes it when true. `widget_at_login` works the same way with `io.github.xixas.Pace.widget.desktop`.
 
 `panel_text` ∈ hours, percent, gap, left_today, icon. Missing file or key → these defaults.
 paced re-reads it on change (Gio file monitor), no restart needed.
@@ -96,9 +118,37 @@ paced re-reads it on change (Gio file monitor), no restart needed.
 }
 ```
 
-A lead's preset file (`*.pace-targets.json`, C8) has the same `projects` shape plus `"from": "Anand"`.
+A lead's preset file (`*.pace-targets.json`, C8) is `{"from": "Anand", "projects": [...]}` with the
+same snake_case project keys (the camelCase in the C8 mock is illustrative only).
 Import marks rows `source: "lead"` (locked; personal targets may only raise them).
 Prorate: `eff_target = monthly × avail_days ÷ month_working_days`; `need/day = (eff_target − billed) ÷ remaining avail_days`.
+
+## 3a. Profile and history (core provides, the app reads)
+
+- `$XDG_STATE_HOME/pace/profile.json`, written by core at sign-in from hrms-api's login reply:
+  `{"name": "Vikas Kyatannawar", "email": "vikas.k@osmosys.co", "employee_id": "...", "pinestem_mapped": true}`.
+- `pace.history.load(start: date, end: date) -> list[dict]`, a core module the app imports (raises
+  `pace.client.Offline` / `SignedOut`). Ranges over 92 days are split internally. One dict per date:
+  `{"date": "2026-10-26", "type": "working|weekend|holiday|leave|half_leave", "working": 1.0|0.5|0,
+  "billable_min": 480, "non_billable_min": 30, "projects": [{"code": "TWE", "name": "Tweelin",
+  "billable_min": 480, "non_billable_min": 0}]}`.
+- `pace.targets.month(projects_rows, days, targets, month) -> list[dict]` returns the `month.projects[]`
+  shape above for any month, so the dashboard Month view (C3) uses the same maths as status.json.
+
+## 3b. In-process tray (tray owner implements, core starts it)
+
+```python
+# pace/tray.py
+class Tray:
+    def __init__(self, bus: Gio.DBusConnection, on_action: Callable[[str], None]): ...
+    def update(self, status: dict) -> None: ...   # called after every status.json write
+    def close(self) -> None: ...
+```
+
+`on_action` strings: refresh, snooze, unsnooze, dashboard, pinestem, widget, quit. Core creates a
+`Tray` only when `XDG_CURRENT_DESKTOP` does not contain GNOME and an SNI watcher
+(`org.kde.StatusNotifierWatcher`) is on the bus. No GTK in paced: draw the icon with pycairo
+into ARGB32 pixmaps, and build the menu as a hand-written `com.canonical.dbusmenu` object.
 
 ## 4. D-Bus: paced on the session bus
 
@@ -121,6 +171,9 @@ Frontends call these; if paced is not on the bus they fall back to spawning `pac
 
 `pace` (GTK app, opens the dashboard, or onboarding when signed out) · `pace sign-in` · `pace status` ·
 `pace widget` · `pace settings` · `paced` (daemon) · `paced --once`.
+
+`pace.cli.main` (core) handles `sign-in` and `status` itself and hands everything else, including no
+arguments, to `pace.ui.main(argv) -> int` (the app owner), imported lazily so the CLI never loads GTK.
 
 ## 6. Module ownership (parallel build)
 
