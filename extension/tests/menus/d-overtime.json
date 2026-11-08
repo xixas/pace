@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "as_of": "2026-10-29T14:06:00",
+  "stale_after": "2026-10-29T14:51:00",
+  "state": "done",
+  "colour": "green",
+  "icon": "dot",
+  "text": "55.0 / 42.5 h",
+  "verdict": "DONE",
+  "logged_min": 3300,
+  "target_min": 2550,
+  "title": "Done",
+  "subtitle": "55.0 / 42.5 h",
+  "note": null,
+  "lines": {
+    "lop_min": 2460,
+    "target_min": 2550,
+    "expected_min": 2700
+  },
+  "days": [
+    {
+      "date": "2026-10-26",
+      "dow": "Mon",
+      "min": 660,
+      "kind": "billed",
+      "text": "11.0"
+    },
+    {
+      "date": "2026-10-27",
+      "dow": "Tue",
+      "min": 660,
+      "kind": "billed",
+      "text": "11.0"
+    },
+    {
+      "date": "2026-10-28",
+      "dow": "Wed",
+      "min": 660,
+      "kind": "billed",
+      "text": "11.0"
+    },
+    {
+      "date": "2026-10-29",
+      "dow": "Thu",
+      "min": 660,
+      "kind": "billed",
+      "text": "11.0"
+    },
+    {
+      "date": "2026-10-30",
+      "dow": "Fri",
+      "min": 660,
+      "kind": "billed",
+      "text": "11.0"
+    }
+  ],
+  "warning": null,
+  "warning_detail": null,
+  "action": null,
+  "last_week": null,
+  "problem": null,
+  "snoozed_until": null,
+  "pinestem_url": "https://pinestem.com/dashboard.html#/tasks"
+}
