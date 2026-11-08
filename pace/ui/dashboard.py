@@ -8,7 +8,8 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Adw, GLib, GObject, Gtk  # noqa: E402
+gi.require_version("Pango", "1.0")
+from gi.repository import Adw, GLib, GObject, Gtk, Pango  # noqa: E402
 
 from pace.ui import config, model, period  # noqa: E402
 from pace.ui.draw import Sparkline, SplitBar, WeekBar  # noqa: E402
@@ -232,7 +233,7 @@ class Dashboard(Adw.BreakpointBin):
         codes = self._series_codes(view["cards"])
         days = Gtk.FlowBox(
             homogeneous=True,
-            min_children_per_line=2,
+            min_children_per_line=3,
             max_children_per_line=5,
             row_spacing=10,
             column_spacing=10,
@@ -440,7 +441,15 @@ class Dashboard(Adw.BreakpointBin):
         card.append(
             box(
                 label(f"{model.hours(p['billed_min'])} / {model.h_short(p['target_min'])} h", "title-1", "numeric", hexpand=True),
-                label(period.target_note(targets, p["code"]), "caption", "dim-label", valign=Gtk.Align.END),
+                label(
+                    period.target_note(targets, p["code"]),
+                    "caption",
+                    "dim-label",
+                    valign=Gtk.Align.END,
+                    xalign=1,
+                    wrap=True,
+                    justify=Gtk.Justification.RIGHT,
+                ),
                 vertical=False,
                 margin_top=6,
             )
@@ -458,7 +467,7 @@ class Dashboard(Adw.BreakpointBin):
         )
         by_now = next((v for d, v in reversed(expected) if d <= today), 0)
         facts = " · ".join(x for x in (p.get("need_text"), f"expected by now {model.hours(by_now)} h") if x)
-        card.append(label(facts, "caption", "dim-label"))
+        card.append(label(facts, "caption", "dim-label", wrap=True))
         card.append(spark)
         working = sum(r["working"] for r in self.rows) or 1
         card.append(
@@ -568,7 +577,8 @@ class Dashboard(Adw.BreakpointBin):
     def _cell(self, cell: dict) -> Gtk.Widget:
         if cell["day"] is None:
             return Gtk.Box(css_classes=["heat-cell"])
-        inner = box(label(str(cell["day"]), "heat-day"), label(cell["label"], "heat-val"), spacing=2, valign=Gtk.Align.START)
+        value = label(cell["label"], "heat-val", ellipsize=Pango.EllipsizeMode.END, max_width_chars=3)
+        inner = box(label(str(cell["day"]), "heat-day"), value, spacing=2, valign=Gtk.Align.START)
         btn = Gtk.Button(child=inner, css_classes=["flat", "heat-cell", cell["cls"]] + (["today"] if cell["today"] else []))
         if cell["tip"]:
             btn.set_tooltip_text(cell["tip"])
