@@ -199,3 +199,17 @@ def target_note(targets: dict, code: str) -> str:
         return "tracked only · billable"
     text = f"{row['monthly_h']:g} {'prorated' if row.get('prorate') else 'fixed'}"
     return text + (" · lead's choice" if row.get("source") == "lead" else "")
+
+
+def no_mapping_cards(rows: list[dict], today: date) -> list[tuple[str, str, str]]:
+    """A8: without a PineStem mapping only leave and holidays are known. rows cover this month and the weeks ahead."""
+    leave = [r for r in rows if r["type"] in ("leave", "half_leave") and r["date"][:7] == today.isoformat()[:7]]
+    days = sum(1.0 if r["type"] == "leave" else 0.5 for r in leave)
+    leave_val = "none" if not days else f"{days:g} day" + ("s" if days > 1 else "")
+    leave_sub = ", ".join(f"{parse_dt(r['date']).day} {parse_dt(r['date']):%b}" for r in leave)
+    nxt = next((parse_dt(r["date"]).date() for r in rows if r["type"] == "holiday" and r["date"] >= today.isoformat()), None)
+    return [
+        ("This week", "—", "no billing data"),
+        (f"Leave · {today:%b}", leave_val, leave_sub),
+        ("Next holiday", f"{nxt:%a} {nxt.day} {nxt:%b}" if nxt else "none soon", ""),
+    ]

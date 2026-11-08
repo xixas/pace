@@ -145,3 +145,9 @@ def test_widget_position_roundtrip():
     assert config.load_widget_pos() is None
     config.save_widget_pos(120, 340)
     assert config.load_widget_pos() == (120, 340)
+
+
+def test_ui_state_keeps_other_keys():
+    config.save_ui_state(topbar_seen=True)
+    config.save_widget_pos(1, 2)
+    assert config.load_ui_state() == {"topbar_seen": True, "widget": {"x": 1, "y": 2}}

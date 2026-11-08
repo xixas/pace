@@ -128,3 +128,14 @@ def test_project_badge_and_sub():
     assert period.target_note(t, "RES") == "tracked only · billable"
     t["projects"][0].update(prorate=False, source="personal")
     assert period.target_note(t, "TWE") == "140 fixed"
+
+
+def test_no_mapping_cards_leave_and_next_holiday():
+    r = history_rows(date(2026, 10, 1), date(2026, 11, 30), TODAY)
+    for row in r:
+        if row["date"] == "2026-11-02":
+            row["type"] = "holiday"
+    cards = period.no_mapping_cards(r, TODAY)
+    assert cards[0] == ("This week", "—", "no billing data")
+    assert cards[1] == ("Leave · Oct", "1 day", "9 Oct")
+    assert cards[2] == ("Next holiday", "Mon 2 Nov", "")

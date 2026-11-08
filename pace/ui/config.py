@@ -172,17 +172,26 @@ def remove_my_data(clear_session: Callable[[], None]) -> None:
         (autostart_dir() / name).unlink(missing_ok=True)
 
 
-def widget_state_path() -> Path:
-    return state_dir() / "widget.json"
+def ui_state_path() -> Path:
+    return state_dir() / "ui.json"
+
+
+def load_ui_state() -> dict:
+    s = read_json(ui_state_path())
+    return s if isinstance(s, dict) else {}
+
+
+def save_ui_state(**patch) -> None:
+    write_json(ui_state_path(), {**load_ui_state(), **patch})
 
 
 def load_widget_pos() -> tuple[int, int] | None:
-    s = read_json(widget_state_path())
     try:
-        return int(s["x"]), int(s["y"])
-    except (TypeError, KeyError, ValueError):
+        w = load_ui_state()["widget"]
+        return int(w["x"]), int(w["y"])
+    except (KeyError, TypeError, ValueError):
         return None
 
 
 def save_widget_pos(x: int, y: int) -> None:
-    write_json(widget_state_path(), {"x": x, "y": y})
+    save_ui_state(widget={"x": x, "y": y})
