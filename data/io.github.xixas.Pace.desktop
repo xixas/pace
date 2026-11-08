@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Pace
+Comment=Your PineStem hours against the target and the loss-of-pay line
+Exec=pace
+Icon=io.github.xixas.Pace
+Terminal=false
+Categories=Utility;GTK;
+Keywords=hours;billing;pinestem;timesheet;
+StartupNotify=true

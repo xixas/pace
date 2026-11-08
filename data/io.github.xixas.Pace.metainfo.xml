@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.xixas.Pace</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <name>Pace</name>
+  <summary>Your billed hours against the week's target</summary>
+  <description>
+    <p>Pace shows your PineStem billed hours for the week against your target and the loss-of-pay line, in the top bar, a small widget and a dashboard.</p>
+    <p>It ships a GNOME Shell panel extension and a tray icon for other desktops. Your data stays on your machine.</p>
+  </description>
+  <launchable type="desktop-id">io.github.xixas.Pace.desktop</launchable>
+  <url type="homepage">https://github.com/xixas/pace</url>
+  <developer id="co.osmosys"><name>Osmosys</name></developer>
+  <content_rating type="oars-1.1"/>
+  <provides><binary>pace</binary><binary>paced</binary></provides>
+  <releases>
+    <release version="0.1.0" date="2026-11-08"/>
+  </releases>
+</component>

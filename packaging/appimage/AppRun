@@ -1,0 +1,20 @@
+#!/bin/sh
+# AppRun: run Pace from the mounted AppDir on the host's python3 and GTK stack.
+HERE=$(dirname "$(readlink -f "$0")")
+PY=/usr/bin/python3
+if ! "$PY" -c 'import gi; gi.require_version("Gtk", "4.0"); gi.require_version("Adw", "1")' 2>/dev/null; then
+    echo "Pace (AppImage) needs the host GTK4 stack: python3-gi, gtk4, libadwaita, libsecret." >&2
+    echo "  Fedora: sudo dnf install python3-gobject gtk4 libadwaita libsecret python3-cairo" >&2
+    echo "  Ubuntu: sudo apt install python3-gi python3-cairo gir1.2-gtk-4.0 gir1.2-adw-1 gir1.2-secret-1" >&2
+    exit 1
+fi
+EXT=pace@osmosys
+DEST=${XDG_DATA_HOME:-$HOME/.local/share}/gnome-shell/extensions/$EXT
+if [ ! -d "$DEST" ] && [ -d "$HERE/usr/share/gnome-shell/extensions/$EXT" ]; then
+    mkdir -p "$DEST" && cp -r "$HERE/usr/share/gnome-shell/extensions/$EXT/." "$DEST/"
+fi
+export PYTHONPATH="$HERE/usr/lib/pace${PYTHONPATH:+:$PYTHONPATH}"
+case "$(basename "${ARGV0:-$0}")" in
+    paced) exec "$PY" -c 'import sys; from pace.cli import paced; sys.exit(paced())' "$@" ;;
+    *) exec "$PY" -c 'import sys; from pace.cli import main; sys.exit(main())' "$@" ;;
+esac

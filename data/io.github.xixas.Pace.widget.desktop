@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Pace mini widget
+Comment=Shows the Pace mini widget at login
+Exec=pace widget
+Icon=io.github.xixas.Pace
+Terminal=false
+NoDisplay=true
+X-GNOME-Autostart-enabled=true

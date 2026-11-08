@@ -1,0 +1,69 @@
+name: release
+on:
+  push:
+    tags: ["v*"]
+
+permissions: {}
+
+jobs:
+  rpm:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Build rpm in fedora:44
+        run: |
+          mkdir -p out
+          docker run --rm -v "$PWD":/src:ro -v "$PWD/out":/out fedora:44 sh /src/packaging/build-rpm.sh /src /out
+      - name: Smoke test in a clean fedora:44
+        run: docker run --rm -v "$PWD/packaging":/p:ro -v "$PWD/out":/out:ro fedora:44 sh /p/smoke-test.sh rpm /out
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with: { name: rpm, path: out/*.rpm }
+
+  deb:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Build deb in ubuntu:24.04
+        run: |
+          mkdir -p out
+          docker run --rm -v "$PWD":/src:ro -v "$PWD/out":/out ubuntu:24.04 sh /src/packaging/build-deb.sh /src /out
+      - name: Smoke test in a clean ubuntu:24.04
+        run: docker run --rm -v "$PWD/packaging":/p:ro -v "$PWD/out":/out:ro ubuntu:24.04 sh /p/smoke-test.sh deb /out
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with: { name: deb, path: out/*.deb }
+
+  appimage:
+    runs-on: ubuntu-24.04
+    continue-on-error: true   # best-effort: see packaging/appimage/build.sh
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - run: sudo apt-get update && sudo apt-get install -y libfuse2t64
+      - run: packaging/appimage/build.sh "$PWD" "$PWD/out" "${GITHUB_REF_NAME#v}"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with: { name: appimage, path: out/*.AppImage }
+
+  publish:
+    needs: [rpm, deb, appimage]
+    if: ${{ !cancelled() && needs.rpm.result == 'success' && needs.deb.result == 'success' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with: { path: dist, merge-multiple: true }
+      - uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2.6.1
+        with:
+          files: dist/*
+          generate_release_notes: true
