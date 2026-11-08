@@ -8,22 +8,23 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Adw, GLib, Gtk  # noqa: E402
+from gi.repository import Adw, GLib, GObject, Gtk  # noqa: E402
 
 from pace.ui import config, model, period  # noqa: E402
-from pace.ui.draw import Sparkline, WeekBar  # noqa: E402
-from pace.ui.widgets import box, clear, label, open_uri, pill, run_async  # noqa: E402
+from pace.ui.draw import Sparkline, SplitBar, WeekBar  # noqa: E402
+from pace.ui.widgets import action_row, box, clear, label, open_uri, pill, run_async  # noqa: E402
 
 PINESTEM = "https://pinestem.com/dashboard.html#/tasks"
+NARROW = 560  # below this (in sp) the view switcher moves from the header to a bottom bar
 
 
 def status_page(
     icon: str, title: str, body: str = "", pill_text: str | None = None, button: tuple | None = None
 ) -> Adw.StatusPage:
     page = Adw.StatusPage(icon_name=icon, title=title, description=body, vexpand=True)
-    holder = box(spacing=12, halign=Gtk.Align.CENTER)
+    holder = box(spacing=18, halign=Gtk.Align.CENTER)
     if pill_text:
-        holder.append(pill(pill_text, "grey"))
+        holder.append(pill(pill_text, "grey", halign=Gtk.Align.CENTER))
     if button:
         b = Gtk.Button(label=button[0], halign=Gtk.Align.CENTER, css_classes=["pill", "suggested-action"])
         b.connect("clicked", lambda *_: button[1]())
@@ -33,11 +34,31 @@ def status_page(
     return page
 
 
-class Dashboard(Adw.Bin):
+def stat(title: str, value: str, sub: str = "", badge: Gtk.Widget | None = None) -> Gtk.Box:
+    """A small labelled number: caption, value, one dim line (optionally with a pill in front)."""
+    col = box(label(title, "caption", "dim-label"), label(value, "pace-value", "numeric"), spacing=2)
+    if badge or sub:
+        row = box(vertical=False, spacing=8)
+        if badge:
+            row.append(badge)
+        if sub:
+            row.append(label(sub, "caption", "dim-label", wrap=True, valign=Gtk.Align.CENTER))
+        col.append(row)
+    return col
+
+
+def icon_row(icon: str, title: str, subtitle: str, colour_class: str) -> Adw.PreferencesGroup:
+    """One-row group with a coloured symbolic icon in front: the C2 short-days warning and the A11 note."""
+    row = action_row(title, subtitle)
+    row.add_prefix(Gtk.Image(icon_name=icon, css_classes=[colour_class], pixel_size=20))
+    group = Adw.PreferencesGroup()
+    group.add(row)
+    return group
+
+
+class Dashboard(Adw.BreakpointBin):
     def __init__(self, services, window, now=datetime.now):
-        super().__init__()
-        self.toolbar = Adw.ToolbarView()
-        self.set_child(self.toolbar)
+        super().__init__(width_request=360, height_request=300)
         self.services, self.window, self.now = services, window, now
         self.status: dict = {}
         self.month_first = now().date().replace(day=1)
@@ -49,20 +70,23 @@ class Dashboard(Adw.Bin):
         self._dismissed: set[str] = set()
         self._week_gen = self._month_gen = 0
 
+        self.toolbar = Adw.ToolbarView()
+        self.set_child(self.toolbar)
         self.ago = label("", "dim-label", "caption")
         self.refresh_btn = Gtk.Button(icon_name="view-refresh-symbolic", tooltip_text="Refresh now")
         self.refresh_btn.connect("clicked", self._on_refresh)
         header = Adw.HeaderBar()
         header.pack_start(box(self.refresh_btn, self.ago, vertical=False, spacing=6, valign=Gtk.Align.CENTER))
         self.stack = Adw.ViewStack()
-        self.week_body, self.month_body, self.cal_body = (box(spacing=16) for _ in range(3))
-        for name, title, body in (
-            ("week", "Week", self.week_body),
-            ("month", "Month", self.month_body),
-            ("calendar", "Calendar", self.cal_body),
+        self.week_body, self.month_body, self.cal_body = (box(spacing=18) for _ in range(3))
+        for name, title, icon, body in (
+            ("week", "Week", "view-list-symbolic", self.week_body),
+            ("month", "Month", "x-office-calendar-symbolic", self.month_body),
+            ("calendar", "Calendar", "view-grid-symbolic", self.cal_body),
         ):
-            self.stack.add_titled(self._scroller(body), name, title)
-        header.set_title_widget(Adw.InlineViewSwitcher(stack=self.stack, display_mode=Adw.InlineViewSwitcherDisplayMode.LABELS))
+            self.stack.add_titled_with_icon(self._scroller(body), name, title, icon)
+        switcher = Adw.ViewSwitcher(stack=self.stack, policy=Adw.ViewSwitcherPolicy.WIDE)
+        header.set_title_widget(switcher)
         menu = Gtk.MenuButton(
             icon_name="open-menu-symbolic", menu_model=window.build_menu(), primary=True, tooltip_text="Main menu"
         )
@@ -75,17 +99,23 @@ class Dashboard(Adw.Bin):
         self.toolbar.add_top_bar(self.skew_banner)
         self.toolbar.add_top_bar(self.banner)
         self.toolbar.set_content(self.stack)
+        switcher_bar = Adw.ViewSwitcherBar(stack=self.stack)
+        self.toolbar.add_bottom_bar(switcher_bar)
+        narrow = Adw.Breakpoint.new(Adw.BreakpointCondition.parse(f"max-width: {NARROW}sp"))
+        narrow.add_setter(switcher_bar, "reveal", True)
+        narrow.add_setter(header, "title-widget", GObject.Value(Gtk.Widget, None))
+        self.add_breakpoint(narrow)
         self.stack.connect("notify::visible-child-name", lambda *_: self._ensure_month())
         GLib.timeout_add_seconds(20, self._tick)
 
     @staticmethod
     def _scroller(body: Gtk.Box) -> Gtk.ScrolledWindow:
         clamp = Adw.Clamp(
-            maximum_size=820,
-            tightening_threshold=600,
+            maximum_size=760,
+            tightening_threshold=560,
             child=body,
             margin_top=18,
-            margin_bottom=24,
+            margin_bottom=30,
             margin_start=16,
             margin_end=16,
         )
@@ -196,52 +226,92 @@ class Dashboard(Adw.Bin):
         if stale and (as_of := model.parse_dt(s.get("as_of"))):
             head = view["stats"][0]
             head["label"] = f"Week · {s.get('title') or 'This week'} as of {as_of:%H:%M}"
-        self.week_body.append(
-            box(*(self._stat(st, view["colour"]) for st in view["stats"]), vertical=False, spacing=12, homogeneous=True)
-        )
+        self.week_body.append(self._hero(view))
+        if view["warning"]:
+            self.week_body.append(icon_row("dialog-warning-symbolic", view["warning"], view["warning_detail"] or "", "warning"))
+        codes = self._series_codes(view["cards"])
+        self.week_body.append(box(*(self._day(c, codes) for c in view["cards"]), vertical=False, spacing=10, homogeneous=True))
+        if projects := (s.get("month") or {}).get("projects"):
+            self.week_body.append(self._month_group(s["month"], projects))
+
+    def _hero(self, view: dict) -> Gtk.Box:
+        """C1 top card: the week's hours as the one big number, the verdict pill and advice, the bar, then the small stats."""
+        head, *rest = view["stats"]
+        top = box(label(head["label"], "caption-heading", "dim-label"), spacing=6)
+        top.append(label(head["value"], "pace-hero"))
+        verdict = box(vertical=False, spacing=10, margin_top=4)
+        if head["badge"]:
+            verdict.append(pill(head["badge"], view["colour"]))
+        if head["sub"]:
+            verdict.append(label(head["sub"], "body", wrap=True, valign=Gtk.Align.CENTER))
+        top.append(verdict)
         bar = WeekBar()
         bar.set_data(view["bar"], view["colour"])
-        self.week_body.append(
+        progress = box(
             box(
-                box(
-                    label(view["week_label"], "heading", hexpand=True),
-                    label(view["bar_text"], "heading", "numeric"),
-                    vertical=False,
-                ),
-                bar,
-                spacing=6,
-            )
+                label(view["week_label"], "caption-heading", "dim-label", hexpand=True),
+                label(view["bar_text"], "caption-heading", "numeric"),
+                vertical=False,
+            ),
+            bar,
+            spacing=6,
+            margin_top=18,
         )
-        if view["warning"]:
-            warn = box(label(view["warning"], "heading", wrap=True), classes=("pace-warning",), spacing=2)
-            if view["warning_detail"]:
-                warn.append(label(view["warning_detail"], "caption", wrap=True))
-            self.week_body.append(warn)
-        self.week_body.append(box(*(self._day(c) for c in view["cards"]), vertical=False, spacing=10, homogeneous=True))
+        stats = Adw.WrapBox(child_spacing=32, line_spacing=14, margin_top=16, justify=Adw.JustifyMode.NONE)
+        for st in rest:
+            stats.append(stat(st["label"], st["value"], st["sub"]))
+        return box(top, progress, Gtk.Separator(margin_top=18), stats, classes=("card", "pace-hero-card"))
 
-    def _stat(self, st: dict, colour: str) -> Gtk.Box:
-        head = box(label(st["label"], "caption", "dim-label", hexpand=True), vertical=False, spacing=6)
-        card = box(head, label(st["value"], "pace-value"), classes=("card", "pace-tile"), spacing=2)
-        sub = box(vertical=False, spacing=8)
-        if st["badge"]:
-            sub.append(pill(st["badge"], colour))
-        if st["sub"]:
-            sub.append(label(st["sub"], "pace-sub", wrap=True))
-        card.append(sub)
-        return card
+    @staticmethod
+    def _series_codes(cards: list[dict]) -> list[str]:
+        """Project codes in the order they get their colour: biggest week total first."""
+        totals: dict[str, float] = {}
+        for c in cards:
+            for code, h in c["split"]:
+                totals[code] = totals.get(code, 0) + float(h)
+        return sorted(totals, key=lambda c: -totals[c])
 
-    def _day(self, c: dict) -> Gtk.Button:
-        inner = box(spacing=2, halign=Gtk.Align.CENTER)
-        inner.append(label(c["dow"] + (" · today" if c["today"] else ""), "caption", "dim-label", xalign=0.5))
+    def _day(self, c: dict, codes: list[str]) -> Gtk.Button:
+        inner = box(spacing=3)
+        dow = label(c["dow"], "caption-heading", "dim-label", xalign=0.5)
+        if c["today"]:
+            dow = label(c["dow"] + " · today", "caption-heading", "accent", xalign=0.5)
+        inner.append(dow)
         inner.append(label(c["text"], "pace-day-text", xalign=0.5))
+        if c["split"]:
+            total = sum(float(h) for _, h in c["split"]) or 1
+            strip = SplitBar()
+            strip.set_data([(float(h) / total, codes.index(code)) for code, h in c["split"]])
+            strip.set_margin_top(4)
+            strip.set_margin_bottom(4)
+            strip.set_margin_start(10)
+            strip.set_margin_end(10)
+            inner.append(strip)
         for code, h in c["split"]:
-            inner.append(label(f"{code} {h}", "pace-sub", xalign=0.5))
+            inner.append(label(f"{code} {h}", "caption", "dim-label", "numeric", xalign=0.5))
         if c["foot"]:
-            inner.append(label(c["foot"], "pace-sub", xalign=0.5))
+            inner.append(label(c["foot"], "caption", "dim-label", xalign=0.5, margin_top=2))
         btn = Gtk.Button(child=inner, css_classes=["card", "pace-day", c["kind"]] + (["today"] if c["today"] else []))
         btn.set_tooltip_text("Open PineStem")
         btn.connect("clicked", lambda *_: open_uri(self, self.status.get("pinestem_url") or PINESTEM))
         return btn
+
+    def _month_group(self, month: dict, projects: list[dict]) -> Adw.PreferencesGroup:
+        """The month's project targets under the week, one row each; activating a row opens the Month tab."""
+        left = month.get("working_days_left")
+        group = Adw.PreferencesGroup(
+            title=f"{month.get('name') or 'This month'} by project",
+            description=f"{left} working day{'s' if left != 1 else ''} left" if left is not None else None,
+        )
+        for p in projects:
+            text, colour = period.project_badge(p)
+            sub = " · ".join(x for x in (p.get("text"), p.get("need_text")) if x)
+            row = action_row(p["name"], sub, activatable=True)
+            row.add_suffix(pill(text, colour))
+            row.add_suffix(Gtk.Image(icon_name="go-next-symbolic"))
+            row.connect("activated", lambda *_: self.stack.set_visible_child_name("month"))
+            group.add(row)
+        return group
 
     def _render_no_mapping(self) -> None:
         cards = (
@@ -249,17 +319,10 @@ class Dashboard(Adw.Bin):
             if self.ahead_rows
             else [("This week", "—", "no billing data")]
         )
-        tiles = [
-            box(
-                label(t, "caption", "dim-label"),
-                label(v, "pace-value-sm"),
-                label(sub, "pace-sub"),
-                classes=("card", "pace-tile"),
-                spacing=2,
-            )
-            for t, v, sub in cards
-        ]
-        self.week_body.append(box(*tiles, vertical=False, spacing=12, homogeneous=True))
+        tiles = Adw.WrapBox(child_spacing=40, line_spacing=18, justify=Adw.JustifyMode.NONE)
+        for t, v, sub in cards:
+            tiles.append(stat(t, v, sub))
+        self.week_body.append(box(tiles, classes=("card", "pace-hero-card")))
 
     # ---- month and calendar ----------------------------------------------------------------------------------------
 
@@ -303,14 +366,14 @@ class Dashboard(Adw.Bin):
     def _render_loading(self) -> None:
         for body in (self.month_body, self.cal_body):
             clear(body)
-            body.append(Gtk.Spinner(spinning=True, halign=Gtk.Align.CENTER, margin_top=60, width_request=32, height_request=32))
+            body.append(Adw.Spinner(halign=Gtk.Align.CENTER, margin_top=60, width_request=32, height_request=32))
 
     def _nav(self) -> Gtk.Box:
         prev = Gtk.Button(icon_name="go-previous-symbolic", css_classes=["flat", "circular"], tooltip_text="Previous month")
         nxt = Gtk.Button(icon_name="go-next-symbolic", css_classes=["flat", "circular"], tooltip_text="Next month")
         prev.connect("clicked", lambda *_: self._go(-1))
         nxt.connect("clicked", lambda *_: self._go(1))
-        title = label(f"{self.month_first:%B %Y}", "title-3", xalign=0.5, hexpand=True)
+        title = label(f"{self.month_first:%B %Y}", "title-2", xalign=0.5, hexpand=True)
         return box(prev, title, nxt, vertical=False, spacing=6)
 
     def _go(self, delta: int) -> None:
@@ -340,30 +403,41 @@ class Dashboard(Adw.Bin):
         body.append(self._table(table))
         if note := period.footnote(self.rows):
             body.append(
-                label(f"*Total includes non-billable (used for pay). Targets use billable only. {note}", "pace-sub", wrap=True)
+                label(
+                    f"*Total includes non-billable (used for pay). Targets use billable only. {note}",
+                    "caption",
+                    "dim-label",
+                    wrap=True,
+                    margin_start=4,
+                )
             )
 
     def _project_card(self, p: dict, targets: dict, today: date) -> Gtk.Box:
         text, colour = period.project_badge(p)
-        badge = pill(text, colour)
-        badge.set_margin_start(6)
-        head = box(label(p["name"], "heading"), label(p["code"], "caption", "dim-label"), badge, vertical=False, spacing=8)
-        card = box(head, classes=("card", "pace-tile"), spacing=6)
-        if p.get("target_min"):
-            card.append(
-                box(
-                    label(f"{model.hours(p['billed_min'])} / {model.h_short(p['target_min'])} h", "pace-value", hexpand=True),
-                    label(period.target_note(targets, p["code"]), "pace-sub", valign=Gtk.Align.END),
-                    vertical=False,
-                )
-            )
-        else:
-            card.append(label(f"{model.hours(p['billed_min'])} h", "pace-value"))
-            card.append(label("tracked only · billable", "pace-sub"))
+        head = box(
+            label(p["name"], "heading"),
+            label(p["code"], "caption", "dim-label", hexpand=True),
+            pill(text, colour),
+            vertical=False,
+            spacing=8,
+        )
+        card = box(head, classes=("card", "pace-hero-card"), spacing=4)
+        if not p.get("target_min"):
+            card.append(label(f"{model.hours(p['billed_min'])} h", "title-1", "numeric", margin_top=6))
+            card.append(label("tracked only · billable", "caption", "dim-label"))
             return card
+        card.append(
+            box(
+                label(f"{model.hours(p['billed_min'])} / {model.h_short(p['target_min'])} h", "title-1", "numeric", hexpand=True),
+                label(period.target_note(targets, p["code"]), "caption", "dim-label", valign=Gtk.Align.END),
+                vertical=False,
+                margin_top=6,
+            )
+        )
         series = [(d, v) for d, v in period.cumulative(self.rows, p["code"]) if d <= today]
         expected = period.expected_line(self.rows, p["target_min"])
         spark = Sparkline()
+        spark.set_margin_top(10)
         spark.set_data(
             [v for _, v in series],
             [v for _, v in expected],
@@ -373,14 +447,20 @@ class Dashboard(Adw.Bin):
         )
         by_now = next((v for d, v in reversed(expected) if d <= today), 0)
         facts = " · ".join(x for x in (p.get("need_text"), f"expected by now {model.hours(by_now)} h") if x)
-        card.append(label(facts, "pace-sub"))
+        card.append(label(facts, "caption", "dim-label"))
         card.append(spark)
         working = sum(r["working"] for r in self.rows) or 1
         card.append(
             box(
-                label(f"expected: {model.h_short(p['target_min'] / working)} h per working day", "pace-sub", hexpand=True),
-                label(f"actual {model.hours(p['billed_min'])} h", "pace-sub"),
+                label(
+                    f"expected: {model.h_short(p['target_min'] / working)} h per working day",
+                    "caption",
+                    "dim-label",
+                    hexpand=True,
+                ),
+                label(f"actual {model.hours(p['billed_min'])} h", "caption", "dim-label"),
                 vertical=False,
+                margin_top=4,
             )
         )
         return card
@@ -390,17 +470,17 @@ class Dashboard(Adw.Bin):
         sizes = [Gtk.SizeGroup(mode=Gtk.SizeGroupMode.HORIZONTAL) for _ in cols]
 
         def row(cells, classes=()):
-            r = box(vertical=False, spacing=8, classes=classes)
+            r = box(vertical=False, spacing=14, classes=classes)
             for i, text in enumerate(cells):
-                lab = label(text, *(c for c in classes if c != "pace-table-row"), xalign=0 if i == 0 else 1, hexpand=i == 0)
+                lab = label(text, xalign=0 if i == 0 else 1, hexpand=i == 0)
                 if i:
                     lab.add_css_class("numeric")
                 sizes[i].add_widget(lab)
                 r.append(lab)
             return r
 
-        card = box(classes=("card", "pace-tile"), spacing=2)
-        card.append(label(f"{self.month_first:%B}, week by week", "heading", margin_bottom=6))
+        card = box(classes=("card", "pace-table"))
+        card.append(label(f"{self.month_first:%B}, week by week", "heading", "pace-table-title"))
         card.append(row(cols, ("pace-table-head",)))
         monday = model.week_bounds(self.now().date())[0].isoformat()
         for w in t["weeks"]:
@@ -412,6 +492,7 @@ class Dashboard(Adw.Bin):
             ]
             r = row(cells, ("pace-table-row",))
             if w["monday"] == monday:
+                r.add_css_class("accent")
                 btn = Gtk.Button(child=r, css_classes=["flat", "pace-table-btn"], tooltip_text="Show this week")
                 btn.connect("clicked", lambda *_: self.stack.set_visible_child_name("week"))
                 card.append(btn)
@@ -442,13 +523,15 @@ class Dashboard(Adw.Bin):
         floor = config.load_targets()["dailyMinimum"]
         grid = Gtk.Grid(row_spacing=6, column_spacing=6, column_homogeneous=True)
         for i, dow in enumerate(("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")):
-            grid.attach(label(dow, "caption", "dim-label", xalign=0.5), i, 0, 1, 1)
+            grid.attach(label(dow, "caption-heading", "dim-label", xalign=0.5, margin_bottom=4), i, 0, 1, 1)
         for r, week in enumerate(period.calendar_grid(self.rows, self.month_first, self.now().date(), floor), start=1):
             for c, cell in enumerate(week):
                 grid.attach(self._cell(cell), c, r, 1, 1)
         body.append(grid)
         low = floor - 1.5
-        legend = box(vertical=False, spacing=14, halign=Gtk.Align.CENTER, margin_top=6)
+        legend = Adw.WrapBox(
+            child_spacing=16, line_spacing=8, justify=Adw.JustifyMode.NONE, halign=Gtk.Align.CENTER, margin_top=4
+        )
         for cls, text in (
             ("heat-ok", f"≥ {floor:g} h"),
             ("heat-mid", f"{low:g}–{floor - 0.1:.1f} h"),
@@ -458,24 +541,26 @@ class Dashboard(Adw.Bin):
             ("heat-leave", "leave"),
         ):
             sw = Gtk.Box(css_classes=["swatch", cls], valign=Gtk.Align.CENTER)
-            legend.append(box(sw, label(text, "pace-sub"), vertical=False, spacing=5))
+            legend.append(box(sw, label(text, "caption", "dim-label"), vertical=False, spacing=6))
         body.append(legend)
         body.append(
             label(
                 f"Colour = total billed hours that day vs the {floor:g} h daily minimum. Weekends are never counted.",
-                "pace-sub",
+                "caption",
+                "dim-label",
                 wrap=True,
                 xalign=0.5,
+                justify=Gtk.Justification.CENTER,
             )
         )
 
     def _cell(self, cell: dict) -> Gtk.Widget:
         if cell["day"] is None:
-            return Gtk.Box(css_classes=["heat-cell", "heat-none"])
-        inner = box(label(str(cell["day"]), "heat-day"), label(cell["label"], "heat-val"), spacing=2)
+            return Gtk.Box(css_classes=["heat-cell"])
+        inner = box(label(str(cell["day"]), "heat-day"), label(cell["label"], "heat-val"), spacing=2, valign=Gtk.Align.START)
         btn = Gtk.Button(child=inner, css_classes=["flat", "heat-cell", cell["cls"]] + (["today"] if cell["today"] else []))
         if cell["tip"]:
             btn.set_tooltip_text(cell["tip"])
-        if cell["cls"] not in ("heat-off",):
+        if cell["cls"] != "heat-off":
             btn.connect("clicked", lambda *_: open_uri(self, self.status.get("pinestem_url") or PINESTEM))
         return btn
