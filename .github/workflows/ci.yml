@@ -17,10 +17,19 @@ jobs:
       - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: "3.12"
-      - run: pip install ruff pytest
+      - run: pip install ruff
       - run: ruff check .
       - run: ruff format --check .
-      - run: python -m pytest -q
+
+  tests:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      # System python: gi, cairo and libsecret come from the distro, as in the installed package
+      - run: sudo apt-get update && sudo apt-get install -y python3-pytest python3-gi python3-cairo gir1.2-secret-1 dbus
+      - run: dbus-run-session -- /usr/bin/python3 -m pytest -q
 
   extension:
     runs-on: ubuntu-24.04
