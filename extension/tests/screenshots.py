@@ -6,6 +6,12 @@ Run inside its own D-Bus so nothing touches the real session, settings or status
 The shell gets temp XDG dirs and keyfile GSettings with only pace@osmosys enabled. Each fixture is put in
 place the way paced does (write + rename), then the right end of the top bar is captured to <out>/<name>.png.
 Fixtures are restamped to now so they render fresh; 14-stale is 05-pay-risk left at its old time.
+
+Then every menus/*.json is put in place, the dropdown is opened and its top-right corner is captured to
+<out>/menu-<name>.png. A test-only helper extension (tests/helper/pace-test@osmosys, never shipped) opens
+and closes the menu when this script writes "open"/"close" to <state>/pace/menu-cmd. Menu fixtures are restamped
+so "Updated 4 min ago" and "retrying in 2 min" read as in the design. With --sheet FILE (needs Pillow) all
+menus are also tiled into one contact sheet.
 """
 
 import argparse
@@ -16,7 +22,7 @@ import subprocess
 import sys
 import tempfile
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import gi
@@ -28,12 +34,15 @@ HERE = Path(__file__).resolve().parent
 EXT = HERE.parent / "pace@osmosys"
 UUID = "pace@osmosys"
 W, H = 1600, 900
+MENU_H = 860  # tall enough for the longest menu (B2 with the month section)
+MENU_W = 420
 STRIP = 640  # right end of the top bar: the Pace label plus the system indicators
 # Shell only takes screenshots from callers owning one of these names (ui/screenshot.js, GNOME 50)
 ALLOWED_NAME = "org.gnome.SettingsDaemon.MediaKeys"
 
+HELPER = "pace-test@osmosys"
 KEYFILE = f"""[org/gnome/shell]
-enabled-extensions=['{UUID}']
+enabled-extensions=['{UUID}', '{HELPER}']
 disable-user-extensions=false
 welcome-dialog-last-shown-version='999'
 
@@ -70,10 +79,29 @@ def wait_for_shell(bus, shell, probe, timeout=60):
     sys.exit(f"gnome-shell didn't come up: {err}")
 
 
+def contact_sheet(pngs, dest):
+    from PIL import Image, ImageDraw
+
+    ims = [Image.open(p).convert("RGB") for p in pngs]
+    cols = 3
+    rows = -(-len(ims) // cols)
+    w, h = ims[0].size
+    sheet = Image.new("RGB", (cols * w, rows * (h + 18)), (40, 40, 40))
+    d = ImageDraw.Draw(sheet)
+    for i, (p, im) in enumerate(zip(pngs, ims)):
+        x, y = (i % cols) * w, (i // cols) * (h + 18)
+        d.text((x + 6, y + 3), p.stem, fill=(255, 255, 255))
+        sheet.paste(im, (x, y + 18))
+    sheet.save(dest)
+    print("ok   " + str(dest))
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", required=True, type=Path)
     ap.add_argument("--fixtures", type=Path, default=HERE / "fixtures")
+    ap.add_argument("--menus", type=Path, default=HERE / "menus")
+    ap.add_argument("--sheet", type=Path, help="also write a contact sheet of all menu PNGs here (needs Pillow)")
     a = ap.parse_args()
     if "DBUS_SESSION_BUS_ADDRESS" not in os.environ or not os.environ.get("PACE_PRIVATE_BUS"):
         sys.exit("run me as: PACE_PRIVATE_BUS=1 dbus-run-session -- python3 extension/tests/screenshots.py --out DIR")
@@ -88,6 +116,7 @@ def main():
     exts = root / "data" / "gnome-shell" / "extensions"
     exts.mkdir(parents=True)
     (exts / UUID).symlink_to(EXT)
+    (exts / HELPER).symlink_to(HERE / "helper" / HELPER)
     (root / "config" / "glib-2.0" / "settings").mkdir(parents=True)
     (root / "config" / "glib-2.0" / "settings" / "keyfile").write_text(KEYFILE)
     env["GSETTINGS_BACKEND"] = "keyfile"
@@ -120,6 +149,30 @@ def main():
             png = a.out / f"{name}.png"
             ok, _ = call(bus, "ScreenshotArea", GLib.Variant("(iiiibs)", (W - STRIP, 0, STRIP, 32, False, str(png))), "(bs)")
             print(("ok   " if ok else "FAIL ") + png.name)
+        menu_pngs = []
+        for f in sorted(a.menus.glob("*.json")):
+            s = json.loads(f.read_text())
+            now = datetime.now()
+            if s.get("state") != "offline" and s.get("as_of"):
+                s["as_of"] = (now - timedelta(minutes=4)).isoformat(timespec="seconds")
+            if s.get("stale_after"):
+                s["stale_after"] = (now + timedelta(minutes=41)).isoformat(timespec="seconds")
+            if (s.get("problem") or {}).get("retry_at"):
+                s["problem"]["retry_at"] = (now + timedelta(minutes=2)).isoformat(timespec="seconds")
+            tmp = state / ".status.json.tmp"
+            tmp.write_text(json.dumps(s, ensure_ascii=False))
+            tmp.replace(state / "status.json")
+            time.sleep(1.0)
+            (state / "menu-cmd").write_text("open")
+            time.sleep(1.0)
+            png = a.out / f"menu-{f.stem}.png"
+            ok, _ = call(bus, "ScreenshotArea", GLib.Variant("(iiiibs)", (W - MENU_W, 0, MENU_W, MENU_H, False, str(png))), "(bs)")
+            print(("ok   " if ok else "FAIL ") + png.name)
+            menu_pngs.append(png)
+            (state / "menu-cmd").write_text("close")
+            time.sleep(0.5)
+        if a.sheet and menu_pngs:
+            contact_sheet(menu_pngs, a.sheet)
     finally:
         shell.terminate()
         shell.wait(10)

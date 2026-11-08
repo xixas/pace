@@ -70,7 +70,7 @@ export function menuModel(json, now) {
         notice: {
             none: 'Waiting for paced',
             skew: 'Pace schema mismatch',
-            signed_out: 'Your DhiHRMS session expired',
+            signed_out: s?.problem ? null : 'Your DhiHRMS session expired',
             stale: 'paced has stopped updating: these numbers are old',
         }[l.state] ?? null,
         noticeDetail: l.state === 'skew' ? 'Log out and back in to show numbers' : null,

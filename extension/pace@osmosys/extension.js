@@ -13,7 +13,8 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
-import {look} from './look.js';
+import {look, menuModel, NO_PACED} from './look.js';
+import {buildMenu} from './menu.js';
 
 Gio._promisify(Gio.File.prototype, 'load_contents_async');
 
@@ -47,16 +48,10 @@ class PaceIndicator extends PanelMenu.Button {
             this._box.add_child(a);
         this.add_child(this._box);
 
-        this._verdict = new PopupMenu.PopupMenuItem('', {reactive: false});
-        this._verdict.label.add_style_class_name('pace-verdict');
-        this.menu.addMenuItem(this._verdict);
-        this._updated = new PopupMenu.PopupMenuItem('', {reactive: false});
-        this._updated.label.add_style_class_name('pace-sub');
-        this.menu.addMenuItem(this._updated);
-        this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         // The Shell's PATH often lacks ~/.local/bin, where a per-user install puts pace
-        const pace = GLib.find_program_in_path('pace') ?? GLib.build_filenamev([GLib.get_home_dir(), '.local', 'bin', 'pace']);
-        this._signIn = this.menu.addAction('Sign in…', () => this._spawn([pace, 'sign-in']));
+        this._pace = GLib.find_program_in_path('pace') ?? GLib.build_filenamev([GLib.get_home_dir(), '.local', 'bin', 'pace']);
+        this._menuSig = null;
+        this._flashText = null;
 
         const dir = Gio.File.new_for_path(GLib.build_filenamev([GLib.get_user_state_dir(), 'pace']));
         try {
@@ -76,7 +71,7 @@ class PaceIndicator extends PanelMenu.Button {
         this._read();
         // Re-judge each minute: if paced stops, the file stops changing and only the clock can tell
         this._tick = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 60, () => {
-            this._render(look(this._json ?? null, Date.now()));
+            this._render();
             return GLib.SOURCE_CONTINUE;
         });
     }
@@ -91,28 +86,71 @@ class PaceIndicator extends PanelMenu.Button {
                 return;
         }
         this._json = json;
-        this._render(look(json, Date.now()));
+        this._render();
     }
 
-    _render(l) {
+    _render() {
+        const now = Date.now();
+        const l = look(this._json ?? null, now);
         COLOURS.forEach(c => this._box.remove_style_class_name(`pace-${c}`));
         this._box.add_style_class_name(`pace-${COLOURS.includes(l.colour) ? l.colour : 'grey'}`);
         this._dot.visible = l.marker === 'dot';
         this._ring.visible = l.marker === '◌';
         this._glyph.visible = !this._dot.visible && !this._ring.visible;
         this._glyph.text = this._glyph.visible ? l.marker : '';
+        // Icon-only (B11): text is "" and only the marker shows
+        this._label.visible = l.text !== '';
         this._label.text = l.text;
 
-        this._verdict.label.text = {
-            none: 'Waiting for paced',
-            skew: 'This panel is older than Pace: update the extension',
-            signed_out: 'Your DhiHRMS session expired',
-            stale: 'paced has stopped updating: these numbers are old',
-        }[l.state] ?? l.verdict ?? l.text;
-        const at = l.asOf ? GLib.DateTime.new_from_iso8601(l.asOf, GLib.TimeZone.new_local()) : null;
-        this._updated.label.text = at ? `${['offline', 'stale'].includes(l.state) ? 'Last updated' : 'Updated'} ${at.format('%a %H:%M')}` : '';
-        this._updated.visible = at !== null;
-        this._signIn.visible = l.state === 'signed_out';
+        const model = menuModel(this._json ?? null, now);
+        const sig = JSON.stringify([model, this._flashText]);
+        if (sig === this._menuSig)
+            return;
+        this._menuSig = sig;
+        this.menu.removeAll();
+        buildMenu(this.menu, model, this._flashText, {
+            dashboard: () => this._spawn([this._pace]),
+            signIn: () => this._spawn([this._pace, 'sign-in']),
+            open: url => this._open(url),
+            refresh: () => this._paced('Refresh'),
+            snooze: () => this._paced('Snooze'),
+            unsnooze: () => this._paced('Unsnooze'),
+        });
+    }
+
+    // paced owns the work; no bus auto-start, so an absent paced shows up as an error we can report
+    _paced(method) {
+        Gio.DBus.session.call('io.github.xixas.Pace', '/io/github/xixas/Pace', 'io.github.xixas.Pace1', method,
+            null, null, Gio.DBusCallFlags.NONE, 3000, this._cancellable, (conn, res) => {
+                try {
+                    conn.call_finish(res);
+                } catch (e) {
+                    if (e.matches?.(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
+                        return;
+                    this._flash(NO_PACED);
+                }
+            });
+    }
+
+    _flash(text) {
+        this._flashText = text;
+        this._render();
+        if (this._flashTimer)
+            GLib.source_remove(this._flashTimer);
+        this._flashTimer = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 4, () => {
+            this._flashTimer = null;
+            this._flashText = null;
+            this._render();
+            return GLib.SOURCE_REMOVE;
+        });
+    }
+
+    _open(url) {
+        try {
+            Gio.AppInfo.launch_default_for_uri(url, null);
+        } catch (e) {
+            Main.notifyError('Pace', `Couldn't open ${url}: ${e.message}`);
+        }
     }
 
     _spawn(argv) {
@@ -127,6 +165,8 @@ class PaceIndicator extends PanelMenu.Button {
         this._cancellable.cancel();
         this._monitor.cancel();
         GLib.source_remove(this._tick);
+        if (this._flashTimer)
+            GLib.source_remove(this._flashTimer);
         super.destroy();
     }
 });

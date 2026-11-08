@@ -145,7 +145,7 @@ test('C10 skew: update prompt only, never numbers', () => {
 
 test('signed out: notice plus sign-in, no data blocks', () => {
     const m = menuModel(menu('signed-out'), M);
-    eq([m.signIn, m.notice, m.title, m.bar, m.days], [true, 'Your DhiHRMS session expired', undefined, undefined, undefined], 'signed out');
+    eq([m.signIn, m.problem.message, m.notice, m.title, m.bar, m.days], [true, 'Your DhiHRMS session expired', null, undefined, undefined, undefined], 'signed out');
 });
 
 test('stale numbers: notice and "Last updated" instead of "N min ago"', () => {
