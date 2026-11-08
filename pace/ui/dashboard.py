@@ -378,7 +378,7 @@ class Dashboard(Adw.Bin):
         working = sum(r["working"] for r in self.rows) or 1
         card.append(
             box(
-                label(f"expected: {p['target_min'] / working / 60:g} h per working day", "pace-sub", hexpand=True),
+                label(f"expected: {model.h_short(p['target_min'] / working)} h per working day", "pace-sub", hexpand=True),
                 label(f"actual {model.hours(p['billed_min'])} h", "pace-sub"),
                 vertical=False,
             )
@@ -412,7 +412,7 @@ class Dashboard(Adw.Bin):
             ]
             r = row(cells, ("pace-table-row",))
             if w["monday"] == monday:
-                btn = Gtk.Button(child=r, css_classes=["flat"], tooltip_text="Show this week")
+                btn = Gtk.Button(child=r, css_classes=["flat", "pace-table-btn"], tooltip_text="Show this week")
                 btn.connect("clicked", lambda *_: self.stack.set_visible_child_name("week"))
                 card.append(btn)
             else:

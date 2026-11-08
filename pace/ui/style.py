@@ -29,6 +29,7 @@ CSS = """/* Pace: libadwaita defaults plus a few pills, tiles and heat colours. 
 
 .pace-table-head { font-size: 12px; font-weight: 700; opacity: .65; }
 .pace-table-total { font-weight: 800; }
+.pace-table-btn { padding: 0 0 0 0; min-height: 0; }
 .pace-table-row { padding: 6px 0; border-radius: 8px; }
 
 .heat-cell { border-radius: 10px; padding: 6px; min-height: 64px; min-width: 64px; }

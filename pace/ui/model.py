@@ -20,7 +20,7 @@ def hours(minutes: int | float | None, places: int = 1) -> str:
 
 def h_short(minutes: int | float) -> str:
     """41 h, 42.5 h: no trailing zero."""
-    return f"{minutes / 60:g}"
+    return f"{round(minutes / 60, 1):g}"
 
 
 def parse_dt(text: str | None) -> datetime | None:

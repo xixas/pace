@@ -82,3 +82,8 @@ def test_summary_rows_from_profile_and_history():
     assert ("PineStem account", "not linked") in s["rows"]
     assert ("Holidays 2026", "–") in s["rows"] and ("Leave this month", "0.5 day") in s["rows"]
     assert onboarding.summary(None, None, None)["headline"] == "Signed in"
+
+
+def test_no_leave_reads_none_not_zero_day():
+    assert ("Leave this month", "none") in onboarding.summary({}, 3, 0)["rows"]
+    assert ("Leave this month", "2 days") in onboarding.summary({}, 3, 2.0)["rows"]

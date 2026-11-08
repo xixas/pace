@@ -149,3 +149,7 @@ def test_colour_class_covers_every_status_colour_and_greys_unknowns():
 
 def test_stale_week_is_grey():
     assert model.week_view(status_on_track(), 9.0, stale=True)["colour"] == "grey"
+
+
+def test_h_short_rounds_to_one_decimal():
+    assert model.h_short(7255) == "120.9" and model.h_short(7980) == "133" and model.h_short(2550) == "42.5"

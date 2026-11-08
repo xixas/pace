@@ -57,7 +57,7 @@ class Onboarding(Adw.Bin):
         super().__init__()
         self.services, self.host = services, host
         self.desktop = os.environ.get("XDG_CURRENT_DESKTOP", "") if desktop is None else desktop
-        self.stack = Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE)
+        self.stack = Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE, hhomogeneous=False, vhomogeneous=False)
         self.set_child(Gtk.ScrolledWindow(child=self.stack, hscrollbar_policy=Gtk.PolicyType.NEVER))
         self.attempt, self.redirect, self.url, self.after = 0, None, None, "summary"
         self.waiting = Adw.StatusPage(

@@ -98,7 +98,7 @@ def topbar_kind(xdg_current_desktop: str) -> str:
 
 
 def _days(n: float) -> str:
-    return f"{n:g} day" + ("s" if n > 1 else "")
+    return "none" if not n else f"{n:g} day" + ("s" if n > 1 else "")
 
 
 def summary(profile: dict | None, holidays: int | None, leave_days: float | None, year: int = 2026) -> dict:
