@@ -9,7 +9,7 @@ MON = date(2026, 10, 26)
 TWE = {"code": "TWE", "name": "Tweelin", "monthly_h": 140, "prorate": True, "source": "lead"}
 
 
-def calendar(start=date(2026, 10, 1), end=date(2026, 10, 31), off=()):
+def calendar(start=date(2026, 10, 1), end=date(2026, 11, 30), off=()):
     out, d = [], start
     while d <= end:
         kind = dict(off).get(d) or ("weekend" if d.weekday() > 4 else "working")
@@ -28,8 +28,14 @@ def week(minutes, seen_hour=18, now_day=None, now_seen=13):
     return ledger
 
 
-def build(minutes, at, now_day=None, problem=None, settings=None, targets=None, rows=(), off=(), **kw):
-    state = {"ledger": week(minutes, now_day=now_day), "days": calendar(off=off), "rows": list(rows), "as_of": at.isoformat()}
+def build(minutes, at, now_day=None, problem=None, settings=None, targets=None, rows=(), off=(), snoozed=None, **kw):
+    state = {
+        "ledger": week(minutes, now_day=now_day),
+        "days": calendar(off=off),
+        "rows": list(rows),
+        "as_of": at.isoformat(),
+        "snoozed_until": snoozed,
+    }
     return verdict_status(state, at, problem, settings=settings or DEFAULTS, targets=targets, **kw)
 
 
