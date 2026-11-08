@@ -21,7 +21,12 @@ def _tag(text: str) -> Gtk.Label:
 
 
 def _spin(value: float, low: float, high: float, step: float, on_change) -> Gtk.SpinButton:
-    spin = Gtk.SpinButton(adjustment=Gtk.Adjustment(value=value, lower=low, upper=high, step_increment=step), digits=1, valign=Gtk.Align.CENTER, width_chars=5)
+    spin = Gtk.SpinButton(
+        adjustment=Gtk.Adjustment(value=value, lower=low, upper=high, step_increment=step),
+        digits=1,
+        valign=Gtk.Align.CENTER,
+        width_chars=5,
+    )
     spin.connect("value-changed", lambda s: on_change(s.get_value()))
     return spin
 
@@ -49,7 +54,19 @@ class TargetsPage(Adw.NavigationPage):
         done = Gtk.Button(label="Done", css_classes=["pill", "suggested-action"])
         imp.connect("clicked", lambda *_: import_preset(window, self.rebuild))
         done.connect("clicked", lambda *_: self.on_done())
-        tv.add_bottom_bar(box(imp, Gtk.Box(hexpand=True), done, vertical=False, spacing=12, margin_top=10, margin_bottom=10, margin_start=16, margin_end=16))
+        tv.add_bottom_bar(
+            box(
+                imp,
+                Gtk.Box(hexpand=True),
+                done,
+                vertical=False,
+                spacing=12,
+                margin_top=10,
+                margin_bottom=10,
+                margin_start=16,
+                margin_end=16,
+            )
+        )
         self.set_child(tv)
         self.rebuild()
 
@@ -85,8 +102,14 @@ class TargetsPage(Adw.NavigationPage):
         monthly.add(add)
         page.add(monthly)
         note = Adw.PreferencesGroup()
-        note.add(box(label("Pay (LOP) always counts billable + non-billable.", "heading", wrap=True),
-                     label("Project targets above count billable only.", "caption", wrap=True), classes=("pace-info",), spacing=2))
+        note.add(
+            box(
+                label("Pay (LOP) always counts billable + non-billable.", "heading", wrap=True),
+                label("Project targets above count billable only.", "caption", wrap=True),
+                classes=("pace-info",),
+                spacing=2,
+            )
+        )
         page.add(note)
         self.holder.set_child(page)
 
@@ -123,11 +146,17 @@ class TargetsPage(Adw.NavigationPage):
         self.rebuild()
 
     def _add_dialog(self) -> None:
-        code, name, hours = Adw.EntryRow(title="Project code (e.g. TWE)"), Adw.EntryRow(title="Project name"), Adw.EntryRow(title="Monthly billable hours")
+        code, name, hours = (
+            Adw.EntryRow(title="Project code (e.g. TWE)"),
+            Adw.EntryRow(title="Project name"),
+            Adw.EntryRow(title="Monthly billable hours"),
+        )
         group = Adw.PreferencesGroup()
         for r in (code, name, hours):
             group.add(r)
-        d = Adw.AlertDialog(heading="Add personal target", body="Billable hours only. Lead-set targets can only be raised by a personal one.")
+        d = Adw.AlertDialog(
+            heading="Add personal target", body="Billable hours only. Lead-set targets can only be raised by a personal one."
+        )
         d.set_extra_child(group)
         d.add_response("cancel", "Cancel")
         d.add_response("add", "Add")
@@ -144,7 +173,15 @@ class TargetsPage(Adw.NavigationPage):
                 return self.window.toast("A target needs a code and a name")
             t = config.load_targets()
             t["projects"] = [p for p in t["projects"] if p["code"] != code.get_text().strip().upper()]
-            t["projects"].append({"code": code.get_text().strip().upper(), "name": name.get_text().strip(), "monthly_h": h, "prorate": False, "source": "personal"})
+            t["projects"].append(
+                {
+                    "code": code.get_text().strip().upper(),
+                    "name": name.get_text().strip(),
+                    "monthly_h": h,
+                    "prorate": False,
+                    "source": "personal",
+                }
+            )
             config.save_targets(t)
             self.rebuild()
 
@@ -176,7 +213,9 @@ def import_preset(window, on_imported) -> None:
 
 def confirm_import(window, filename: str, preset: dict, on_imported) -> None:
     lines = "\n".join(config.preset_summary(preset["projects"]))
-    d = Adw.AlertDialog(heading="Import targets?", body=f"Import targets from {filename} (from {preset['from']}, lead)?\n\n{lines}")
+    d = Adw.AlertDialog(
+        heading="Import targets?", body=f"Import targets from {filename} (from {preset['from']}, lead)?\n\n{lines}"
+    )
     d.add_response("cancel", "Cancel")
     d.add_response("import", "Import")
     d.set_response_appearance("import", Adw.ResponseAppearance.SUGGESTED)
@@ -198,8 +237,16 @@ def share_dialog(window, sender: str) -> None:
     dialog = Adw.Dialog(title="Share targets", content_width=460)
     project = Adw.ComboRow(title="Project", model=Gtk.StringList.new([f"{r['name']} · {r['code']}" for r in rows]))
     first = rows[0].get("monthly_h") or 0
-    monthly = Adw.SpinRow(title="Monthly target", subtitle="billable hours", adjustment=Gtk.Adjustment(value=first, lower=0, upper=400, step_increment=1))
-    prorate = Adw.SwitchRow(title="Prorate for leave and holidays", subtitle="Yes: the target shrinks for each leave day or holiday", active=bool(rows[0].get("prorate")))
+    monthly = Adw.SpinRow(
+        title="Monthly target",
+        subtitle="billable hours",
+        adjustment=Gtk.Adjustment(value=first, lower=0, upper=400, step_increment=1),
+    )
+    prorate = Adw.SwitchRow(
+        title="Prorate for leave and holidays",
+        subtitle="Yes: the target shrinks for each leave day or holiday",
+        active=bool(rows[0].get("prorate")),
+    )
 
     def project_changed(*_):
         r = rows[project.get_selected()]
@@ -207,7 +254,12 @@ def share_dialog(window, sender: str) -> None:
         prorate.set_active(bool(r.get("prorate")))
 
     project.connect("notify::selected", project_changed)
-    prorate.connect("notify::active", lambda *_: prorate.set_subtitle("Yes: the target shrinks for each leave day or holiday" if prorate.get_active() else "No: the target stays fixed"))
+    prorate.connect(
+        "notify::active",
+        lambda *_: prorate.set_subtitle(
+            "Yes: the target shrinks for each leave day or holiday" if prorate.get_active() else "No: the target stays fixed"
+        ),
+    )
     group = Adw.PreferencesGroup()
     for r in (project, monthly, prorate):
         group.add(r)
@@ -217,7 +269,11 @@ def share_dialog(window, sender: str) -> None:
     header = Adw.HeaderBar(show_end_title_buttons=False, show_start_title_buttons=False)
     header.pack_start(cancel)
     header.pack_end(export)
-    intro = label("Make a preset file for your team. They import it in Preferences, and its values show as “set by lead”.", "dim-label", wrap=True)
+    intro = label(
+        "Make a preset file for your team. They import it in Preferences, and its values show as “set by lead”.",
+        "dim-label",
+        wrap=True,
+    )
     tv = Adw.ToolbarView(content=box(intro, group, spacing=16, margin_top=12, margin_bottom=20, margin_start=16, margin_end=16))
     tv.add_top_bar(header)
     dialog.set_child(tv)
@@ -235,7 +291,11 @@ def share_dialog(window, sender: str) -> None:
                 return
             file.replace_contents(json.dumps(preset, indent=2).encode(), None, False, Gio.FileCreateFlags.NONE, None)
             dialog.close()
-            window.toast(f"Saved {file.get_basename()}", "Show in folder", lambda: Gtk.FileLauncher.new(file).open_containing_folder(window, None, None))
+            window.toast(
+                f"Saved {file.get_basename()}",
+                "Show in folder",
+                lambda: Gtk.FileLauncher.new(file).open_containing_folder(window, None, None),
+            )
 
         chooser.save(window, None, saved)
 

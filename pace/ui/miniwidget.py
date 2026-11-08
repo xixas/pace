@@ -8,17 +8,10 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Gtk  # noqa: E402
 
+from pace.ui.model import widget_view  # noqa: E402
 from pace.ui.widgets import box, clear, label  # noqa: E402
 
 WIDTH = 230
-
-
-def widget_view(status: dict) -> dict:
-    """What the card shows. Signed out or before the first poll there is no `widget` key."""
-    w = status.get("widget")
-    if not w:
-        return {"title": "Pace", "big": "–", "side": "", "lines": [status.get("text") or "Sign in to see your week"], "project": None, "colour": "grey"}
-    return {**w, "colour": status.get("colour") or "grey"}
 
 
 class MiniWidget(Gtk.ApplicationWindow):
@@ -56,4 +49,9 @@ class MiniWidget(Gtk.ApplicationWindow):
 
     @staticmethod
     def _numbers(big: str, side: str) -> Gtk.Box:
-        return box(label(big, "big", hexpand=True), label(side, "caption", "dim-label", valign=Gtk.Align.END, margin_bottom=4), vertical=False, spacing=8)
+        return box(
+            label(big, "big", hexpand=True),
+            label(side, "caption", "dim-label", valign=Gtk.Align.END, margin_bottom=4),
+            vertical=False,
+            spacing=8,
+        )

@@ -115,3 +115,11 @@ def test_empty_state_kinds():
     e = model.empty_state(s)
     assert e["title"] == "Nothing billed yet this week"
     assert "42.5 h" in e["body"]
+
+
+def test_widget_view_from_status_and_without():
+    v = model.widget_view(status_on_track())
+    assert v["title"] == "Week on track" and v["big"] == "30.1 / 42.5" and v["colour"] == "green"
+    assert v["project"]["title"] == "Tweelin −6.5 h"
+    out = model.widget_view({"state": "signed_out", "text": "Sign in again", "colour": "amber"})
+    assert out["title"] == "Pace" and out["lines"] == ["Sign in again"] and out["project"] is None

@@ -63,8 +63,13 @@ class Onboarding(Adw.Bin):
         self.waiting = Adw.StatusPage(icon_name="web-browser-symbolic", title="Finish signing in in your browser…", vexpand=True)
         self.failure_holder = Adw.Bin()
         self.summary_holder = Adw.Bin()
-        for name, widget in (("welcome", self._welcome()), ("waiting", self._waiting()), ("failure", self.failure_holder),
-                             ("keyring", self._keyring()), ("summary", self.summary_holder)):
+        for name, widget in (
+            ("welcome", self._welcome()),
+            ("waiting", self._waiting()),
+            ("failure", self.failure_holder),
+            ("keyring", self._keyring()),
+            ("summary", self.summary_holder),
+        ):
             self.stack.add_named(widget, name)
 
     def show(self, name: str) -> None:
@@ -76,9 +81,11 @@ class Onboarding(Adw.Bin):
         go = pill_button("Sign in with Microsoft")
         go.connect("clicked", lambda *_: self.begin())
         return page(
-            APP_ICON, "Know your pace before Friday",
+            APP_ICON,
+            "Know your pace before Friday",
             "Pace reads your billed hours, leave and holidays, and tells you early if the week or month is slipping.",
-            go, label("Opens your browser · no passwords stored", "caption", "dim-label"),
+            go,
+            label("Opens your browser · no passwords stored", "caption", "dim-label"),
         )
 
     def begin(self, after: str = "summary") -> None:
@@ -94,8 +101,12 @@ class Onboarding(Adw.Bin):
         copy.connect("clicked", self._copy_link)
         cancel.connect("clicked", lambda *_: self._cancel())
         self.waiting.set_child(
-            box(Gtk.Spinner(spinning=True, width_request=32, height_request=32), box(copy, cancel, vertical=False, spacing=12, halign=Gtk.Align.CENTER),
-                spacing=16, halign=Gtk.Align.CENTER)
+            box(
+                Gtk.Spinner(spinning=True, width_request=32, height_request=32),
+                box(copy, cancel, vertical=False, spacing=12, halign=Gtk.Align.CENTER),
+                spacing=16,
+                halign=Gtk.Align.CENTER,
+            )
         )
         return self.waiting
 
@@ -116,7 +127,9 @@ class Onboarding(Adw.Bin):
             return
         port = onboarding.listening_port(url)
         self.redirect = f"http://127.0.0.1:{port}/" if port else None
-        self.waiting.set_description(f"Pace is waiting on 127.0.0.1:{port}. It gives up after 5 minutes." if port else "It gives up after 5 minutes.")
+        self.waiting.set_description(
+            f"Pace is waiting on 127.0.0.1:{port}. It gives up after 5 minutes." if port else "It gives up after 5 minutes."
+        )
         Gtk.UriLauncher.new(url).launch(self.get_root(), None, None)
 
     def _copy_link(self, *_):
@@ -159,7 +172,15 @@ class Onboarding(Adw.Bin):
     # ---- A9 --------------------------------------------------------------------------------------------------------
 
     def _keyring(self) -> Adw.StatusPage:
-        file_row, none_row = Adw.ActionRow(title="Store in a private file", subtitle="~/.local/share/pace, mode 600 — readable only by your user, not encrypted (like rclone.conf)"), Adw.ActionRow(title="Sign in every login", subtitle="Nothing is stored; you sign in each time you log in to the desktop")
+        file_row, none_row = (
+            Adw.ActionRow(
+                title="Store in a private file",
+                subtitle="~/.local/share/pace, mode 600 — readable only by your user, not encrypted (like rclone.conf)",
+            ),
+            Adw.ActionRow(
+                title="Sign in every login", subtitle="Nothing is stored; you sign in each time you log in to the desktop"
+            ),
+        )
         a, b = Gtk.CheckButton(active=True), Gtk.CheckButton(group=None)
         b.set_group(a)
         for row, check in ((file_row, a), (none_row, b)):
@@ -180,10 +201,17 @@ class Onboarding(Adw.Bin):
 
         go.connect("clicked", proceed)
         sp = Adw.StatusPage(
-            icon_name="dialog-password-symbolic", title="Pace can't reach a password keyring", vexpand=True,
+            icon_name="dialog-password-symbolic",
+            title="Pace can't reach a password keyring",
+            vexpand=True,
             description="Your desktop has no Secret Service (common on minimal KDE or COSMIC). Pace needs somewhere to keep your sign-in. You choose once.",
         )
-        sp.set_child(Adw.Clamp(maximum_size=520, child=box(group, box(later, go, vertical=False, spacing=12, halign=Gtk.Align.CENTER, margin_top=12))))
+        sp.set_child(
+            Adw.Clamp(
+                maximum_size=520,
+                child=box(group, box(later, go, vertical=False, spacing=12, halign=Gtk.Align.CENTER, margin_top=12)),
+            )
+        )
         return sp
 
     # ---- A6 --------------------------------------------------------------------------------------------------------
@@ -212,13 +240,15 @@ class Onboarding(Adw.Bin):
         group = Adw.PreferencesGroup()
         for title, value in s["rows"]:
             row = Adw.ActionRow(title=title)
-            row.add_prefix(Gtk.Image(icon_name="emblem-ok-symbolic" if not value or value == "linked" else "x-office-calendar-symbolic"))
+            row.add_prefix(
+                Gtk.Image(icon_name="object-select-symbolic" if not value or value == "linked" else "x-office-calendar-symbolic")
+            )
             if value:
                 row.add_suffix(label(value, "dim-label"))
             group.add(row)
         nxt = pill_button("Next: targets →")
         nxt.connect("clicked", lambda *_: self.host.push_targets(self.show_topbar))
-        name = (s["headline"].removeprefix("Signed in as ") or "?")
+        name = s["headline"].removeprefix("Signed in as ") or "?"
         content = box(
             Adw.Avatar(size=72, text=name, show_initials=True, halign=Gtk.Align.CENTER),
             label(s["headline"], "title-2", xalign=0.5, margin_top=12),
@@ -238,13 +268,28 @@ class Onboarding(Adw.Bin):
             enable, skip = pill_button("Enable"), pill_button("Skip, use the window only", suggested=False)
             enable.connect("clicked", self._enable_extension)
             skip.connect("clicked", lambda *_: self._finish_topbar())
-            self._put("topbar", page("view-pin-symbolic", "Turn on Pace in the top bar",
-                                     "GNOME has no system tray, so Pace ships a small panel extension inside the package. It only needs switching on.",
-                                     enable, skip))
+            self._put(
+                "topbar",
+                page(
+                    "view-pin-symbolic",
+                    "Turn on Pace in the top bar",
+                    "GNOME has no system tray, so Pace ships a small panel extension inside the package. It only needs switching on.",
+                    enable,
+                    skip,
+                ),
+            )
         else:
             got = pill_button("Got it")
             got.connect("clicked", lambda *_: self._finish_topbar())
-            self._put("topbar", page("emblem-ok-symbolic", "Pace is in your system tray", "Left-click opens the mini widget, right-click the menu.", got))
+            self._put(
+                "topbar",
+                page(
+                    "object-select-symbolic",
+                    "Pace is in your system tray",
+                    "Left-click opens the mini widget, right-click the menu.",
+                    got,
+                ),
+            )
 
     def _put(self, name: str, widget: Gtk.Widget) -> None:
         old = self.stack.get_child_by_name(name)
@@ -261,13 +306,23 @@ class Onboarding(Adw.Bin):
             if error:
                 return self.host.toast("Couldn't enable the extension. Try: gnome-extensions enable pace@osmosys")
             out, later = pill_button("Log out now"), pill_button("Later", suggested=False)
-            out.connect("clicked", lambda *_: (self._finish_topbar(), GLib.spawn_command_line_async("gnome-session-quit --logout")))
+            out.connect(
+                "clicked", lambda *_: (self._finish_topbar(), GLib.spawn_command_line_async("gnome-session-quit --logout"))
+            )
             later.connect("clicked", lambda *_: self._finish_topbar())
-            self._put("topbar", page("emblem-ok-symbolic", "Enabled", "Log out and back in once to show it. GNOME loads new extensions at login.", out, later))
+            self._put(
+                "topbar",
+                page(
+                    "object-select-symbolic",
+                    "Enabled",
+                    "Log out and back in once to show it. GNOME loads new extensions at login.",
+                    out,
+                    later,
+                ),
+            )
 
         run_async(work, done)
 
     def _finish_topbar(self) -> None:
         config.save_ui_state(topbar_seen=True)
         self.host.go_dashboard()
-

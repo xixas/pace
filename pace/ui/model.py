@@ -222,3 +222,18 @@ def week_split(rows: list[dict]) -> dict:
 def week_bounds(today: date) -> tuple[date, date]:
     monday = today - timedelta(days=today.weekday())
     return monday, monday + timedelta(days=6)
+
+
+def widget_view(status: dict) -> dict:
+    """What the card shows. Signed out or before the first poll there is no `widget` key."""
+    w = status.get("widget")
+    if not w:
+        return {
+            "title": "Pace",
+            "big": "–",
+            "side": "",
+            "lines": [status.get("text") or "Sign in to see your week"],
+            "project": None,
+            "colour": "grey",
+        }
+    return {**w, "colour": status.get("colour") or "grey"}

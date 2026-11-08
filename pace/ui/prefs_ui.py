@@ -33,12 +33,36 @@ REFRESH = (5, 10, 15, 30, 60)
 def _time_button(settings: dict, key: str, save) -> Gtk.MenuButton:
     """The time button opens a small picker (hours, minutes)."""
     hh, mm = config.split_time(settings["notify"][key]["at"])
-    h = Gtk.SpinButton(adjustment=Gtk.Adjustment(value=hh, lower=0, upper=23, step_increment=1), width_chars=2, orientation=Gtk.Orientation.VERTICAL, wrap=True)
-    m = Gtk.SpinButton(adjustment=Gtk.Adjustment(value=mm, lower=0, upper=59, step_increment=5), width_chars=2, orientation=Gtk.Orientation.VERTICAL, wrap=True)
+    h = Gtk.SpinButton(
+        adjustment=Gtk.Adjustment(value=hh, lower=0, upper=23, step_increment=1),
+        width_chars=2,
+        orientation=Gtk.Orientation.VERTICAL,
+        wrap=True,
+    )
+    m = Gtk.SpinButton(
+        adjustment=Gtk.Adjustment(value=mm, lower=0, upper=59, step_increment=5),
+        width_chars=2,
+        orientation=Gtk.Orientation.VERTICAL,
+        wrap=True,
+    )
     for spin in (h, m):
         spin.connect("output", lambda s: s.set_text(f"{int(s.get_value()):02d}") or True)
     btn = Gtk.MenuButton(label=settings["notify"][key]["at"], valign=Gtk.Align.CENTER, css_classes=["flat"])
-    btn.set_popover(Gtk.Popover(child=box(h, label(":", "title-3"), m, vertical=False, spacing=6, margin_top=8, margin_bottom=8, margin_start=8, margin_end=8)))
+    btn.set_popover(
+        Gtk.Popover(
+            child=box(
+                h,
+                label(":", "title-3"),
+                m,
+                vertical=False,
+                spacing=6,
+                margin_top=8,
+                margin_bottom=8,
+                margin_start=8,
+                margin_end=8,
+            )
+        )
+    )
 
     def changed(*_):
         text = config.format_time(int(h.get_value()), int(m.get_value()))
@@ -77,11 +101,19 @@ class Preferences(Adw.PreferencesDialog):
         display = Adw.PreferencesGroup(title="Display")
         labels = self.window.status().get("labels") or {}
         texts = [(key, labels.get(key) or example) for key, example in PANEL_TEXT]
-        panel = Adw.ComboRow(title="Panel text", model=Gtk.StringList.new([t for _, t in texts]), selected=[k for k, _ in texts].index(s["panel_text"]))
+        panel = Adw.ComboRow(
+            title="Panel text",
+            model=Gtk.StringList.new([t for _, t in texts]),
+            selected=[k for k, _ in texts].index(s["panel_text"]),
+        )
         panel.connect("notify::selected", lambda r, *_: self._set("panel_text", texts[r.get_selected()][0]))
         widget = Adw.SwitchRow(title="Show mini widget at login", active=s["widget_at_login"])
         widget.connect("notify::active", lambda r, *_: self._set("widget_at_login", r.get_active()))
-        refresh = Adw.ComboRow(title="Refresh every", model=Gtk.StringList.new([f"{m} min" for m in REFRESH]), selected=REFRESH.index(s["refresh_minutes"]) if s["refresh_minutes"] in REFRESH else 2)
+        refresh = Adw.ComboRow(
+            title="Refresh every",
+            model=Gtk.StringList.new([f"{m} min" for m in REFRESH]),
+            selected=REFRESH.index(s["refresh_minutes"]) if s["refresh_minutes"] in REFRESH else 2,
+        )
         refresh.connect("notify::selected", lambda r, *_: self._set("refresh_minutes", REFRESH[r.get_selected()]))
         for r in (panel, widget, refresh):
             display.add(r)
@@ -112,7 +144,10 @@ class Preferences(Adw.PreferencesDialog):
         page.add(about)
 
         data = Adw.PreferencesGroup(title="Data")
-        rm = Adw.ActionRow(title="Remove my Pace data", subtitle="Deletes the keyring entry, status.json, ~/.config/pace and the autostart entry. Cannot be undone.")
+        rm = Adw.ActionRow(
+            title="Remove my Pace data",
+            subtitle="Deletes the keyring entry, status.json, ~/.config/pace and the autostart entry. Cannot be undone.",
+        )
         btn = Gtk.Button(label="Remove…", valign=Gtk.Align.CENTER, css_classes=["destructive-action"])
         btn.connect("clicked", lambda *_: self._confirm_remove())
         rm.add_suffix(btn)

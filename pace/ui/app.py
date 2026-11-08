@@ -12,7 +12,6 @@ gi.require_version("Adw", "1")
 from gi.repository import Adw, Gdk, Gio, GLib, Gtk  # noqa: E402
 
 from pace.files import state_dir  # noqa: E402
-from pace.ui import config  # noqa: E402
 from pace.ui.dashboard import Dashboard  # noqa: E402
 from pace.ui.miniwidget import MiniWidget  # noqa: E402
 from pace.ui.prefs_ui import Preferences  # noqa: E402
@@ -43,8 +42,12 @@ class MainWindow(Adw.ApplicationWindow):
         self.stack.add_named(self.dashboard, "dashboard")
         self.nav.add(Adw.NavigationPage(title="Pace", tag="main", child=self.stack))
         for name, fn in (
-            ("prefs", self.show_preferences), ("share", self.show_share), ("targets", self.show_targets),
-            ("topbar", self.show_topbar), ("widget", app.show_widget), ("signout", self.confirm_sign_out),
+            ("prefs", self.show_preferences),
+            ("share", self.show_share),
+            ("targets", self.show_targets),
+            ("topbar", self.show_topbar),
+            ("widget", app.show_widget),
+            ("signout", self.confirm_sign_out),
             ("about", self.show_about),
         ):
             act = Gio.SimpleAction.new(name, None)
@@ -132,8 +135,14 @@ class MainWindow(Adw.ApplicationWindow):
     def show_about(self) -> None:
         from pace.ui.services import version
 
-        about = Adw.AboutDialog(application_name="Pace", application_icon="preferences-system-time-symbolic", version=version(), developer_name="Vikas Kyatannawar",
-                                comments="Your PineStem billed hours against targets and the loss-of-pay line.", license_type=Gtk.License.MIT_X11)
+        about = Adw.AboutDialog(
+            application_name="Pace",
+            application_icon="preferences-system-time-symbolic",
+            version=version(),
+            developer_name="Vikas Kyatannawar",
+            comments="Your PineStem billed hours against targets and the loss-of-pay line.",
+            license_type=Gtk.License.MIT_X11,
+        )
         about.present(self)
 
     def confirm_sign_out(self) -> None:
