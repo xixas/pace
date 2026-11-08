@@ -1,4 +1,4 @@
-"""Cairo drawing for the week bar (C1 ticks), the day split strip and the month sparkline (C3). Thin: numbers arrive pre-computed.
+"""Cairo drawing for the week runway, the day split strip and the month sparkline (C3). Thin: numbers arrive pre-computed.
 
 Colours come from the stylesheet: each area carries `.pace-ink.<colour>` so `get_color()` is the themed verdict colour, and the
 parent's colour is the neutral foreground for tracks, grids and labels. Text goes through Pango so it uses the UI font.
@@ -77,7 +77,10 @@ def _round_rect(cr, x, y, w, h, r):
 
 
 class WeekBar(Gtk.DrawingArea):
-    """A thin, quiet progress line: hours over the week's scale. No ticks; the pay line and target are a caption below."""
+    """The runway (direction D): a 6 px track whose span is the week scale. The stretch from the pay line to the target is a
+    lighter "pay safe" band, the fill is neutral unless pay is in play (red) or the week is done (green), and an unbilled
+    day's expected share is a dashed ghost continuing the fill. No ticks, no labels; the caption sits under it.
+    """
 
     BAR = 6
 
@@ -86,21 +89,44 @@ class WeekBar(Gtk.DrawingArea):
         self.bar = None
         self.set_draw_func(self._draw)
 
-    def set_data(self, bar: dict, colour: str):
+    def set_data(self, bar: dict, colour: str = "grey"):
         self.bar = bar
+        _set_ink(self, "red" if bar["emphasis"] or bar["ink"] == "red" else "green" if bar["ink"] == "green" else "grey")
         self.queue_draw()
 
     def _draw(self, area, cr, w, h):
         if not self.bar:
             return
         b, bar_h = self.bar, self.BAR
-        _round_rect(cr, 0, 0, w, bar_h, bar_h / 2)
+        radius = bar_h / 2
+        _round_rect(cr, 0, 0, w, bar_h, radius)
         cr.set_source_rgba(*_neutral(area, 0.10))
-        cr.fill()
-        fill = min(max(bar_h, b["logged"] * w / b["max"]), w)
-        _round_rect(cr, 0, 0, fill, bar_h, bar_h / 2)
-        cr.set_source_rgba(*_neutral(area, 0.55))
-        cr.fill()
+        cr.fill_preserve()
+        cr.save()
+        cr.clip()
+        band_x = round(w * b["band"])
+        if band_x < w:
+            red = b["emphasis"]
+            cr.set_source_rgba(*(_rgba(area, 0.28) if red else _neutral(area, 0.18)))
+            cr.rectangle(band_x, 0, w - band_x, bar_h)
+            cr.fill()
+            cr.set_source_rgba(*(_rgba(area) if red else _neutral(area, 0.5)))
+            cr.rectangle(band_x, 0, 1, bar_h)
+            cr.fill()
+        cr.restore()
+        if b["ghost"]:
+            x0, x1 = (round(w * f) for f in b["ghost"])
+            cr.set_source_rgb(*series_rgb(0))
+            cr.set_line_width(1)
+            cr.set_dash([2.5, 2])
+            _round_rect(cr, x0 + 0.5, 0.5, max(x1 - x0 - 1, 1), bar_h - 1, radius - 0.5)
+            cr.stroke()
+            cr.set_dash([])
+        if b["fill"] > 0:
+            ink = b["ink"]
+            cr.set_source_rgba(*(_rgba(area) if ink in ("red", "green") else _neutral(area, 0.4 if ink == "grey" else 0.75)))
+            _round_rect(cr, 0, 0, min(max(bar_h, b["fill"] * w), w), bar_h, radius)
+            cr.fill()
 
 
 class SplitBar(Gtk.DrawingArea):

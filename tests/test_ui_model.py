@@ -1,5 +1,7 @@
 from datetime import datetime
 
+import pytest
+
 from pace.ui import model
 from tests.ui_fixtures import status_on_track, status_pay_risk_half_leave
 
@@ -53,11 +55,11 @@ def test_week_stats_on_track():
     assert stats["Projected Fri"]["sub"] == "at the 9.0 h/day expected pace"
 
 
-def test_week_bar_ticks():
+def test_week_bar_is_the_runway():
     v = model.week_view(status_on_track(), 9.0)
     bar = v["bar"]
-    assert (bar["logged"], bar["lop"], bar["target"], bar["expected"]) == (1806, 2460, 2550, 2700)
-    assert bar["max"] >= 2700
+    assert bar["fill"] == pytest.approx(1806 / 2550) and bar["band"] == pytest.approx(2460 / 2550)
+    assert bar["ink"] == "neutral" and bar["ghost"] is None and not bar["emphasis"]
     assert v["bar_text"] == "30.1 / 42.5 h"
 
 
@@ -153,3 +155,70 @@ def test_stale_week_is_grey():
 
 def test_h_short_rounds_to_one_decimal():
     assert model.h_short(7255) == "120.9" and model.h_short(7980) == "133" and model.h_short(2550) == "42.5"
+
+
+def _s(state="on_track", logged=1806, kinds=("billed", "billed", "billed", "today", "future"), note=None, lop=2460, target=2550):
+    days = [
+        {"date": f"2026-10-{26 + i}", "dow": d, "min": 0, "kind": k}
+        for i, (d, k) in enumerate(zip(("Mon", "Tue", "Wed", "Thu", "Fri"), kinds, strict=True))
+    ]
+    return {
+        "state": state,
+        "logged_min": logged,
+        "lines": {"lop_min": lop, "target_min": target},
+        "days": days,
+        "note": note,
+    }
+
+
+def test_runway_colour_only_on_risk():
+    ink = lambda **kw: model.runway(_s(**kw))["ink"]  # noqa: E731
+    assert ink() == "neutral" and ink(state="ahead") == "neutral" and ink(state="tight") == "neutral"
+    assert ink(state="behind") == "neutral" and ink(state="bill") == "neutral" and ink(state="short") == "neutral"
+    assert ink(state="pay_risk") == "red" and ink(state="lop") == "red"
+    assert ink(state="done", logged=2550) == "green"
+    assert ink(state="offline") == "grey"
+    assert model.runway(_s(), stale=True)["ink"] == "grey"
+
+
+def test_runway_band_runs_from_the_pay_line_to_the_track_end():
+    assert model.runway(_s(lop=2460, target=2550))["band"] == pytest.approx(2460 / 2550)
+    # half-day leave: pay line above the target, so the track is the line and the band is empty
+    r = model.runway(_s(lop=2460, target=2295))
+    assert r["band"] == 1.0
+    # shorter week: the band widens
+    assert model.runway(_s(lop=1920, target=2040))["band"] == pytest.approx(1920 / 2040)
+
+
+def test_runway_pending_day_is_a_ghost_continuing_the_fill():
+    r = model.runway(_s(state="bill", logged=2040, kinds=("billed",) * 4 + ("pending",)))
+    assert r["ghost"] == pytest.approx((0.8, 0.8 + 510 / 2550)) and r["ink"] == "neutral"
+
+
+def test_runway_overtime_caps_at_the_track_end():
+    r = model.runway(_s(state="done", logged=3300, kinds=("billed",) * 5))
+    assert r["fill"] == 1.0 and r["ghost"] is None
+    assert r["caption"] == "target met · +12.5 h"
+
+
+def test_runway_ghost_is_clipped_to_the_track():
+    r = model.runway(_s(logged=2500, kinds=("billed",) * 4 + ("pending",)))
+    assert r["ghost"][1] == 1.0
+
+
+def test_runway_last_day_gap_keeps_a_neutral_fill_with_a_red_band():
+    r = model.runway(_s(logged=2400, kinds=("billed",) * 4 + ("today",), note="Last working day · 40.0 of the 41 h line"))
+    assert r["ink"] == "neutral" and r["emphasis"]
+    assert r["caption"] == "pay needs 1.0 h · 2.5 h to target"
+
+
+def test_runway_captions():
+    cap = lambda **kw: model.runway_caption(_s(**kw))  # noqa: E731
+    assert cap() == "10.9 h to pay line · 12.4 h to target"
+    assert cap(state="bill", logged=2040, kinds=("billed",) * 4 + ("pending",)) == "7.0 h to pay line · bill Fri to finish"
+    assert cap(logged=1560, kinds=("billed",) * 2 + ("pending", "today", "future")) == "15.0 h to pay line · Wed not billed yet"
+    assert cap(state="short", logged=2508, kinds=("billed",) * 5) == "pay safe · 0.7 h under target"
+    assert cap(logged=2520) == "pay safe · 0.5 h to target"
+    assert cap(state="lop", logged=2370, kinds=("billed",) * 5) == "1.5 h under the pay line"
+    assert cap(state="done", logged=2550, kinds=("billed",) * 5) == "target met"
+    assert cap(state="done", logged=2670, kinds=("billed",) * 5) == "target met · +2.0 h"

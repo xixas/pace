@@ -98,16 +98,73 @@ def _projected(status: dict, expected_daily_h: float):
     return last, total
 
 
+DAY_SHARE_MIN = 510  # 8.5 h: what an unbilled day is expected to add (the daily minimum)
+
+
+def _h1(minutes: float) -> str:
+    return f"{minutes / 60:.1f} h"
+
+
+def runway_caption(status: dict) -> str:
+    """The one line under the runway: what is left to the pay line and the target, in words. Same strings as the GNOME menu."""
+    logged, lines, days = status.get("logged_min") or 0, status.get("lines") or {}, status.get("days") or []
+    lop, target = lines.get("lop_min") or 0, lines.get("target_min") or 0
+    pending = [d["dow"] for d in days if d["kind"] == "pending"]
+    week_open = any(d["kind"] in OPEN_DAYS for d in days)
+    if logged >= target:
+        over = logged - target
+        return "target met" + (f" · +{_h1(over)}" if over >= 6 else "")
+    if logged >= lop:
+        return f"pay safe · {_h1(target - logged)} {'to' if week_open else 'under'} target"
+    if not week_open:
+        return f"{_h1(lop - logged)} under the pay line"
+    if (status.get("note") or "").startswith("Last working day"):
+        return f"pay needs {_h1(lop - logged)} · {_h1(target - logged)} to target"
+    if pending:
+        end = f"bill {pending[0]} to finish" if status.get("state") == "bill" else f"{pending[0]} not billed yet"
+        return f"{_h1(lop - logged)} to pay line · {end}"
+    return f"{_h1(lop - logged)} to pay line · {_h1(target - logged)} to target"
+
+
+def runway(status: dict, stale: bool = False) -> dict:
+    """Direction D. Everything as fractions of the target (the track): fill, the pay-safe band, the pending ghost.
+
+    ink: neutral by default, red only for pay_risk and lop, green when done, grey when stale or offline. Overtime is capped
+    at the track end and printed in the caption, never drawn.
+    """
+    logged, lines, days = status.get("logged_min") or 0, status.get("lines") or {}, status.get("days") or []
+    lop, target = lines.get("lop_min") or 0, lines.get("target_min") or 0
+    track = max(target, lop, 1)
+    fill = min(logged / track, 1.0)
+    state = status.get("state")
+    ink = (
+        "grey"
+        if stale or state in ("offline", "on_leave")
+        else "red"
+        if state in ("pay_risk", "lop")
+        else "green"
+        if state == "done"
+        else "neutral"
+    )
+    pending = sum(1 for d in days if d["kind"] == "pending")
+    ghost = (fill, min(1.0, fill + pending * DAY_SHARE_MIN / track)) if pending and fill < 1 else None
+    emphasis = logged < lop and (status.get("note") or "").startswith("Last working day")
+    return {
+        "fill": fill,
+        "band": lop / track,  # where the pay-safe band starts; it runs to the track end
+        "ghost": ghost,
+        "ink": ink,
+        "emphasis": emphasis or (ink == "red" and logged < lop),
+        "caption": runway_caption(status),
+    }
+
+
 def week_view(status: dict, expected_daily_h: float, split: dict | None = None, stale: bool = False) -> dict | None:
     """C1/C2. split: {iso date: [(code, "7.7"), ...]} from pace.history, optional."""
     if status.get("logged_min") is None:
         return None
     logged, lines, days = status["logged_min"], status.get("lines") or {}, status.get("days") or []
-    lop, target, expected = (
-        lines.get("lop_min") or 0,
-        lines.get("target_min") or status.get("target_min") or 0,
-        lines.get("expected_min") or 0,
-    )
+    lop, target = lines.get("lop_min") or 0, lines.get("target_min") or status.get("target_min") or 0
     done = [d for d in days if d["kind"] in ("billed", "short")]
     done_min = sum(d["min"] or 0 for d in done)
     pay_sub = "reached" if logged >= lop else f"{hours(lop - logged)} h to go"
@@ -158,7 +215,7 @@ def week_view(status: dict, expected_daily_h: float, split: dict | None = None, 
     first = parse_dt(days[0]["date"]) if days else None
     return {
         "stats": stats,
-        "bar": {"logged": logged, "lop": lop, "target": target, "expected": expected, "max": max(logged, target, expected, 1)},
+        "bar": runway(status, stale),
         "bar_text": f"{hours(logged)} / {h_short(target)} h",
         "week_label": f"Week of {first.day} {first:%b}" if first else "This week",
         "cards": cards,
