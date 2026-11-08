@@ -11,12 +11,21 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 
 DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-T = 510  # 8.5 h: the day's target
-FULL = 540  # 9 h: one LOP-safe day
-PART = 300  # 5 h: the remainder that still counts as a day
 EOD = 20  # hour the day's own work window closes
 MAXDAY = 630  # 10.5 h: the most a day can reasonably take
 GRACE_UNTIL = 12  # hour of the next working day until which an unbilled day is only "not billed yet"
+
+
+@dataclass(frozen=True)
+class Rules:
+    """The numbers behind the target and the LOP line, in minutes: DhiHRMS's full and part, Pace's own target."""
+
+    target: int = 510  # 8.5 h: the day's target
+    full: int = 540  # 9 h: one LOP-safe day
+    part: int = 300  # 5 h: the remainder that still counts as a day
+
+
+DEFAULT = Rules()
 
 
 @dataclass(frozen=True)
@@ -42,16 +51,16 @@ class Verdict:
     today: int = 0  # minutes billed today so far
 
 
-def lop_count(total: float, d: float) -> float:
-    return 0 if d <= 0 else max(0, d - (total // FULL + (1 if total % FULL >= PART else 0)))
+def lop_count(total: float, d: float, rules: Rules = DEFAULT) -> float:
+    return 0 if d <= 0 else max(0, d - (total // rules.full + (1 if total % rules.full >= rules.part else 0)))
 
 
-def lop_line(d: float) -> int:
+def lop_line(d: float, rules: Rules = DEFAULT) -> int:
     """Smallest weekly total with no LOP: 41 h for both 5 and 4.5 working days."""
-    return FULL * (math.ceil(d) - 1) + PART
+    return rules.full * (math.ceil(d) - 1) + rules.part
 
 
-def week_verdict(work: Sequence[float], entries: Sequence[Entry], day: int, hour: float) -> Verdict:
+def week_verdict(work: Sequence[float], entries: Sequence[Entry], day: int, hour: float, rules: Rules = DEFAULT) -> Verdict:
     """work: fraction of each day Mon..Sun that is a working day (1, 0.5, 0). day/hour: now."""
     # Weekend billings count toward the total, as in hrms-api's Mon 00:00 - Sun 23:59 window (report-window.ts:75-79).
     seen = [e for e in entries if e.seen_day < day or (e.seen_day == day and e.seen_hour <= hour)]
@@ -63,8 +72,8 @@ def week_verdict(work: Sequence[float], entries: Sequence[Entry], day: int, hour
     d = sum(work)
     if d == 0:
         return Verdict("ON LEAVE", logged)
-    lop = lop_line(d)
-    target = max(T * d, lop)  # half-day weeks: 38.25 h < 41 h, pay wins
+    lop = lop_line(d, rules)
+    target = max(rules.target * d, lop)  # half-day weeks: 38.25 h < 41 h, pay wins
     last_work = max(i for i, w in enumerate(work) if w)
 
     def next_work(i: int) -> int:
@@ -79,13 +88,13 @@ def week_verdict(work: Sequence[float], entries: Sequence[Entry], day: int, hour
         closed = i < day or hour >= EOD
         nw = next_work(i)
         if closed and (day < nw or (day == nw and hour < GRACE_UNTIL)):
-            credit += T * work[i]
+            credit += rules.target * work[i]
             pending.append(i)
     eff = logged + credit
     tag = f" · {','.join(DAYS[i] for i in pending)} not billed yet" if pending else ""
 
     if day > last_work:
-        n = lop_count(eff, d)
+        n = lop_count(eff, d, rules)
         return Verdict(
             ("DONE" if logged >= target else "BILL" if eff >= target else f"LOP {n:g}d" if n > 0 else "SHORT (pay safe)") + tag,
             logged,
@@ -114,9 +123,9 @@ def week_verdict(work: Sequence[float], entries: Sequence[Entry], day: int, hour
         label = "SHORT (pay safe)"
     elif need > MAXDAY:
         label = "BEHIND"
-    elif need > FULL:
+    elif need > rules.full:
         label = "TIGHT"
-    elif past_days > 0 and day != last_work and before >= FULL * past_days:
+    elif past_days > 0 and day != last_work and before >= rules.full * past_days:
         label = "AHEAD"
     else:
         label = "ON TRACK"
@@ -126,7 +135,7 @@ def week_verdict(work: Sequence[float], entries: Sequence[Entry], day: int, hour
     short_days = [
         f"{DAYS[i]} {hours(for_day(i), trim=True)} h"
         for i in range(day + 1)
-        if work[i] and (i < day or after_eod) and i not in pending and for_day(i) < T * work[i] - 15
+        if work[i] and (i < day or after_eod) and i not in pending and for_day(i) < rules.target * work[i] - 15
     ]
     if label.startswith("PAY RISK") and short_days:
         label += " · " + ", ".join(short_days)

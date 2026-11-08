@@ -110,3 +110,17 @@ def test_hours_display_rounds_half_up():
 def test_verdict_carries_the_week_target():
     assert week_verdict(W5, [], 0, 9).target == 2550  # 42.5 h
     assert week_verdict([1, 1, 1, 0.5, 1, 0, 0], [], 0, 9).target == 2460  # half-day week: pay line 41 h wins over 38.25 h
+
+
+def test_custom_rules_change_lop_count_lop_line_and_the_week_verdict():
+    from pace.engine import DEFAULT, Rules, lop_count, lop_line
+
+    assert DEFAULT == Rules(target=510, full=540, part=300)
+    loose = Rules(target=480, full=480, part=240)
+    assert lop_count(2400, 5) == 1  # 40 h at 9/5: 4 full days + 4 h < 5 h
+    assert lop_count(2400, 5, loose) == 0  # 40 h at 8/4: 5 full days
+    assert lop_line(5, loose) == 480 * 4 + 240 == 2160
+    entries = daily([8, 8, 8, 8, 8])
+    assert week_verdict(W5, entries, 5, 12).label == "LOP 1d"
+    v = week_verdict(W5, entries, 5, 12, loose)
+    assert (v.label, v.target) == ("DONE", 2400)

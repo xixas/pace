@@ -34,6 +34,31 @@ def test_a_broken_file_or_bad_value_falls_back_to_the_default(tmp_path, monkeypa
     assert Settings().data == DEFAULTS
 
 
+def test_rules_default_to_dhihrms_values_and_convert_to_minutes(tmp_path, monkeypatch):
+    from pace.engine import Rules
+
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
+    assert DEFAULTS["rules"] == {"daily_target_h": 8.5, "full_day_h": 9.0, "part_day_h": 5.0}
+    assert Settings().rules() == Rules(510, 540, 300)
+    write(tmp_path, monkeypatch, {"rules": {"daily_target_h": 8, "full_day_h": 8, "part_day_h": 4}})
+    assert Settings().rules() == Rules(480, 480, 240)
+
+
+def test_bad_rules_fall_back_to_the_defaults(tmp_path, monkeypatch):
+    bad = [
+        {"part_day_h": 9.0, "full_day_h": 9.0},  # part must be below full
+        {"part_day_h": 0},
+        {"full_day_h": 25},
+        {"daily_target_h": 0},
+        {"daily_target_h": 24.5},
+        {"full_day_h": "nine"},
+        {"part_day_h": 10},  # part above the default full
+    ]
+    for rules in bad:
+        write(tmp_path, monkeypatch, {"rules": rules})
+        assert Settings().data["rules"] == DEFAULTS["rules"], rules
+
+
 def test_reload_picks_up_a_change(tmp_path, monkeypatch):
     write(tmp_path, monkeypatch, {})
     s = Settings()

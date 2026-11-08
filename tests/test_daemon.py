@@ -57,6 +57,20 @@ def test_settings_pick_the_panel_text():
     assert read_json(state_dir() / "status.json")["text"] == "20%"
 
 
+def test_the_daemon_uses_the_settings_rules_and_recomputes_when_they_change():
+    config = state_dir().parent.parent / "config" / "pace"
+    config.mkdir(parents=True)
+    week = [MON + timedelta(i) for i in range(5)]
+    d = Daemon(FakeApi(billed(*week, minutes=480)), Clock(datetime(2026, 11, 6, 21, 0)))
+    d.tick()
+    assert d.status["state"] == "pay_risk"  # 40 h is under the 9/5 line of 41 h
+    (config / "settings.json").write_text('{"rules": {"daily_target_h": 8, "full_day_h": 8, "part_day_h": 4}}')
+    d.settings.reload()
+    d.render()  # what the settings monitor triggers
+    assert d.status["state"] == "done"
+    assert d.status["lines"]["lop_min"] == 2160
+
+
 def test_snooze_lasts_until_midnight_and_unsnooze_undoes_it_without_a_poll():
     api = FakeApi(billed(MON))
     d = Daemon(api, Clock(datetime(2026, 11, 3, 18, 30)))

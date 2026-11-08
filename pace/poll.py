@@ -9,9 +9,9 @@ import calendar
 from datetime import date, datetime, timedelta
 
 from pace.client import Offline, SignedOut
-from pace.engine import DAYS, hours, lop_count, week_verdict
+from pace.engine import DAYS, DEFAULT, Rules, hours, lop_count, week_verdict
 from pace.hrms import day_minutes, day_types, entries, record, work_days
-from pace.settings import DEFAULTS
+from pace.settings import DEFAULTS, rules_from
 from pace.status import PINESTEM_URL, Ctx, Week, lop_text, status
 from pace.targets import month_block
 
@@ -49,10 +49,11 @@ def verdict_status(
     retry_at: datetime | None = None,
 ) -> dict:
     settings = settings or DEFAULTS
+    rules = rules_from(settings)
     monday = at.date() - timedelta(at.weekday())
     hour = at.hour + at.minute / 60
     work = work_days(state["days"], monday)
-    v = week_verdict(work, entries(state["ledger"], monday), at.weekday(), hour)
+    v = week_verdict(work, entries(state["ledger"], monday), at.weekday(), hour, rules)
     snoozed = datetime.fromisoformat(state["snoozed_until"]) if state.get("snoozed_until") else None
     ctx = Ctx(
         week=Week(monday, at, work, day_types(state["days"], monday), day_minutes(state["ledger"], monday)),
@@ -62,28 +63,29 @@ def verdict_status(
         expected_daily_h=settings["expected_daily_h"],
         snoozed_until=snoozed if snoozed and snoozed > at else None,
         retry_at=retry_at,
-        last_week=last_week_banner(state, monday - timedelta(7), 7 + at.weekday(), hour),
+        last_week=last_week_banner(state, monday - timedelta(7), 7 + at.weekday(), hour, rules),
+        rules=rules,
     )
     return status(v, at, problem, ctx)
 
 
-def last_week_summary(state: dict, at: datetime) -> dict | None:
+def last_week_summary(state: dict, at: datetime, rules: Rules = DEFAULT) -> dict | None:
     """How last week ended, for the Monday nudge; None when it had no working days."""
     monday = at.date() - timedelta(at.weekday() + 7)
     work = work_days(state["days"], monday)
     if not sum(work):
         return None
-    v = week_verdict(work, entries(state["ledger"], monday), 7 + at.weekday(), at.hour + at.minute / 60)
-    return {"logged_min": v.logged, "target_min": v.target, "lop_days": lop_count(v.logged, sum(work))}
+    v = week_verdict(work, entries(state["ledger"], monday), 7 + at.weekday(), at.hour + at.minute / 60, rules)
+    return {"logged_min": v.logged, "target_min": v.target, "lop_days": lop_count(v.logged, sum(work), rules)}
 
 
-def last_week_banner(state: dict, monday: date, day: int, hour: float) -> dict | None:
+def last_week_banner(state: dict, monday: date, day: int, hour: float, rules: Rules = DEFAULT) -> dict | None:
     """B12: last week's days still inside their grace, and what the week comes to if they stay unbilled."""
     work = work_days(state["days"], monday)
-    v = week_verdict(work, entries(state["ledger"], monday), day, hour)
+    v = week_verdict(work, entries(state["ledger"], monday), day, hour, rules)
     if not v.pending:
         return None
-    n = lop_count(v.logged, sum(work))
+    n = lop_count(v.logged, sum(work), rules)
     cost = lop_text(n) if n > 0 else "pay safe"
     first = next((i for i, w in enumerate(work_days(state["days"], monday + timedelta(7))) if w), 0)
     deadline = "today" if first == day - 7 else DAYS[first]

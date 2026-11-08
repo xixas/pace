@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
-from pace.engine import DAYS, EOD, MAXDAY, T, Verdict, hours, lop_count, lop_line
+from pace.engine import DAYS, DEFAULT, EOD, MAXDAY, Rules, Verdict, hours, lop_count, lop_line
 from pace.files import state_dir, write_json
 from pace.targets import MINUS
 
@@ -76,6 +76,7 @@ class Ctx:
     snoozed_until: datetime | None = None
     retry_at: datetime | None = None
     last_week: dict | None = None
+    rules: Rules = DEFAULT
 
 
 def look(v: Verdict) -> tuple[str, str, str]:
@@ -131,7 +132,7 @@ def problem_info(kind: str, ctx: Ctx) -> dict:
 
 
 def week_fields(v: Verdict, base: str, ctx: Ctx) -> dict:
-    days = day_rows(v, ctx.week) if ctx.week else None
+    days = day_rows(v, ctx.week, ctx.rules) if ctx.week else None
     short = [d for d in days or [] if d["kind"] == "short"]
     show_warning = short and base not in ("done", "on_leave")
     return {
@@ -153,7 +154,7 @@ def last_day_gap(v: Verdict, base: str) -> bool:
     return base in NEEDY + ("behind",) and bool(PAY_NEEDS.search(v.label))
 
 
-def day_rows(v: Verdict, wk: Week) -> list[dict]:
+def day_rows(v: Verdict, wk: Week, rules: Rules = DEFAULT) -> list[dict]:
     today = wk.at.weekday()
     past_today = wk.at.hour + wk.at.minute / 60 >= EOD
     out = []
@@ -161,7 +162,7 @@ def day_rows(v: Verdict, wk: Week) -> list[dict]:
         m = wk.minutes[i]
         if i > 4 and not m:
             continue
-        kind, text = day_kind(i, m, wk, v, today, past_today)
+        kind, text = day_kind(i, m, wk, v, today, past_today, rules)
         out.append(
             {
                 "date": (wk.monday + timedelta(i)).isoformat(),
@@ -174,7 +175,7 @@ def day_rows(v: Verdict, wk: Week) -> list[dict]:
     return out
 
 
-def day_kind(i: int, m: int, wk: Week, v: Verdict, today: int, past_today: bool) -> tuple[str, str]:
+def day_kind(i: int, m: int, wk: Week, v: Verdict, today: int, past_today: bool, rules: Rules = DEFAULT) -> tuple[str, str]:
     w = wk.work[i]
     if not w:
         kind = wk.types[i] if wk.types[i] in ("holiday", "leave") else "weekend" if i > 4 else "holiday"
@@ -185,7 +186,7 @@ def day_kind(i: int, m: int, wk: Week, v: Verdict, today: int, past_today: bool)
         return ("half_leave", "½ leave") if w < 1 else ("future", "–")
     if i in v.pending:
         return "pending", "not yet"
-    if m < T * w - 15:
+    if m < rules.target * w - 15:
         return "short", hours(m)
     return ("half_leave", hours(m)) if w < 1 else ("billed", hours(m))
 
@@ -241,7 +242,7 @@ def warning_detail(v: Verdict, ctx: Ctx) -> str | None:
     gap = v.lop - best
     if gap <= 0:
         return None
-    n = lop_count(best, sum(ctx.week.work))
+    n = lop_count(best, sum(ctx.week.work), ctx.rules)
     cost = f"about {n:g} {'day' if n <= 1 else 'days'} of loss of pay"
     if v.rem == 0:
         return f"The week ends {hours(gap)} h under the line, {cost}."
@@ -255,7 +256,7 @@ def lines(v: Verdict, base: str, ctx: Ctx) -> dict | None:
         return None
     emphasis = "lop" if base == "pay_risk" or last_day_gap(v, base) else None
     return {
-        "lop_min": lop_line(d),
+        "lop_min": lop_line(d, ctx.rules),
         "target_min": v.target,
         "expected_min": round(ctx.expected_daily_h * 60 * d),
         "emphasis": emphasis,

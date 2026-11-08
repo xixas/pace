@@ -94,10 +94,15 @@ Added keys (all may be `null` when there is no data, e.g. signed out):
     "project_behind": {"on": true, "at": "10:30"},
     "signed_out":     {"on": true}
   },
+  "rules": {"daily_target_h": 8.5, "full_day_h": 9.0, "part_day_h": 5.0},
   "widget_at_login": false,
   "token_store": "keyring"
 }
 ```
+
+`rules` sets the weekly target (`daily_target_h` per working day) and the LOP line (`full_day_h`, `part_day_h`). Valid when
+0 < part < full <= 24 and 0 < target <= 24, otherwise all three fall back to the defaults. The defaults mirror
+DhiHRMS's lop_threshold_hours/additional_threshold_hours; the 8.5 target is Pace's own. paced recomputes on change.
 
 `token_store` ∈ keyring, file, none (A9). The exact rule behind each nudge is in design C6.
 

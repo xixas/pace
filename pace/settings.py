@@ -5,6 +5,7 @@ from __future__ import annotations
 import copy
 import re
 
+from pace.engine import Rules
 from pace.files import config_dir, read_json
 
 NUDGES = ("pay_risk", "friday", "daily", "monday", "zero_hour", "project_behind")
@@ -22,10 +23,12 @@ DEFAULTS = {
         "project_behind": {"on": True, "at": "10:30"},
         "signed_out": {"on": True},
     },
+    "rules": {"daily_target_h": 8.5, "full_day_h": 9.0, "part_day_h": 5.0},
     "widget_at_login": False,
     "token_store": "keyring",
 }
 CHOICES = {"panel_text": ("hours", "percent", "gap", "left_today", "icon"), "token_store": ("keyring", "file", "none")}
+RULE_KEYS = ("daily_target_h", "full_day_h", "part_day_h")
 TIME = re.compile(r"([01]\d|2[0-3]):[0-5]\d")
 
 
@@ -42,9 +45,20 @@ def merge(base: dict, over: dict) -> dict:
             out[key] = value
         elif key not in CHOICES and key != "at" and type(value) is type(default):
             out[key] = value
+        elif key in RULE_KEYS and isinstance(value, int | float) and not isinstance(value, bool):
+            out[key] = float(value)
         elif key == "expected_daily_h" and isinstance(value, int | float) and not isinstance(value, bool):
             out[key] = float(value)
     return out
+
+
+def valid_rules(r: dict) -> bool:
+    return 0 < r["part_day_h"] < r["full_day_h"] <= 24 and 0 < r["daily_target_h"] <= 24
+
+
+def rules_from(data: dict) -> Rules:
+    r = data["rules"]
+    return Rules(round(r["daily_target_h"] * 60), round(r["full_day_h"] * 60), round(r["part_day_h"] * 60))
 
 
 class Settings:
@@ -56,6 +70,11 @@ class Settings:
     def reload(self) -> None:
         raw = read_json(self.path)
         self.data = merge(DEFAULTS, raw if isinstance(raw, dict) else {})
+        if not valid_rules(self.data["rules"]):
+            self.data["rules"] = dict(DEFAULTS["rules"])
+
+    def rules(self) -> Rules:
+        return rules_from(self.data)
 
     def watch(self, on_change):
         """Re-read the file whenever the app saves it, then call on_change(). Returns the monitor; keep it alive."""
