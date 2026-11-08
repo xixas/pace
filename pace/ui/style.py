@@ -38,7 +38,8 @@ CSS = """
 .pace-hero-card { padding: 22px 24px 18px; }
 .pace-stat { padding: 0; }
 
-.pace-day { padding: 12px 6px 10px; border-radius: 12px; }
+.pace-days > flowboxchild { padding: 0; }
+.pace-day { padding: 12px 4px 10px; border-radius: 12px; }
 .pace-day.today { box-shadow: inset 0 0 0 2px var(--accent-bg-color); }
 .pace-day.short { background: alpha(var(--warning-color), .14); }
 .pace-day.half_leave { background-image: repeating-linear-gradient(135deg, alpha(var(--warning-color), .18) 0 6px, transparent 6px 12px); }
@@ -54,7 +55,7 @@ CSS = """
 .pace-table-title { padding: 14px 16px 4px; }
 
 /* ---- calendar: heat map ------------------------------------------------------------------------------------------------ */
-.heat-cell { border-radius: 10px; padding: 8px; min-height: 60px; min-width: 56px; }
+.heat-cell { border-radius: 10px; padding: 7px 6px; min-height: 58px; min-width: 32px; }
 .heat-ok { background: alpha(var(--success-color), .22); }
 .heat-mid { background: alpha(var(--warning-color), .26); }
 .heat-low { background: alpha(var(--error-color), .22); }
@@ -69,7 +70,7 @@ CSS = """
 
 /* ---- B10 mini widget: a rounded card on a transparent, undecorated window -------------------------------------------- */
 window.pace-widget { background: transparent; }
-.pace-widget-card { background: var(--card-bg-color); color: var(--card-fg-color); border-radius: 18px; padding: 16px 18px 14px;
+.pace-widget-card { background: var(--window-bg-color); color: var(--window-fg-color); border-radius: 18px; padding: 16px 18px 14px;
   box-shadow: 0 0 0 1px var(--card-shade-color), 0 8px 24px alpha(black, .22); }
 .pace-widget-card .big { font-size: 30px; font-weight: 800; line-height: 1; font-feature-settings: "tnum"; letter-spacing: -0.02em; }
 .pace-widget-card .title { font-size: 13px; font-weight: 700; }

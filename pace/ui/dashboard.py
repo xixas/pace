@@ -230,7 +230,18 @@ class Dashboard(Adw.BreakpointBin):
         if view["warning"]:
             self.week_body.append(icon_row("dialog-warning-symbolic", view["warning"], view["warning_detail"] or "", "warning"))
         codes = self._series_codes(view["cards"])
-        self.week_body.append(box(*(self._day(c, codes) for c in view["cards"]), vertical=False, spacing=10, homogeneous=True))
+        days = Gtk.FlowBox(
+            homogeneous=True,
+            min_children_per_line=2,
+            max_children_per_line=5,
+            row_spacing=10,
+            column_spacing=10,
+            selection_mode=Gtk.SelectionMode.NONE,
+            css_classes=["pace-days"],
+        )
+        for c in view["cards"]:
+            days.append(self._day(c, codes))
+        self.week_body.append(days)
         if projects := (s.get("month") or {}).get("projects"):
             self.week_body.append(self._month_group(s["month"], projects))
 
