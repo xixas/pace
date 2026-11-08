@@ -3,10 +3,12 @@
 
 import Gio from 'gi://Gio';
 import System from 'system';
-import {look} from '../pace@osmosys/look.js';
+import {look, menuModel} from '../pace@osmosys/look.js';
 
 const here = Gio.File.new_for_uri(import.meta.url).get_parent();
-const fixture = name => new TextDecoder().decode(here.get_child('fixtures').get_child(`${name}.json`).load_contents(null)[1]);
+const load = (dir, name) => new TextDecoder().decode(here.get_child(dir).get_child(`${name}.json`).load_contents(null)[1]);
+const fixture = name => load('fixtures', name);
+const menu = name => load('menus', name);
 
 let failed = 0;
 function test(name, fn) {
@@ -78,6 +80,81 @@ test('numbers 3 polls old: paced has stopped, grey them with the time like OFFLI
 test('OFFLINE already carries its time and SIGNED OUT has none: neither turns stale', () => {
     eq(look(fixture('12-offline'), AT + 600 * MIN).text, '26.6 / 42.5 h · 09:40', 'offline');
     eq(look(fixture('13-signed-out'), AT + 600 * MIN).state, 'signed_out', 'signed out');
+});
+
+test('stale_after in status.json beats the 15 min default; icon-only stays icon-only', () => {
+    const s = JSON.parse(fixture('01-on-track'));
+    s.stale_after = '2026-10-29T14:20:00';
+    eq(look(JSON.stringify(s), AT + 8 * MIN).state, 'on_track', 'before stale_after');
+    s.text = '';
+    const l = look(JSON.stringify(s), AT + 21 * MIN);
+    eq([l.state, l.text], ['stale', ''], 'after stale_after');
+});
+
+// Menus: fixtures stamped 2026-10-29 14:06, so "now" 14:10 reads "Updated 4 min ago"
+const M = new Date(2026, 9, 29, 14, 10).getTime();
+
+test('B2 on track: header, bar ticks, days, month, footer', () => {
+    const m = menuModel(menu('b2-on-track'), M);
+    eq([m.title, m.subtitle, m.note, m.titleColour], ['Week · On track', 'needs 8.0 h/day', '4.5 h left today', null], 'header');
+    eq(m.bar.legend, ['LOP 41', 'target 42.5', 'expected 45'], 'legend');
+    eq([m.bar.fill, m.bar.lop, m.bar.target].map(v => Math.round(v * 10) / 10), [66.9, 91.1, 94.4], 'bar percentages');
+    eq(m.bar.emphasis, false, 'lop not emphasised');
+    eq(m.days.map(d => `${d.dow} ${d.text} ${d.kind}`), ['Mon 9.2 billed', 'Tue 8.4 billed', 'Wed 9.0 billed', 'Thu 3.5 today', 'Fri – future'], 'days');
+    eq([m.month.name, m.month.left, m.month.projects.length], ['October', '2 working days left', 2], 'month');
+    eq([m.month.projects[0].needText, m.month.projects[0].colour, m.month.projects[1].colour], ['needs 10.3 h/day on Tweelin', '#ffbe6f', null], 'projects');
+    eq([m.updated, m.problem, m.snoozed, m.lastWeek, m.action], ['Updated 4 min ago', undefined, false, null, null], 'footer');
+});
+
+test('B3 friday gap: LOP tick emphasised with the gap spelled out and a fix button', () => {
+    const m = menuModel(menu('b3-friday-gap'), new Date(2026, 9, 30, 18, 30).getTime());
+    eq([m.bar.emphasis, m.gap], [true, '1.0 h to the loss-of-pay line · 2.5 h to target'], 'gap');
+    eq([m.subtitle, m.action.label], ['pay needs 1.0 h', 'Bill 1 h to stay clear of loss of pay'], 'header');
+});
+
+test('B4 pay risk: red title, short days named, warning detail', () => {
+    const m = menuModel(menu('b4-pay-risk'), new Date(2026, 9, 30, 11, 0).getTime());
+    eq([m.titleColour, m.warning, m.days[2].kind], ['#ff7b63', 'Short days: Wed 6.0 h · Thu 3.5 h', 'short'], 'risk');
+    eq(m.warningDetail.startsWith('Even 10.5 h'), true, 'detail');
+});
+
+test('B5 bill: blue, pending day says not yet, button bills', () => {
+    const m = menuModel(menu('b5-bill'), new Date(2026, 9, 30, 20, 30).getTime());
+    eq([m.bar.colour, m.days[4].kind, m.days[4].text, m.action.label], ['#78aeed', 'pending', 'not yet', 'Open PineStem to bill Fri'], 'bill');
+});
+
+test('B6 offline: banner with as-of and retry countdown, grey, last-updated time', () => {
+    const m = menuModel(menu('b6-offline'), M);
+    eq([m.problem.message, m.problem.detail], ["Can't reach DhiHRMS", 'as of 09:40 · retrying in 2 min'], 'banner');
+    eq([m.updated, m.dim, m.bar.colour], ['Last updated 09:40', true, '#9a9996'], 'dim');
+});
+
+test('B12 monday: last-week banner data present', () => {
+    const m = menuModel(menu('b12-monday-banner'), new Date(2026, 10, 2, 9, 20).getTime());
+    eq([m.lastWeek.text, m.lastWeek.detail], ['Last week: Fri 30 Oct not billed yet', 'Bill by 12:00 today or it counts as 34.0 h → LOP 1 day.'], 'banner');
+});
+
+test('C12 snoozed', () => {
+    eq(menuModel(menu('c12-snoozed'), M).snoozed, true, 'snoozed');
+});
+
+test('C10 skew: update prompt only, never numbers', () => {
+    const m = menuModel(menu('c10-skew'), M);
+    eq([m.state, m.notice, m.noticeDetail, m.title, m.bar, m.days], ['skew', 'Pace schema mismatch', 'Log out and back in to show numbers', undefined, undefined, undefined], 'skew');
+});
+
+test('signed out: notice plus sign-in, no data blocks', () => {
+    const m = menuModel(menu('signed-out'), M);
+    eq([m.signIn, m.notice, m.title, m.bar, m.days], [true, 'Your DhiHRMS session expired', undefined, undefined, undefined], 'signed out');
+});
+
+test('stale numbers: notice and "Last updated" instead of "N min ago"', () => {
+    const m = menuModel(menu('b2-on-track'), M + 60 * MIN);
+    eq([m.state, m.notice, m.updated], ['stale', 'paced has stopped updating: these numbers are old', 'Last updated 14:06'], 'stale');
+});
+
+test('no file: waiting for paced', () => {
+    eq(menuModel(null, M).notice, 'Waiting for paced', 'none');
 });
 
 if (failed)

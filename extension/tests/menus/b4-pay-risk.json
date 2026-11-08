@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "as_of": "2026-10-30T10:58:00",
+  "stale_after": "2026-10-30T11:43:00",
+  "state": "pay_risk",
+  "colour": "red",
+  "icon": "dot",
+  "text": "27.1 / 42.5 h · pay risk",
+  "verdict": "PAY RISK",
+  "logged_min": 1626,
+  "target_min": 2550,
+  "title": "Pay at risk",
+  "subtitle": "27.1 / 42.5 h",
+  "note": "Needs 13.9 h today to reach 41 h. The limit is 10.5 h/day.",
+  "lines": {
+    "lop_min": 2460,
+    "target_min": 2550,
+    "expected_min": 2700
+  },
+  "days": [
+    {
+      "date": "2026-10-26",
+      "dow": "Mon",
+      "min": 552,
+      "kind": "billed",
+      "text": "9.2"
+    },
+    {
+      "date": "2026-10-27",
+      "dow": "Tue",
+      "min": 504,
+      "kind": "billed",
+      "text": "8.4"
+    },
+    {
+      "date": "2026-10-28",
+      "dow": "Wed",
+      "min": 360,
+      "kind": "short",
+      "text": "6.0"
+    },
+    {
+      "date": "2026-10-29",
+      "dow": "Thu",
+      "min": 210,
+      "kind": "short",
+      "text": "3.5"
+    },
+    {
+      "date": "2026-10-30",
+      "dow": "Fri",
+      "min": 0,
+      "kind": "today",
+      "text": "0.0"
+    }
+  ],
+  "warning": "Short days: Wed 6.0 h · Thu 3.5 h",
+  "warning_detail": "Even 10.5 h today ends 3.4 h under the line, about 1 day of loss of pay.",
+  "action": {
+    "label": "Open PineStem to bill Fri",
+    "url": "https://pinestem.com/dashboard.html#/tasks"
+  },
+  "last_week": null,
+  "month": null,
+  "problem": null,
+  "snoozed_until": null,
+  "pinestem_url": "https://pinestem.com/dashboard.html#/tasks"
+}

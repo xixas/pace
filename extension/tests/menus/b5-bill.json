@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "as_of": "2026-10-30T20:27:00",
+  "stale_after": "2026-10-30T21:12:00",
+  "state": "bill",
+  "colour": "blue",
+  "icon": "ring",
+  "text": "34.0 / 42.5 h",
+  "verdict": "BILL",
+  "logged_min": 2040,
+  "target_min": 2550,
+  "title": "Bill your hours",
+  "subtitle": "34.0 / 42.5 h",
+  "note": "Fri not billed yet",
+  "lines": {
+    "lop_min": 2460,
+    "target_min": 2550,
+    "expected_min": 2700
+  },
+  "days": [
+    {
+      "date": "2026-10-26",
+      "dow": "Mon",
+      "min": 510,
+      "kind": "billed",
+      "text": "8.5"
+    },
+    {
+      "date": "2026-10-27",
+      "dow": "Tue",
+      "min": 510,
+      "kind": "billed",
+      "text": "8.5"
+    },
+    {
+      "date": "2026-10-28",
+      "dow": "Wed",
+      "min": 510,
+      "kind": "billed",
+      "text": "8.5"
+    },
+    {
+      "date": "2026-10-29",
+      "dow": "Thu",
+      "min": 510,
+      "kind": "billed",
+      "text": "8.5"
+    },
+    {
+      "date": "2026-10-30",
+      "dow": "Fri",
+      "min": null,
+      "kind": "pending",
+      "text": "not yet"
+    }
+  ],
+  "warning": null,
+  "warning_detail": null,
+  "action": {
+    "label": "Open PineStem to bill Fri",
+    "url": "https://pinestem.com/dashboard.html#/tasks"
+  },
+  "last_week": null,
+  "month": null,
+  "problem": null,
+  "snoozed_until": null,
+  "pinestem_url": "https://pinestem.com/dashboard.html#/tasks"
+}
