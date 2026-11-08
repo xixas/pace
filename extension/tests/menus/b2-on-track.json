@@ -1,0 +1,92 @@
+{
+  "version": 1,
+  "as_of": "2026-10-29T14:06:00",
+  "stale_after": "2026-10-29T14:51:00",
+  "state": "on_track",
+  "colour": "green",
+  "icon": "dot",
+  "text": "30.1 / 42.5 h",
+  "verdict": "ON TRACK",
+  "logged_min": 1806,
+  "target_min": 2550,
+  "title": "On track",
+  "subtitle": "needs 8.0 h/day",
+  "note": "4.5 h left today",
+  "lines": {
+    "lop_min": 2460,
+    "target_min": 2550,
+    "expected_min": 2700
+  },
+  "days": [
+    {
+      "date": "2026-10-26",
+      "dow": "Mon",
+      "min": 552,
+      "kind": "billed",
+      "text": "9.2"
+    },
+    {
+      "date": "2026-10-27",
+      "dow": "Tue",
+      "min": 504,
+      "kind": "billed",
+      "text": "8.4"
+    },
+    {
+      "date": "2026-10-28",
+      "dow": "Wed",
+      "min": 540,
+      "kind": "billed",
+      "text": "9.0"
+    },
+    {
+      "date": "2026-10-29",
+      "dow": "Thu",
+      "min": 210,
+      "kind": "today",
+      "text": "3.5"
+    },
+    {
+      "date": "2026-10-30",
+      "dow": "Fri",
+      "min": null,
+      "kind": "future",
+      "text": "–"
+    }
+  ],
+  "warning": null,
+  "warning_detail": null,
+  "action": null,
+  "last_week": null,
+  "month": {
+    "name": "October",
+    "working_days_left": 2,
+    "projects": [
+      {
+        "code": "TWE",
+        "name": "Tweelin",
+        "billed_min": 6750,
+        "target_min": 7980,
+        "gap_min": -390,
+        "need_per_day_min": 618,
+        "text": "112.5 / 133 h · behind 6.5",
+        "need_text": "needs 10.3 h/day on Tweelin",
+        "short": "Tweelin −6.5 h"
+      },
+      {
+        "code": "RES",
+        "name": "R&D",
+        "billed_min": 1104,
+        "target_min": null,
+        "gap_min": null,
+        "need_per_day_min": null,
+        "text": "18.4 h · no target",
+        "need_text": null,
+        "short": null
+      }
+    ]
+  },
+  "problem": null,
+  "snoozed_until": null,
+  "pinestem_url": "https://pinestem.com/dashboard.html#/tasks"
+}

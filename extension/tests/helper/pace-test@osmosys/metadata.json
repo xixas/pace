@@ -1,0 +1,7 @@
+{
+  "uuid": "pace-test@osmosys",
+  "name": "Pace test helper",
+  "description": "Screenshot harness only: opens and closes the Pace menu when the harness writes $XDG_STATE_HOME/pace/menu-cmd. Never shipped.",
+  "shell-version": ["48", "49", "50"],
+  "version": 1
+}

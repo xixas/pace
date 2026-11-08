@@ -53,3 +53,47 @@
   font-size: 0.85em;
   color: #9a9a9a;
 }
+
+/* Dropdown (B2-B6, B12, C10, C12). Same palette as the panel; the menu itself is the Shell's dark popup */
+.pace-static { padding: 0 12px; }
+.pace-content { spacing: 4px; padding: 6px 0; }
+.pace-title { font-weight: 700; font-size: 15px; }
+.pace-title-sm { font-weight: 700; }
+.pace-project { font-weight: 500; }
+.pace-sm { font-size: 12px; color: rgba(255, 255, 255, 0.72); }
+.pace-gap { margin-top: 4px; }
+.pace-flash { color: #ffbe6f; }
+.pace-bar { height: 18px; margin-top: 4px; }
+.pace-legend { spacing: 8px; }
+.pace-lop { font-size: 12px; font-weight: 700; color: #ff7b63; }
+.pace-rule { height: 1px; background-color: rgba(255, 255, 255, 0.14); margin: 8px 0 4px 0; }
+
+.pace-days { spacing: 4px; margin-top: 4px; }
+.pace-chip { background-color: rgba(255, 255, 255, 0.07); border-radius: 8px; padding: 5px 0; spacing: 0; }
+.pace-chip-dow { font-size: 11px; color: rgba(255, 255, 255, 0.8); text-align: center; x-align: center; }
+.pace-chip-val { font-size: 14px; font-weight: 700; text-align: center; x-align: center; }
+.pace-chip-today { border: 1.5px solid #78aeed; }
+.pace-chip-future, .pace-chip-weekend, .pace-chip-holiday, .pace-chip-leave, .pace-chip-half_leave { color: rgba(255, 255, 255, 0.5); }
+.pace-chip-future .pace-chip-dow, .pace-chip-future .pace-chip-val,
+.pace-chip-weekend .pace-chip-dow, .pace-chip-weekend .pace-chip-val,
+.pace-chip-holiday .pace-chip-dow, .pace-chip-holiday .pace-chip-val,
+.pace-chip-leave .pace-chip-dow, .pace-chip-leave .pace-chip-val,
+.pace-chip-half_leave .pace-chip-dow, .pace-chip-half_leave .pace-chip-val { color: rgba(255, 255, 255, 0.5); }
+.pace-chip-short .pace-chip-val { color: #ff7b63; }
+.pace-chip-pending { background-color: rgba(120, 174, 237, 0.18); }
+.pace-chip-pending .pace-chip-val { color: #99c1f1; font-size: 12px; }
+
+.pace-banner { border-radius: 9px; padding: 8px 10px; spacing: 2px; margin-bottom: 6px; }
+.pace-banner-warn { background-color: rgba(255, 190, 111, 0.16); }
+.pace-banner-info { background-color: rgba(53, 132, 228, 0.28); }
+.pace-banner-title { font-weight: 700; }
+.pace-warning { margin-top: 6px; spacing: 2px; }
+.pace-warning-title { font-weight: 700; color: #ff7b63; }
+
+.pace-btn { background-color: #3584e4; color: #fff; border-radius: 9px; padding: 8px 12px; font-weight: 700; text-align: center; margin-top: 8px; }
+.pace-btn:hover, .pace-btn:focus { background-color: #4a96ee; }
+.pace-btn-red { background-color: #c01c28; }
+.pace-btn-red:hover, .pace-btn-red:focus { background-color: #d42f3b; }
+.pace-link { color: #99c1f1; font-weight: 700; padding: 0 2px; }
+.pace-link:hover, .pace-link:focus { color: #c0d9f8; }
+.pace-snoozed { color: #ffbe6f; }

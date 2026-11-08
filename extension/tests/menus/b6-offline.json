@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "as_of": "2026-10-29T09:40:00",
+  "stale_after": "2026-10-29T10:25:00",
+  "state": "offline",
+  "colour": "grey",
+  "icon": "circle",
+  "text": "26.6 / 42.5 h · 09:40",
+  "verdict": "ON TRACK",
+  "logged_min": 1596,
+  "target_min": 2550,
+  "title": "On track",
+  "subtitle": "needs 8.0 h/day",
+  "note": null,
+  "lines": {
+    "lop_min": 2460,
+    "target_min": 2550,
+    "expected_min": 2700
+  },
+  "days": [
+    {
+      "date": "2026-10-26",
+      "dow": "Mon",
+      "min": 552,
+      "kind": "billed",
+      "text": "9.2"
+    },
+    {
+      "date": "2026-10-27",
+      "dow": "Tue",
+      "min": 504,
+      "kind": "billed",
+      "text": "8.4"
+    },
+    {
+      "date": "2026-10-28",
+      "dow": "Wed",
+      "min": 540,
+      "kind": "billed",
+      "text": "9.0"
+    },
+    {
+      "date": "2026-10-29",
+      "dow": "Thu",
+      "min": 0,
+      "kind": "today",
+      "text": "0.0"
+    },
+    {
+      "date": "2026-10-30",
+      "dow": "Fri",
+      "min": null,
+      "kind": "future",
+      "text": "–"
+    }
+  ],
+  "warning": null,
+  "warning_detail": null,
+  "action": null,
+  "last_week": null,
+  "month": {
+    "name": "October",
+    "working_days_left": 2,
+    "projects": [
+      {
+        "code": "TWE",
+        "name": "Tweelin",
+        "billed_min": 6540,
+        "target_min": 7980,
+        "gap_min": -390,
+        "need_per_day_min": null,
+        "text": "109.0 / 133 h · behind 6.5",
+        "need_text": null,
+        "short": null
+      },
+      {
+        "code": "RES",
+        "name": "R&D",
+        "billed_min": 1104,
+        "target_min": null,
+        "gap_min": null,
+        "need_per_day_min": null,
+        "text": "18.4 h",
+        "need_text": null,
+        "short": null
+      }
+    ]
+  },
+  "problem": {
+    "kind": "offline",
+    "message": "Can't reach DhiHRMS",
+    "retry_at": "2026-10-29T14:12:00"
+  },
+  "snoozed_until": null,
+  "pinestem_url": "https://pinestem.com/dashboard.html#/tasks"
+}
