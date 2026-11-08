@@ -61,11 +61,10 @@
 .pace-title-sm { font-weight: 700; }
 .pace-project { font-weight: 500; }
 .pace-sm { font-size: 12px; color: rgba(255, 255, 255, 0.72); }
-.pace-gap { margin-top: 4px; }
 .pace-flash { color: #ffbe6f; }
-.pace-bar { height: 18px; margin-top: 4px; }
-.pace-legend { spacing: 8px; }
-.pace-lop { font-size: 12px; font-weight: 700; color: #ff7b63; }
+.pace-bar { height: 14px; margin-top: 4px; }
+.pace-caption { spacing: 10px; }
+.pace-tone { font-weight: 700; }
 .pace-rule { height: 1px; background-color: rgba(255, 255, 255, 0.14); margin: 8px 0 4px 0; }
 
 .pace-days { spacing: 4px; margin-top: 4px; }

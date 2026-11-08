@@ -44,60 +44,88 @@ function rgb(hex) {
     return [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255);
 }
 
-// Rounded track, the fill, and the LOP / target / expected ticks (design: .bar with <b> ticks)
-function drawBar(area, bar) {
+const RED = rgb('#ff7b63'), GREEN = rgb('#57e389'), BLUE = rgb('#78aeed');
+const TRACK = 6;
+
+// Rounded rect as a path (corner radius r), no fill
+function roundRect(cr, x0, x1, y, h, r) {
+    cr.newSubPath();
+    cr.arc(x0 + r, y + r, r, Math.PI, 1.5 * Math.PI);
+    cr.arc(x1 - r, y + r, r, 1.5 * Math.PI, 2 * Math.PI);
+    cr.arc(x1 - r, y + h - r, r, 0, 0.5 * Math.PI);
+    cr.arc(x0 + r, y + h - r, r, 0.5 * Math.PI, Math.PI);
+    cr.closePath();
+}
+
+// The runway (direction D): 6 px track, lighter pay-safe band from the pay line to the end, the fill (neutral unless
+// red/green), and the pending day's expected share as a dashed ghost continuing the fill. No ticks.
+function drawRunway(area, r) {
     const cr = area.get_context();
     const [w, h] = area.get_surface_size();
-    const th = 8, y = (h - th) / 2;
-    const pill = (x0, x1, c, a) => {
-        const r = th / 2;
-        cr.setSourceRGBA(...c, a);
-        cr.newSubPath();
-        cr.arc(x0 + r, y + r, r, Math.PI / 2, 1.5 * Math.PI);
-        cr.arc(x1 - r, y + r, r, 1.5 * Math.PI, Math.PI / 2);
-        cr.closePath();
+    const y = (h - TRACK) / 2, rad = TRACK / 2;
+    roundRect(cr, 0, w, y, TRACK, rad);
+    cr.setSourceRGBA(1, 1, 1, 0.12);
+    cr.fillPreserve();
+    cr.save();
+    cr.clip();
+    const bx = Math.round(w * r.band);
+    if (bx < w) {
+        cr.setSourceRGBA(...(r.emphasis ? RED : [1, 1, 1]), r.emphasis ? 0.28 : 0.2);
+        cr.rectangle(bx, y, w - bx, TRACK);
         cr.fill();
-    };
-    pill(0, w, [1, 1, 1], 0.13);
-    const fillW = Math.max(th, w * bar.fill / 100);
-    if (bar.fill > 0)
-        pill(0, fillW, rgb(bar.colour ?? '#9a9996'), 1);
-    if (bar.project) {
-        cr.$dispose();
-        return;
+        cr.setSourceRGBA(...(r.emphasis ? RED : [1, 1, 1]), r.emphasis ? 1 : 0.55);
+        cr.rectangle(bx, y, 1, TRACK);
+        cr.fill();
     }
-    const tick = (pct, tw, th2, c, a) => {
-        const x = Math.min(w - tw, Math.max(0, w * pct / 100 - tw / 2));
-        cr.setSourceRGBA(...c, a);
-        cr.rectangle(x, (h - th2) / 2, tw, th2);
+    cr.restore();
+    if (r.ghost) {
+        const [g0, g1] = r.ghost.map(f => Math.round(w * f));
+        cr.setSourceRGBA(...BLUE, 1);
+        cr.setLineWidth(1);
+        cr.setDash([2.5, 2], 0);
+        roundRect(cr, g0 + 0.5, Math.max(g1 - 0.5, g0 + 1.5), y + 0.5, TRACK - 1, rad - 0.5);
+        cr.stroke();
+        cr.setDash([], 0);
+    }
+    if (r.fill > 0) {
+        const c = {red: [...RED, 1], green: [...GREEN, 1], grey: [1, 1, 1, 0.4]}[r.ink] ?? [1, 1, 1, 0.82];
+        cr.setSourceRGBA(...c);
+        roundRect(cr, 0, Math.min(w, Math.max(TRACK, w * r.fill)), y, TRACK, rad);
         cr.fill();
-    };
-    tick(bar.target, 2, 14, [1, 1, 1], 0.55);
-    tick(100, 2, 14, [1, 1, 1], 0.55);
-    if (bar.emphasis) {
-        tick(bar.lop, 7, 18, rgb('#ff7b63'), 0.25);
-        tick(bar.lop, 3, 18, rgb('#ff7b63'), 1);
-    } else {
-        tick(bar.lop, 2, 14, [1, 1, 1], 0.55);
     }
     cr.$dispose();
 }
 
-function bar(b) {
-    const area = new St.DrawingArea({x_expand: true, style_class: 'pace-bar'});
-    area.connect('repaint', a => drawBar(a, b));
+// A project's month progress: rounded track and a coloured fill
+function drawProject(area, p) {
+    const cr = area.get_context();
+    const [w, h] = area.get_surface_size();
+    const th = 8, y = (h - th) / 2;
+    const pill = (x1, c, a) => {
+        cr.setSourceRGBA(...c, a);
+        roundRect(cr, 0, x1, y, th, th / 2);
+        cr.fill();
+    };
+    pill(w, [1, 1, 1], 0.13);
+    if (p.fill > 0)
+        pill(Math.max(th, w * p.fill / 100), rgb(p.colour ?? '#9a9996'), 1);
+    cr.$dispose();
+}
+
+function bar(draw, data, styleClass) {
+    const area = new St.DrawingArea({x_expand: true, style_class: styleClass});
+    area.connect('repaint', a => draw(a, data));
     return area;
 }
 
-function legend(items, emphasis) {
-    const r = new St.BoxLayout({x_expand: true, style_class: 'pace-legend'});
-    const aligns = [Clutter.ActorAlign.START, Clutter.ActorAlign.CENTER, Clutter.ActorAlign.END];
-    items.forEach((t, i) => {
-        const l = label(t, i === 0 && emphasis ? 'pace-lop' : 'pace-sm');
-        l.x_expand = true;
-        l.x_align = aligns[i];
-        r.add_child(l);
-    });
+// Hours left, pay-line gap right (red/blue/green/amber when it matters)
+function caption(c, tone) {
+    const r = new St.BoxLayout({x_expand: true, style_class: 'pace-caption'});
+    r.add_child(label(c.hours, 'pace-sm'));
+    const t = label(c.text, tone ? 'pace-sm pace-tone' : 'pace-sm', {style: tone ? `color: ${tone};` : null});
+    t.x_expand = true;
+    t.x_align = Clutter.ActorAlign.END;
+    r.add_child(t);
     return r;
 }
 
@@ -170,13 +198,11 @@ export function buildMenu(menu, m, flash, act) {
             content.add_child(label(m.note, 'pace-sm', {wrap: true}));
     }
     if (m.bar) {
-        content.add_child(bar(m.bar));
-        content.add_child(legend(m.bar.legend, m.bar.emphasis));
+        content.add_child(bar(drawRunway, m.bar, 'pace-bar'));
+        content.add_child(caption(m.bar.caption, m.bar.tone));
     }
     if (m.days)
         content.add_child(days(m.days));
-    if (m.gap)
-        content.add_child(label(m.gap, 'pace-sm pace-gap', {wrap: true}));
     if (m.warning) {
         content.add_child(vbox('pace-warning', [
             label(`⚠ ${m.warning}`, 'pace-warning-title', {wrap: true}),
@@ -192,7 +218,7 @@ export function buildMenu(menu, m, flash, act) {
             content.add_child(row(label(p.name, 'pace-project'),
                 label(p.text, 'pace-sm', {style: p.colour ? `color: ${p.colour}; opacity: 1;` : null})));
             if (p.fill !== null)
-                content.add_child(bar({fill: p.fill, lop: 0, target: 0, colour: p.colour, emphasis: false, project: true}));
+                content.add_child(bar(drawProject, p, 'pace-bar'));
             if (p.needText)
                 content.add_child(label(p.needText, 'pace-sm'));
         }

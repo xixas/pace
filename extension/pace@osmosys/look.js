@@ -58,8 +58,62 @@ export function agoText(at, now) {
     return min < 60 ? `${min} min ago` : `${Math.floor(min / 60)} h ago`;
 }
 
-const hours = min => String(Math.round(min / 6) / 10).replace(/\.0$/, '');
 const hoursFixed = min => `${(Math.round(min / 6) / 10).toFixed(1)} h`;
+
+// An unbilled day is expected to add the daily minimum (8.5 h)
+export const DAY_SHARE_MIN = 510;
+const OPEN_DAYS = ['today', 'future', 'pending'];
+
+// The one line under the runway (same strings as the app's pace.ui.model.runway_caption)
+export function runwayCaption(s) {
+    const logged = s.logged_min ?? 0, days = s.days ?? [];
+    const lop = s.lines?.lop_min ?? 0, target = s.lines?.target_min ?? 0;
+    const pending = days.filter(d => d.kind === 'pending').map(d => d.dow);
+    const open = days.some(d => OPEN_DAYS.includes(d.kind));
+    if (logged >= target) {
+        const over = logged - target;
+        return `target met${over >= 6 ? ` · +${hoursFixed(over)}` : ''}`;
+    }
+    if (logged >= lop)
+        return `pay safe · ${hoursFixed(target - logged)} ${open ? 'to' : 'under'} target`;
+    if (!open)
+        return `${hoursFixed(lop - logged)} under the pay line`;
+    if (s.note?.startsWith('Last working day'))
+        return `pay needs ${hoursFixed(lop - logged)} · ${hoursFixed(target - logged)} to target`;
+    if (pending.length) {
+        const end = s.state === 'bill' ? `bill ${pending[0]} to finish` : `${pending[0]} not billed yet`;
+        return `${hoursFixed(lop - logged)} to pay line · ${end}`;
+    }
+    return `${hoursFixed(lop - logged)} to pay line · ${hoursFixed(target - logged)} to target`;
+}
+
+// Direction D, as fractions of the track (the target): fill, where the pay-safe band starts, the pending ghost.
+// ink: neutral unless pay is in play (red) or the week is done (green); grey when stale or offline. Overtime is capped at
+// the track end and printed in the caption, never drawn.
+export function runway(s, dim) {
+    const logged = s.logged_min ?? 0, days = s.days ?? [];
+    const lop = s.lines.lop_min ?? 0, target = s.lines.target_min ?? 0;
+    const track = Math.max(target, lop, 1);
+    const fill = Math.min(logged / track, 1);
+    const pending = days.filter(d => d.kind === 'pending').length;
+    const ink = dim || s.state === 'offline' ? 'grey'
+        : ['pay_risk', 'lop'].includes(s.state) ? 'red'
+            : s.state === 'done' ? 'green' : 'neutral';
+    // B3: the band edge is red, with the gap in the caption, on the last working day under the line
+    const lastDay = logged < lop && !!s.note?.startsWith('Last working day');
+    const emphasis = lastDay || (ink === 'red' && logged < lop);
+    const tone = ink === 'red' || lastDay ? HEX.red : s.state === 'bill' ? HEX.blue
+        : s.state === 'done' ? HEX.green : s.state === 'short' ? HEX.amber : null;
+    return {
+        fill,
+        band: lop / track,
+        ghost: pending && fill < 1 ? [fill, Math.min(1, fill + pending * DAY_SHARE_MIN / track)] : null,
+        ink,
+        emphasis,
+        tone: ink === 'grey' ? null : tone,
+        caption: {hours: s.logged_min == null ? '–' : hoursFixed(logged), text: runwayCaption(s)},
+    };
+}
 
 // Everything the dropdown draws, as plain data. Null/absent keys drop their block.
 export function menuModel(json, now) {
@@ -92,21 +146,8 @@ export function menuModel(json, now) {
         m.subtitle = s.subtitle ?? null;
         m.note = s.note ?? null;
     }
-    const ln = s.lines;
-    if (ln?.expected_min > 0) {
-        const pc = v => Math.min(100, 100 * v / ln.expected_min);
-        const logged = s.logged_min ?? 0;
-        // B3: the LOP tick is emphasised, with the gap spelled out, on the last working day under the line
-        const emphasis = logged < ln.lop_min && !!s.note?.startsWith('Last working day');
-        m.bar = {
-            fill: pc(logged), lop: pc(ln.lop_min), target: pc(ln.target_min),
-            colour: l.dim ? HEX.grey : HEX[s.colour] ?? HEX.green,
-            emphasis,
-            legend: [`LOP ${hours(ln.lop_min)}`, `target ${hours(ln.target_min)}`, `expected ${hours(ln.expected_min)}`],
-        };
-        if (emphasis)
-            m.gap = `${hoursFixed(ln.lop_min - logged)} to the loss-of-pay line · ${hoursFixed(ln.target_min - logged)} to target`;
-    }
+    if (s.lines?.expected_min > 0)
+        m.bar = runway(s, l.dim);
     if (s.days?.length)
         m.days = s.days.map(d => ({dow: d.dow, text: d.text, kind: d.kind}));
     m.warning = s.warning ?? null;
