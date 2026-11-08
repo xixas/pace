@@ -61,5 +61,24 @@ test('a newer status.json than this extension knows: says so instead of guessing
     eq([l.state, l.marker, l.colour, l.dim, l.text], ['skew', '○', 'grey', true, 'Update Pace'], 'look');
 });
 
+// Fixtures are stamped 2026-10-29 14:10 local; paced rewrites status.json every 5 min poll
+const AT = new Date(2026, 9, 29, 14, 10).getTime();
+const MIN = 60e3;
+
+test('fresh numbers keep their colour', () => {
+    const l = look(fixture('01-on-track'), AT + 14 * MIN);
+    eq([l.state, l.colour, l.dim, l.text], ['on_track', 'green', false, '30.1 / 42.5 h'], 'look');
+});
+
+test('numbers 3 polls old: paced has stopped, grey them with the time like OFFLINE', () => {
+    const l = look(fixture('05-pay-risk'), AT + 16 * MIN);
+    eq([l.state, l.marker, l.colour, l.dim, l.text], ['stale', '○', 'grey', true, '27.1 / 42.5 h · pay risk · 14:10'], 'look');
+});
+
+test('OFFLINE already carries its time and SIGNED OUT has none: neither turns stale', () => {
+    eq(look(fixture('12-offline'), AT + 600 * MIN).text, '26.6 / 42.5 h · 09:40', 'offline');
+    eq(look(fixture('13-signed-out'), AT + 600 * MIN).state, 'signed_out', 'signed out');
+});
+
 if (failed)
     System.exit(1);

@@ -5,15 +5,18 @@ Run inside its own D-Bus so nothing touches the real session, settings or status
 
 The shell gets temp XDG dirs and keyfile GSettings with only pace@osmosys enabled. Each fixture is put in
 place the way paced does (write + rename), then the right end of the top bar is captured to <out>/<name>.png.
+Fixtures are restamped to now so they render fresh; 14-stale is 05-pay-risk left at its old time.
 """
 
 import argparse
+import json
 import os
 import shutil
 import subprocess
 import sys
 import tempfile
 import time
+from datetime import datetime
 from pathlib import Path
 
 import gi
@@ -105,12 +108,16 @@ def main():
         Gio.bus_own_name_on_connection(bus, ALLOWED_NAME, Gio.BusNameOwnerFlags.NONE, None, None)
         wait_for_shell(bus, shell, root / "probe.png")
         time.sleep(3)  # startup animation into the desktop
-        for f in sorted(a.fixtures.glob("*.json")):
+        shots = [(f.stem, json.loads(f.read_text()), True) for f in sorted(a.fixtures.glob("*.json"))]
+        shots.append(("14-stale", json.loads((a.fixtures / "05-pay-risk.json").read_text()), False))
+        for name, s, fresh in shots:
+            if fresh and s["as_of"] and s["state"] != "offline":  # fixtures are dated: restamp, or they all go stale
+                s["as_of"] = datetime.now().isoformat(timespec="seconds")
             tmp = state / ".status.json.tmp"
-            shutil.copyfile(f, tmp)
+            tmp.write_text(json.dumps(s, ensure_ascii=False))
             tmp.replace(state / "status.json")
             time.sleep(1.0)
-            png = a.out / f"{f.stem}.png"
+            png = a.out / f"{name}.png"
             ok, _ = call(bus, "ScreenshotArea", GLib.Variant("(iiiibs)", (W - STRIP, 0, STRIP, 32, False, str(png))), "(bs)")
             print(("ok   " if ok else "FAIL ") + png.name)
     finally:

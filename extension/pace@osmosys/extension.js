@@ -1,5 +1,5 @@
 // Pace: this week's billed hours in the GNOME top bar. Draws whatever paced last wrote to
-// $XDG_STATE_HOME/pace/status.json and redraws when the file changes; no network, no timers.
+// $XDG_STATE_HOME/pace/status.json and redraws when the file changes, plus once a minute to catch a stopped paced.
 
 import GObject from 'gi://GObject';
 import GLib from 'gi://GLib';
@@ -72,6 +72,11 @@ class PaceIndicator extends PanelMenu.Button {
                 this._read();
         });
         this._read();
+        // Re-judge each minute: if paced stops, the file stops changing and only the clock can tell
+        this._tick = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 60, () => {
+            this._render(look(this._json ?? null, Date.now()));
+            return GLib.SOURCE_CONTINUE;
+        });
     }
 
     async _read() {
@@ -83,7 +88,8 @@ class PaceIndicator extends PanelMenu.Button {
             if (e.matches?.(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
                 return;
         }
-        this._render(look(json));
+        this._json = json;
+        this._render(look(json, Date.now()));
     }
 
     _render(l) {
@@ -99,9 +105,10 @@ class PaceIndicator extends PanelMenu.Button {
             none: 'Waiting for paced',
             skew: 'This panel is older than Pace: update the extension',
             signed_out: 'Your DhiHRMS session expired',
+            stale: 'paced has stopped updating: these numbers are old',
         }[l.state] ?? l.verdict ?? l.text;
         const at = l.asOf ? GLib.DateTime.new_from_iso8601(l.asOf, GLib.TimeZone.new_local()) : null;
-        this._updated.label.text = at ? `${l.state === 'offline' ? 'Offline · last updated' : 'Updated'} ${at.format('%a %H:%M')}` : '';
+        this._updated.label.text = at ? `${['offline', 'stale'].includes(l.state) ? 'Last updated' : 'Updated'} ${at.format('%a %H:%M')}` : '';
         this._updated.visible = at !== null;
         this._signIn.visible = l.state === 'signed_out';
     }
@@ -117,6 +124,7 @@ class PaceIndicator extends PanelMenu.Button {
     destroy() {
         this._cancellable.cancel();
         this._monitor.cancel();
+        GLib.source_remove(this._tick);
         super.destroy();
     }
 });
