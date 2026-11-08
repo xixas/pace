@@ -86,6 +86,14 @@ def test_monday_morning_banner_for_last_fridays_unbilled_hours_until_noon():
     assert s["last_week"] is None
 
 
+def test_last_week_summary_is_what_hr_will_count_once_the_friday_grace_is_over():
+    from pace.poll import last_week_summary
+
+    api = FakeApi(billed(*(LAST_MON + timedelta(i) for i in range(4))))  # Mon-Thu billed, Fri not
+    _, state = poll(api, {}, datetime(2026, 11, 2, 12, 30))
+    assert last_week_summary(state, datetime(2026, 11, 2, 12, 30)) == {"logged_min": 2040, "target_min": 2550, "lop_days": 1}
+
+
 def test_the_month_is_fetched_from_its_first_day_when_that_is_before_last_monday():
     api = FakeApi([])
     poll(api, {}, datetime(2026, 11, 20, 9, 0))  # Fri 20 Nov: last Monday is 9 Nov, the month starts 1 Nov

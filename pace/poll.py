@@ -67,6 +67,16 @@ def verdict_status(
     return status(v, at, problem, ctx)
 
 
+def last_week_summary(state: dict, at: datetime) -> dict | None:
+    """How last week ended, for the Monday nudge; None when it had no working days."""
+    monday = at.date() - timedelta(at.weekday() + 7)
+    work = work_days(state["days"], monday)
+    if not sum(work):
+        return None
+    v = week_verdict(work, entries(state["ledger"], monday), 7 + at.weekday(), at.hour + at.minute / 60)
+    return {"logged_min": v.logged, "target_min": v.target, "lop_days": lop_count(v.logged, sum(work))}
+
+
 def last_week_banner(state: dict, monday: date, day: int, hour: float) -> dict | None:
     """B12: last week's days still inside their grace, and what the week comes to if they stay unbilled."""
     work = work_days(state["days"], monday)

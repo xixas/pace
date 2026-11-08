@@ -1,8 +1,9 @@
-"""Entry points: `pace sign-in | status` and `paced` (the daemon). Config: $XDG_CONFIG_HOME/pace/config.json."""
+"""Entry points: `pace` (sign-in, status; the rest is the GTK app) and `paced` (the daemon). Config: $XDG_CONFIG_HOME/pace/config.json."""
 
 from __future__ import annotations
 
 import json
+import os
 import signal
 import sys
 
@@ -16,7 +17,6 @@ DEFAULTS = {
     "client_id": "8c8d68c3-01e3-4e4b-aeab-975858570bf9",
 }
 REQUIRED = ("base_url",)
-POLL_SECONDS = 300
 
 
 class ConfigError(Exception):
@@ -48,45 +48,118 @@ def client(cfg):
     return Client(cfg.base_url, session_store(), urllib_transport)
 
 
+def sign_in() -> None:
+    """The browser sign-in. Raises on failure."""
+    import webbrowser
+
+    from pace.signin import sign_in_flow
+
+    cfg = load_config()
+    sign_in_flow(cfg, client(cfg), open_uri=webbrowser.open)
+
+
 def main(argv=None) -> int:
     args = sys.argv[1:] if argv is None else argv
     if args == ["status"]:
         print(json.dumps(read_json(state_dir() / "status.json"), indent=1))
         return 0
     if args == ["sign-in"]:
-        import webbrowser
-
-        from pace.signin import sign_in_flow
-
         try:
-            cfg = load_config()
-            sign_in_flow(cfg, client(cfg), open_uri=webbrowser.open)
+            sign_in()
         except Exception as e:
             print(f"pace: sign-in failed: {e}", file=sys.stderr)
             return 1
         print("Signed in.")
         return 0
-    print("usage: pace sign-in | status", file=sys.stderr)
-    return 2
+    return open_app(args)
+
+
+def open_app(args: list[str]) -> int:
+    """Everything else is the GTK app, imported only now so `pace status` never loads GTK."""
+    try:
+        from pace.ui import main as ui_main
+    except ModuleNotFoundError as e:
+        if e.name != "pace.ui":
+            raise
+        print("pace: the Pace window (pace.ui) isn't installed. Try `pace status` or `pace sign-in`.", file=sys.stderr)
+        return 2
+    return ui_main(args)
+
+
+def tray_wanted(desktop: str, watcher_present: bool) -> bool:
+    """GNOME shows the panel extension instead; every other desktop with a StatusNotifier watcher gets the tray."""
+    return "GNOME" not in desktop.upper() and watcher_present
+
+
+def start_tray(bus, daemon):
+    """pace.tray.Tray when this desktop wants one and the module exists; None otherwise."""
+    from gi.repository import Gio, GLib
+
+    watcher = bus.call_sync(
+        "org.freedesktop.DBus",
+        "/org/freedesktop/DBus",
+        "org.freedesktop.DBus",
+        "NameHasOwner",
+        GLib.Variant("(s)", ("org.kde.StatusNotifierWatcher",)),
+        GLib.VariantType("(b)"),
+        Gio.DBusCallFlags.NONE,
+        -1,
+        None,
+    ).unpack()[0]
+    if not tray_wanted(os.environ.get("XDG_CURRENT_DESKTOP", ""), watcher):
+        return None
+    try:
+        from pace.tray import Tray
+    except ImportError:
+        return None
+    tray = Tray(bus, daemon.action)
+    daemon.listeners.append(tray.update)
+    if daemon.status:
+        tray.update(daemon.status)
+    return tray
 
 
 def paced(argv=None) -> int:
-    """Paint the saved week, poll now, then every POLL_SECONDS on a GLib main loop. --once polls once and exits."""
+    """Paint the saved week, poll now, then on the settings' interval on a GLib main loop. --once polls once and exits."""
     from pace.daemon import Daemon
 
     try:
-        daemon = Daemon(client(load_config()))
+        daemon = Daemon(client(load_config()), sign_in=sign_in)
     except ConfigError as e:
         print(f"paced: {e}", file=sys.stderr)
         return 1
+    if "--once" in (sys.argv[1:] if argv is None else argv):
+        daemon.boot()
+        daemon.tick()
+        return 0
+    from gi.repository import Gio, GLib
+
+    from pace.notify import Notifier
+    from pace.service import Service
+
+    bus = Gio.bus_get_sync(Gio.BusType.SESSION, None)
+    loop = GLib.MainLoop()
+    daemon.on_quit = loop.quit
+    daemon.on_signed_in = lambda: GLib.idle_add(lambda: daemon.tick() or False)
+    daemon.send = Notifier(bus, daemon.action).send
+    service = Service(bus, daemon)
+    daemon.listeners.append(service.status_changed)
+    tray = start_tray(bus, daemon)  # noqa: F841  (kept alive for the loop's lifetime)
+    timer = {}
+
+    def schedule() -> None:
+        if timer:
+            GLib.source_remove(timer["id"])
+        timer["id"] = GLib.timeout_add_seconds(daemon.settings.data["refresh_minutes"] * 60, lambda: daemon.tick() or True)
+
+    def settings_changed() -> None:
+        daemon.render()
+        schedule()
+
+    monitor = daemon.settings.watch(settings_changed)  # noqa: F841
     daemon.boot()
     daemon.tick()
-    if "--once" in (sys.argv[1:] if argv is None else argv):
-        return 0
-    from gi.repository import GLib
-
-    loop = GLib.MainLoop()
-    GLib.timeout_add_seconds(POLL_SECONDS, lambda: daemon.tick() or True)
+    schedule()
     GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGTERM, lambda: loop.quit() or False)
     loop.run()
     return 0

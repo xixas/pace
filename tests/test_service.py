@@ -34,8 +34,10 @@ def test_every_method_reaches_the_daemon(bus_address):  # noqa: F811
         ("ShowWidget", "show_widget"),
         ("Quit", "quit"),
     ]:
-        client.call(NAME, PATH, IFACE, method, None, None, Gio.DBusCallFlags.NONE, 2000, None, lambda c, r: done.append(c.call_finish(r)))
-        assert pump(lambda: len(done) > 0 and expected in daemon.calls), method
+        client.call(
+            NAME, PATH, IFACE, method, None, None, Gio.DBusCallFlags.NONE, 2000, None, lambda c, r: done.append(c.call_finish(r))
+        )
+        assert pump(lambda e=expected: len(done) > 0 and e in daemon.calls), method
         done.clear()
     assert daemon.calls == ["refresh", "snooze", "unsnooze", "sign_in", "show_widget", "quit"]
 
@@ -44,7 +46,9 @@ def test_status_changed_signal_carries_the_status_json(bus_address):  # noqa: F8
     svc = Service(connect(bus_address), Daemon())
     client = connect(bus_address)
     got = []
-    client.signal_subscribe(NAME, IFACE, "StatusChanged", PATH, None, Gio.DBusSignalFlags.NONE, lambda *a: got.append(a[-1].unpack()[0]))
+    client.signal_subscribe(
+        NAME, IFACE, "StatusChanged", PATH, None, Gio.DBusSignalFlags.NONE, lambda *a: got.append(a[-1].unpack()[0])
+    )
     assert pump(lambda: svc.owned)
     svc.status_changed({"state": "on_track", "text": "30.1 / 42.5 h"})
     assert pump(lambda: got)
