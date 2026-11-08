@@ -57,6 +57,12 @@ def icon_row(icon: str, title: str, subtitle: str, colour_class: str) -> Adw.Pre
     return group
 
 
+def bar_caption(b: dict) -> str:
+    """Pay line and target as words under the week line, in place of tick marks on it."""
+    parts = [f"{name} {b[key] / 60:g} h" for key, name in (("lop", "Pay line"), ("target", "Target")) if b.get(key)]
+    return " · ".join(parts)
+
+
 class Dashboard(Adw.BreakpointBin):
     def __init__(self, services, window, now=datetime.now):
         super().__init__(width_request=360, height_request=300)
@@ -266,6 +272,7 @@ class Dashboard(Adw.BreakpointBin):
                 vertical=False,
             ),
             bar,
+            label(bar_caption(view["bar"]), "caption", "dim-label", "numeric", xalign=0),
             spacing=6,
             margin_top=18,
         )

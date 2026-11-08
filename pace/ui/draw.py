@@ -77,54 +77,30 @@ def _round_rect(cr, x, y, w, h, r):
 
 
 class WeekBar(Gtk.DrawingArea):
-    """Progress bar with ticks for the pay line, the target and the expected total, each labelled under its own tick."""
+    """A thin, quiet progress line: hours over the week's scale. No ticks; the pay line and target are a caption below."""
 
-    BAR, TOP = 12, 6
+    BAR = 6
 
     def __init__(self):
-        super().__init__(content_height=42, hexpand=True)
+        super().__init__(content_height=self.BAR, hexpand=True, valign=Gtk.Align.CENTER)
         self.bar = None
         self.set_draw_func(self._draw)
 
     def set_data(self, bar: dict, colour: str):
         self.bar = bar
-        _set_ink(self, colour)
         self.queue_draw()
 
     def _draw(self, area, cr, w, h):
         if not self.bar:
             return
-        b, top, bar_h = self.bar, self.TOP, self.BAR
-        scale = w / b["max"]
-        _round_rect(cr, 0, top, w, bar_h, bar_h / 2)
+        b, bar_h = self.bar, self.BAR
+        _round_rect(cr, 0, 0, w, bar_h, bar_h / 2)
         cr.set_source_rgba(*_neutral(area, 0.10))
         cr.fill()
-        fill = min(max(bar_h, b["logged"] * scale), w)
-        _round_rect(cr, 0, top, fill, bar_h, bar_h / 2)
-        cr.set_source_rgba(*_rgba(area))
+        fill = min(max(bar_h, b["logged"] * w / b["max"]), w)
+        _round_rect(cr, 0, 0, fill, bar_h, bar_h / 2)
+        cr.set_source_rgba(*_neutral(area, 0.55))
         cr.fill()
-        ticks = [(b[k], n) for k, n in (("lop", "pay line"), ("target", "target"), ("expected", "expected")) if b[k]]
-        ticks.sort()
-        cr.set_line_width(2)
-        for minutes, _ in ticks:
-            x = round(min(minutes * scale, w - 1))
-            cr.set_source_rgba(*_neutral(area, 0.7))
-            cr.move_to(x, top - 3)
-            cr.line_to(x, top + bar_h + 3)
-            cr.stroke()
-        # labels are centred under their tick, then pushed apart (and inside the bar) so none overlap; order stays tick order
-        cr.set_source_rgba(*_neutral(area, 0.6))
-        gap = 10
-        labels = [(f"{name} {minutes / 60:g}", min(minutes * scale, w - 1)) for minutes, name in ticks]
-        widths = [_text_width(area, t) for t, _ in labels]
-        lefts = [x - tw / 2 for (_, x), tw in zip(labels, widths, strict=True)]
-        for i in range(len(lefts)):
-            lefts[i] = max(lefts[i], 0 if i == 0 else lefts[i - 1] + widths[i - 1] + gap)
-        for i in reversed(range(len(lefts))):
-            limit = w if i == len(lefts) - 1 else lefts[i + 1] - gap
-            lefts[i] = max(0, min(lefts[i], limit - widths[i]))
-        for (text, _), left in zip(labels, lefts, strict=True):
-            _text(area, cr, text, left, top + bar_h + 7)
 
 
 class SplitBar(Gtk.DrawingArea):
