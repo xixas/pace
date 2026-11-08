@@ -84,17 +84,25 @@ def test_network_error_or_server_error_is_offline(reply):
         Client(BASE, Store({"access": "A1", "refresh": "R1"}), transport).my_hours(date(2026, 10, 26), date(2026, 11, 8))
 
 
-def test_sign_in_exchanges_the_entra_token_for_an_hrms_session():
+def test_fresh_adds_the_cache_bypass_flag():
+    t = Transport({("GET", "/billing-report/my-hours/"): [(200, {"data": []})]})
+    Client(BASE, Store({"access": "A1", "refresh": "R1"}), t).my_hours(date(2026, 10, 26), date(2026, 11, 8), fresh=True)
+    assert t.requests[0][1].endswith("&fresh=1")
+
+
+def test_sign_in_exchanges_the_entra_token_for_an_hrms_session(tmp_path, monkeypatch):
+    monkeypatch.setenv("XDG_STATE_HOME", str(tmp_path))
     store = Store()
     login = {
         "success": True,
         "message": "Login successful",
-        "data": {"access": "A1", "refresh": "R1", "user": {}, "role_info": {}},
+        "data": {"access": "A1", "refresh": "R1", "user": {"first_name": "Vikas", "email": "v@o.co"}, "role_info": {}},
     }
     t = Transport({("POST", "/auth/microsoft/"): [(200, login)]})
     Client(BASE, store, t).sign_in("entra-jwt")
     assert t.requests == [("POST", f"{BASE}/auth/microsoft/", None, {"token": "entra-jwt"})]
     assert store.tokens == {"access": "A1", "refresh": "R1"}
+    assert (tmp_path / "pace" / "profile.json").exists()
 
 
 def test_refused_sign_in_carries_the_servers_message():
