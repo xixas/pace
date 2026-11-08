@@ -111,7 +111,8 @@ class Daemon:
         self.state.pop("signed_out_sent", None)
         today = now.date().isoformat()
         sent = {today: self.state.get("sent", {}).get(today, [])}
-        for n in due(s, self.settings.data, now, sent, last_week_summary(self.state, now)):
+        summary = last_week_summary(self.state, now) if self.state.get("days") else None  # no data yet on a first offline start
+        for n in due(s, self.settings.data, now, sent, summary):
             sent[today].append(n.key)
             self.send(n)
         self.state["sent"] = sent

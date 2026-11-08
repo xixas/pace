@@ -106,6 +106,12 @@ def test_snoozed_and_offline_polls_send_nothing():
     assert sent == []
 
 
+def test_a_first_start_with_no_network_shows_offline_and_does_not_crash():
+    sent = []
+    Daemon(DownApi(Offline("no route")), Clock(datetime(2026, 11, 3, 9, 0)), send=sent.append).tick()
+    assert read_json(state_dir() / "status.json")["state"] == "offline" and sent == []
+
+
 def test_signed_out_sends_one_notification_until_the_next_sign_in():
     sent = []
     clock = Clock(datetime(2026, 11, 3, 9, 40))
