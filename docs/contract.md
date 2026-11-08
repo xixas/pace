@@ -144,7 +144,7 @@ Prorate: `eff_target = monthly × avail_days ÷ month_working_days`; `need/day =
 # pace/tray.py
 class Tray:
     def __init__(self, bus: Gio.DBusConnection, on_action: Callable[[str], None]): ...
-    def update(self, status: dict) -> None: ...   # called after every status.json write
+    def update(self, status: dict) -> None: ...  # called after every status.json write
     def close(self) -> None: ...
 ```
 

@@ -72,9 +72,9 @@ test('fresh numbers keep their colour', () => {
     eq([l.state, l.colour, l.dim, l.text], ['on_track', 'green', false, '30.1 / 42.5 h'], 'look');
 });
 
-test('numbers 3 polls old: paced has stopped, grey them with the time like OFFLINE', () => {
-    const l = look(fixture('05-pay-risk'), AT + 16 * MIN);
-    eq([l.state, l.marker, l.colour, l.dim, l.text], ['stale', '○', 'grey', true, '27.1 / 42.5 h · pay risk · 14:10'], 'look');
+test('past stale_after (3 polls): paced has stopped, grey them with the time like OFFLINE', () => {
+    const l = look(fixture('05-pay-risk'), new Date(2026, 9, 30, 11, 46).getTime());
+    eq([l.state, l.marker, l.colour, l.dim, l.text], ['stale', '○', 'grey', true, '27.1 / 42.5 h · pay risk · 11:00'], 'look');
 });
 
 test('OFFLINE already carries its time and SIGNED OUT has none: neither turns stale', () => {

@@ -88,7 +88,7 @@ def contact_sheet(pngs, dest):
     w, h = ims[0].size
     sheet = Image.new("RGB", (cols * w, rows * (h + 18)), (40, 40, 40))
     d = ImageDraw.Draw(sheet)
-    for i, (p, im) in enumerate(zip(pngs, ims)):
+    for i, (p, im) in enumerate(zip(pngs, ims, strict=True)):
         x, y = (i % cols) * w, (i // cols) * (h + 18)
         d.text((x + 6, y + 3), p.stem, fill=(255, 255, 255))
         sheet.paste(im, (x, y + 18))
@@ -166,7 +166,9 @@ def main():
             (state / "menu-cmd").write_text("open")
             time.sleep(1.0)
             png = a.out / f"menu-{f.stem}.png"
-            ok, _ = call(bus, "ScreenshotArea", GLib.Variant("(iiiibs)", (W - MENU_W, 0, MENU_W, MENU_H, False, str(png))), "(bs)")
+            ok, _ = call(
+                bus, "ScreenshotArea", GLib.Variant("(iiiibs)", (W - MENU_W, 0, MENU_W, MENU_H, False, str(png))), "(bs)"
+            )
             print(("ok   " if ok else "FAIL ") + png.name)
             menu_pngs.append(png)
             (state / "menu-cmd").write_text("close")
