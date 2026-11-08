@@ -28,7 +28,8 @@ Added keys (all may be `null` when there is no data, e.g. signed out):
   "title": "On track",
   "subtitle": "needs 8.0 h/day",
   "note": "4.5 h left today",
-  "lines": {"lop_min": 2460, "target_min": 2550, "expected_min": 2700},
+  "lines": {"lop_min": 2460, "target_min": 2550, "expected_min": 2700, "emphasis": "lop"},
+  "gap_text": "1.0 h to the loss-of-pay line · 2.5 h to target",
   "days": [
     {"date": "2026-10-26", "dow": "Mon", "min": 552, "kind": "billed", "text": "9.2"},
     {"date": "2026-10-29", "dow": "Thu", "min": 210, "kind": "today", "text": "3.5"},
@@ -54,6 +55,8 @@ Added keys (all may be `null` when there is no data, e.g. signed out):
 }
 ```
 
+- `lines.emphasis`: `"lop"` when the LOP tick should be emphasised (B3, B4), else `null`. `gap_text`: the B3
+  line under the day chips, `null` when not shown.
 - `stale_after` = `as_of` + 3 × refresh interval. A frontend shows the stale look (grey, time appended)
   once now > `stale_after`. Absent → fall back to 15 min.
 - `days[].kind` ∈ billed, today, future, pending (not billed yet; `text` "not yet"), short (a past
