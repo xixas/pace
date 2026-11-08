@@ -125,7 +125,8 @@ class MainWindow(Adw.ApplicationWindow):
         share_dialog(self, (self.services.profile() or {}).get("name") or "Me")
 
     def show_preferences(self) -> None:
-        Preferences(self, self.services).present(self)
+        self.prefs = Preferences(self, self.services)
+        self.prefs.present(self)
 
     def show_topbar(self) -> None:
         self.onboarding.after = "topbar"

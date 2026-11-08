@@ -123,3 +123,9 @@ def test_widget_view_from_status_and_without():
     assert v["project"]["title"] == "Tweelin −6.5 h"
     out = model.widget_view({"state": "signed_out", "text": "Sign in again", "colour": "amber"})
     assert out["title"] == "Pace" and out["lines"] == ["Sign in again"] and out["project"] is None
+
+
+def test_ui_entry_point_is_importable_without_loading_gtk():
+    import pace.ui
+
+    assert callable(pace.ui.main)

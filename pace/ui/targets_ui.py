@@ -74,14 +74,14 @@ class TargetsPage(Adw.NavigationPage):
         targets, settings = config.load_targets(), config.load_settings()
         page = Adw.PreferencesPage()
         daily = Adw.PreferencesGroup(title="Daily")
-        minimum = Adw.ActionRow(title="Minimum average", subtitle="Weekly average must stay above this")
+        minimum = Adw.ActionRow(use_markup=False, title="Minimum average", subtitle="Weekly average must stay above this")
         minimum.add_suffix(Gtk.Image(icon_name="changes-prevent-symbolic", valign=Gtk.Align.CENTER))
         minimum.add_suffix(_tag("set by org"))
         minimum.add_suffix(label(f"{targets['dailyMinimum']:g} h", "heading", valign=Gtk.Align.CENTER))
-        expected = Adw.ActionRow(title="Expected", subtitle="What a good day looks like")
+        expected = Adw.ActionRow(use_markup=False, title="Expected", subtitle="What a good day looks like")
         expected.add_suffix(_spin(settings["expected_daily_h"], 5, 14, 0.5, self._set_expected))
         expected.add_suffix(label("h", "dim-label", valign=Gtk.Align.CENTER))
-        lop = Adw.ActionRow(title="Loss-of-pay line", subtitle="9 h = a day, 5 h leftover = +1")
+        lop = Adw.ActionRow(use_markup=False, title="Loss-of-pay line", subtitle="9 h = a day, 5 h leftover = +1")
         lop.add_suffix(_tag("read-only"))
         lop.add_suffix(label("41 h / 5-day week", "heading", valign=Gtk.Align.CENTER))
         for r in (minimum, expected, lop):
@@ -92,11 +92,13 @@ class TargetsPage(Adw.NavigationPage):
         for row in project_rows(self.window.status(), targets):
             monthly.add(self._project_row(row, targets))
             if row["source"] == "lead" and row.get("monthly_h") is not None:
-                pr = Adw.ActionRow(title="Prorate for leave & holidays", subtitle=f"Lead's choice for {row['name']}")
+                pr = Adw.ActionRow(
+                    use_markup=False, title="Prorate for leave & holidays", subtitle=f"Lead's choice for {row['name']}"
+                )
                 pr.add_suffix(_tag("set by lead"))
                 pr.add_suffix(Gtk.Switch(active=bool(row.get("prorate")), sensitive=False, valign=Gtk.Align.CENTER))
                 monthly.add(pr)
-        add = Adw.ActionRow(title="Add personal target", activatable=True)
+        add = Adw.ActionRow(use_markup=False, title="Add personal target", activatable=True)
         add.add_prefix(Gtk.Image(icon_name="list-add-symbolic"))
         add.connect("activated", lambda *_: self._add_dialog())
         monthly.add(add)
@@ -114,7 +116,7 @@ class TargetsPage(Adw.NavigationPage):
         self.holder.set_child(page)
 
     def _project_row(self, row: dict, targets: dict) -> Adw.ActionRow:
-        ar = Adw.ActionRow(title=row["name"], subtitle=row["code"])
+        ar = Adw.ActionRow(use_markup=False, title=row["name"], subtitle=row["code"])
         if row.get("monthly_h") is None:
             ar.add_suffix(_tag("no target · tracked"))
         elif row["source"] == "lead":
@@ -235,14 +237,18 @@ def share_dialog(window, sender: str) -> None:
     if not rows:
         return window.alert("Nothing to share yet", "Pace doesn't know any project yet. Add a personal target first.")
     dialog = Adw.Dialog(title="Share targets", content_width=460)
-    project = Adw.ComboRow(title="Project", model=Gtk.StringList.new([f"{r['name']} · {r['code']}" for r in rows]))
+    project = Adw.ComboRow(
+        use_markup=False, title="Project", model=Gtk.StringList.new([f"{r['name']} · {r['code']}" for r in rows])
+    )
     first = rows[0].get("monthly_h") or 0
     monthly = Adw.SpinRow(
+        use_markup=False,
         title="Monthly target",
         subtitle="billable hours",
         adjustment=Gtk.Adjustment(value=first, lower=0, upper=400, step_increment=1),
     )
     prorate = Adw.SwitchRow(
+        use_markup=False,
         title="Prorate for leave and holidays",
         subtitle="Yes: the target shrinks for each leave day or holiday",
         active=bool(rows[0].get("prorate")),

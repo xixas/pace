@@ -51,10 +51,10 @@ window.pace-widget { background: transparent; }
 .pace-widget-card .big { font-size: 24px; font-weight: 800; font-feature-settings: "tnum"; }
 .pace-widget-card .title { font-size: 13px; font-weight: 800; }
 .pace-dot { border-radius: 99px; min-width: 10px; min-height: 10px; }
-.pace-dot.green { background: @success_color; }
-.pace-dot.amber { background: @warning_color; }
-.pace-dot.red { background: @error_color; }
-.pace-dot.blue { background: @accent_color; }
-.pace-dot.grey { background: alpha(currentColor, .45); }
+.pace-dot.green { background-color: #2ec27e; }
+.pace-dot.amber { background-color: #e5a50a; }
+.pace-dot.red { background-color: #e01b24; }
+.pace-dot.blue { background-color: #3584e4; }
+.pace-dot.grey { background-color: alpha(currentColor, .45); }
 .pace-widget-sep { background: alpha(currentColor, .12); min-height: 1px; margin: 6px 0; }
 """

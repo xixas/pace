@@ -174,11 +174,14 @@ class Onboarding(Adw.Bin):
     def _keyring(self) -> Adw.StatusPage:
         file_row, none_row = (
             Adw.ActionRow(
+                use_markup=False,
                 title="Store in a private file",
                 subtitle="~/.local/share/pace, mode 600 — readable only by your user, not encrypted (like rclone.conf)",
             ),
             Adw.ActionRow(
-                title="Sign in every login", subtitle="Nothing is stored; you sign in each time you log in to the desktop"
+                use_markup=False,
+                title="Sign in every login",
+                subtitle="Nothing is stored; you sign in each time you log in to the desktop",
             ),
         )
         a, b = Gtk.CheckButton(active=True), Gtk.CheckButton(group=None)
@@ -239,7 +242,7 @@ class Onboarding(Adw.Bin):
     def _draw_summary(self, s: dict) -> None:
         group = Adw.PreferencesGroup()
         for title, value in s["rows"]:
-            row = Adw.ActionRow(title=title)
+            row = Adw.ActionRow(use_markup=False, title=title)
             row.add_prefix(
                 Gtk.Image(icon_name="object-select-symbolic" if not value or value == "linked" else "x-office-calendar-symbolic")
             )

@@ -89,11 +89,11 @@ class Preferences(Adw.PreferencesDialog):
         page, s = Adw.PreferencesPage(), self.settings
         notify = Adw.PreferencesGroup(title="Notify me when")
         for key, title, sub in NUDGES:
-            row = Adw.SwitchRow(title=title, subtitle=sub, active=s["notify"][key]["on"])
+            row = Adw.SwitchRow(use_markup=False, title=title, subtitle=sub, active=s["notify"][key]["on"])
             row.connect("notify::active", lambda r, k=key: self._set_nudge(k, r.get_active()))
             row.add_suffix(_time_button(s, key, self._set_time))
             notify.add(row)
-        expired = Adw.ActionRow(title="Session expired", subtitle="Cannot be turned off")
+        expired = Adw.ActionRow(use_markup=False, title="Session expired", subtitle="Cannot be turned off")
         expired.add_suffix(Gtk.Image(icon_name="changes-prevent-symbolic"))
         notify.add(expired)
         page.add(notify)
@@ -102,14 +102,16 @@ class Preferences(Adw.PreferencesDialog):
         labels = self.window.status().get("labels") or {}
         texts = [(key, labels.get(key) or example) for key, example in PANEL_TEXT]
         panel = Adw.ComboRow(
+            use_markup=False,
             title="Panel text",
             model=Gtk.StringList.new([t for _, t in texts]),
             selected=[k for k, _ in texts].index(s["panel_text"]),
         )
         panel.connect("notify::selected", lambda r, *_: self._set("panel_text", texts[r.get_selected()][0]))
-        widget = Adw.SwitchRow(title="Show mini widget at login", active=s["widget_at_login"])
+        widget = Adw.SwitchRow(use_markup=False, title="Show mini widget at login", active=s["widget_at_login"])
         widget.connect("notify::active", lambda r, *_: self._set("widget_at_login", r.get_active()))
         refresh = Adw.ComboRow(
+            use_markup=False,
             title="Refresh every",
             model=Gtk.StringList.new([f"{m} min" for m in REFRESH]),
             selected=REFRESH.index(s["refresh_minutes"]) if s["refresh_minutes"] in REFRESH else 2,
@@ -120,14 +122,18 @@ class Preferences(Adw.PreferencesDialog):
         page.add(display)
 
         startup = Adw.PreferencesGroup(title="Startup")
-        login = Adw.SwitchRow(title="Start Pace at login", subtitle="Adds an autostart entry", active=s["start_at_login"])
+        login = Adw.SwitchRow(
+            use_markup=False, title="Start Pace at login", subtitle="Adds an autostart entry", active=s["start_at_login"]
+        )
         login.connect("notify::active", lambda r, *_: self._set("start_at_login", r.get_active()))
         startup.add(login)
         page.add(startup)
 
         account = Adw.PreferencesGroup(title="Account")
         profile = self.services.profile() or {}
-        who = Adw.ActionRow(title=f"Signed in as {profile.get('name') or 'you'}", subtitle=profile.get("email") or "")
+        who = Adw.ActionRow(
+            use_markup=False, title=f"Signed in as {profile.get('name') or 'you'}", subtitle=profile.get("email") or ""
+        )
         out = Gtk.Button(label="Sign out", valign=Gtk.Align.CENTER, css_classes=["destructive-action"])
         out.connect("clicked", lambda *_: (self.close(), self.window.confirm_sign_out()))
         who.add_suffix(out)
@@ -135,8 +141,8 @@ class Preferences(Adw.PreferencesDialog):
         page.add(account)
 
         about = Adw.PreferencesGroup(title="About")
-        about.add(Adw.ActionRow(title="Version", subtitle=version()))
-        upd = Adw.ActionRow(title="Updates", subtitle="Updates: install the newer package file you were sent")
+        about.add(Adw.ActionRow(use_markup=False, title="Version", subtitle=version()))
+        upd = Adw.ActionRow(use_markup=False, title="Updates", subtitle="Updates: install the newer package file you were sent")
         dl = Gtk.Button(label="Download", valign=Gtk.Align.CENTER)
         dl.connect("clicked", lambda *_: open_uri(self.window, RELEASES_URL))
         upd.add_suffix(dl)
@@ -145,6 +151,7 @@ class Preferences(Adw.PreferencesDialog):
 
         data = Adw.PreferencesGroup(title="Data")
         rm = Adw.ActionRow(
+            use_markup=False,
             title="Remove my Pace data",
             subtitle="Deletes the keyring entry, status.json, ~/.config/pace and the autostart entry. Cannot be undone.",
         )
