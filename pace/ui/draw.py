@@ -118,7 +118,7 @@ class Sparkline(Gtk.DrawingArea):
             cr.rectangle(self.LEFT, y, w - self.LEFT, 1)
             cr.fill()
             cr.set_source_rgba(*_fg(area, 0.6))
-            cr.move_to(0, y + 3)
+            cr.move_to(0, max(y + 4, 10))
             cr.show_text(text)
         cr.set_source_rgba(*_fg(area, 0.6))
         cr.move_to(self.LEFT, h - 2)

@@ -245,6 +245,6 @@ def footnote(rows: list[dict]) -> str:
 def axis_labels(target_min: int, rows: list[dict]) -> tuple[list[str], str, str]:
     """C3 sparkline: y labels top to bottom (target, two thirds, one third, 0 in hours, nearest 5) and the first and last day."""
     top = target_min / 60
-    ys = [f"{top:g}", *(str(int(round(top * f / 5) * 5)) for f in (2 / 3, 1 / 3)), "0"]
+    ys = [f"{round(top, 1):g}", *(str(int(round(top * f / 5) * 5)) for f in (2 / 3, 1 / 3)), "0"]
     days = [parse_dt(r["date"]) for r in rows if r["working"]]
     return ys, f"{days[0].day} {days[0]:%b}", f"{days[-1].day} {days[-1]:%b}"
