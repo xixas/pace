@@ -1,11 +1,124 @@
 {
   "version": 1,
-  "as_of": "2026-10-29T14:10:00",
+  "as_of": "2026-10-31T09:00:00",
   "state": "lop",
   "colour": "red",
   "icon": "dot",
   "text": "39.5 h · LOP 1 day",
   "verdict": "LOP 1d",
   "logged_min": 2370,
-  "target_min": 2550
+  "target_min": 2550,
+  "stale_after": "2026-10-31T09:45:00",
+  "title": "Loss of pay",
+  "subtitle": "LOP 1 day",
+  "note": null,
+  "lines": {
+    "lop_min": 2460,
+    "target_min": 2550,
+    "expected_min": 2700,
+    "emphasis": null
+  },
+  "days": [
+    {
+      "date": "2026-10-26",
+      "dow": "Mon",
+      "min": 510,
+      "kind": "billed",
+      "text": "8.5"
+    },
+    {
+      "date": "2026-10-27",
+      "dow": "Tue",
+      "min": 510,
+      "kind": "billed",
+      "text": "8.5"
+    },
+    {
+      "date": "2026-10-28",
+      "dow": "Wed",
+      "min": 510,
+      "kind": "billed",
+      "text": "8.5"
+    },
+    {
+      "date": "2026-10-29",
+      "dow": "Thu",
+      "min": 510,
+      "kind": "billed",
+      "text": "8.5"
+    },
+    {
+      "date": "2026-10-30",
+      "dow": "Fri",
+      "min": 330,
+      "kind": "short",
+      "text": "5.5"
+    }
+  ],
+  "warning": "Short days: Fri 5.5 h",
+  "warning_detail": null,
+  "action": null,
+  "gap_text": null,
+  "month": {
+    "name": "October",
+    "working_days_left": 0,
+    "projects": [
+      {
+        "code": "TWE",
+        "name": "Tweelin",
+        "billed_min": 6750,
+        "target_min": 8400,
+        "gap_min": -1650,
+        "need_per_day_min": null,
+        "text": "112.5 / 140 h · behind 27.5",
+        "need_text": null,
+        "short": "Tweelin −27.5 h"
+      },
+      {
+        "code": "RES",
+        "name": "R&D",
+        "billed_min": 1104,
+        "target_min": null,
+        "gap_min": null,
+        "need_per_day_min": null,
+        "text": "18.4 h · no target",
+        "need_text": null,
+        "short": null
+      }
+    ]
+  },
+  "labels": {
+    "hours": "39.5 h · LOP 1 day",
+    "percent": "93%",
+    "gap": "−27.5 h TWE",
+    "left_today": "39.5 h · LOP 1 day"
+  },
+  "problem": null,
+  "snoozed_until": null,
+  "pinestem_url": "https://pinestem.com/dashboard.html#/tasks",
+  "last_week": null,
+  "tray": {
+    "number": "40",
+    "tooltip_title": "Pace — Week · Loss of pay",
+    "tooltip_lines": [
+      "39.5 h · LOP 1 day",
+      "Tweelin Oct 112.5 / 140 h (−27.5)"
+    ],
+    "info_rows": [
+      "Week · Loss of pay — 39.5 h",
+      "Tweelin −27.5 h (Oct)"
+    ],
+    "fill": 0.93
+  },
+  "widget": {
+    "title": "Week loss of pay",
+    "big": "39.5 / 42.5",
+    "side": "",
+    "lines": [],
+    "project": {
+      "title": "Tweelin −27.5 h",
+      "big": "112.5 / 140",
+      "side": ""
+    }
+  }
 }

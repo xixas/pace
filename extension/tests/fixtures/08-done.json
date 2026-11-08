@@ -1,11 +1,124 @@
 {
   "version": 1,
-  "as_of": "2026-10-29T14:10:00",
+  "as_of": "2026-10-29T18:30:00",
   "state": "done",
   "colour": "green",
   "icon": "check",
   "text": "42.5 h",
   "verdict": "DONE",
   "logged_min": 2550,
-  "target_min": 2550
+  "target_min": 2550,
+  "stale_after": "2026-10-29T19:15:00",
+  "title": "Done",
+  "subtitle": "42.5 h",
+  "note": null,
+  "lines": {
+    "lop_min": 2460,
+    "target_min": 2550,
+    "expected_min": 2700,
+    "emphasis": null
+  },
+  "days": [
+    {
+      "date": "2026-10-26",
+      "dow": "Mon",
+      "min": 600,
+      "kind": "billed",
+      "text": "10.0"
+    },
+    {
+      "date": "2026-10-27",
+      "dow": "Tue",
+      "min": 600,
+      "kind": "billed",
+      "text": "10.0"
+    },
+    {
+      "date": "2026-10-28",
+      "dow": "Wed",
+      "min": 600,
+      "kind": "billed",
+      "text": "10.0"
+    },
+    {
+      "date": "2026-10-29",
+      "dow": "Thu",
+      "min": 750,
+      "kind": "today",
+      "text": "12.5"
+    },
+    {
+      "date": "2026-10-30",
+      "dow": "Fri",
+      "min": null,
+      "kind": "future",
+      "text": "–"
+    }
+  ],
+  "warning": null,
+  "warning_detail": null,
+  "action": null,
+  "gap_text": null,
+  "month": {
+    "name": "October",
+    "working_days_left": 2,
+    "projects": [
+      {
+        "code": "TWE",
+        "name": "Tweelin",
+        "billed_min": 6750,
+        "target_min": 8400,
+        "gap_min": -886,
+        "need_per_day_min": 825,
+        "text": "112.5 / 140 h · behind 14.8",
+        "need_text": "needs 13.8 h/day on Tweelin",
+        "short": "Tweelin −14.8 h"
+      },
+      {
+        "code": "RES",
+        "name": "R&D",
+        "billed_min": 1104,
+        "target_min": null,
+        "gap_min": null,
+        "need_per_day_min": null,
+        "text": "18.4 h · no target",
+        "need_text": null,
+        "short": null
+      }
+    ]
+  },
+  "labels": {
+    "hours": "42.5 h",
+    "percent": "100%",
+    "gap": "−14.8 h TWE",
+    "left_today": "0.0 h left today"
+  },
+  "problem": null,
+  "snoozed_until": null,
+  "pinestem_url": "https://pinestem.com/dashboard.html#/tasks",
+  "last_week": null,
+  "tray": {
+    "number": "43",
+    "tooltip_title": "Pace — Week · Done",
+    "tooltip_lines": [
+      "42.5 h",
+      "Tweelin Oct 112.5 / 140 h (−14.8)"
+    ],
+    "info_rows": [
+      "Week · Done — 42.5 h",
+      "Tweelin −14.8 h (Oct)"
+    ],
+    "fill": 1
+  },
+  "widget": {
+    "title": "Week done",
+    "big": "42.5",
+    "side": "",
+    "lines": [],
+    "project": {
+      "title": "Tweelin −14.8 h",
+      "big": "112.5 / 140",
+      "side": "13.8/day"
+    }
+  }
 }

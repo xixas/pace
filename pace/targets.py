@@ -26,7 +26,7 @@ def month(rows: list[dict], days: list[dict], targets: dict, at: date, today: da
     today = today or date.today()
     mine = [d for d in days if d["date"][:7] == f"{at:%Y-%m}"]
     avail = sum(d["working"] for d in mine)
-    left = sum(d["working"] for d in mine if date.fromisoformat(d["date"]) >= today)
+    left = days_left(mine, today)
     weekdays = sum(1 for n in range(1, calendar.monthrange(at.year, at.month)[1] + 1) if date(at.year, at.month, n).weekday() < 5)
     billed: dict[str, int] = {}
     for r in rows:
@@ -36,6 +36,20 @@ def month(rows: list[dict], days: list[dict], targets: dict, at: date, today: da
     named = {t["name"] for t in targets["projects"]}
     out += [project(n[:3].upper(), n, m, None, avail, left, weekdays) for n, m in billed.items() if n not in named]
     return sorted(out, key=lambda p: (p["target_min"] is None, -p["billed_min"]))
+
+
+def days_left(days: list[dict], today: date) -> float:
+    return sum(d["working"] for d in days if date.fromisoformat(d["date"]) >= today)
+
+
+def month_block(rows: list[dict], days: list[dict], targets: dict, today: date) -> dict:
+    """status.json's `month` for the month containing today."""
+    left = days_left([d for d in days if d["date"][:7] == f"{today:%Y-%m}"], today)
+    return {
+        "name": f"{today:%B}",
+        "working_days_left": int(left) if left == int(left) else left,
+        "projects": month(rows, days, targets, today, today),
+    }
 
 
 def project(code: str, name: str, billed: int, target: dict | None, avail: float, left: float, weekdays: int) -> dict:
