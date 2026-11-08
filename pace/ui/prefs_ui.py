@@ -10,7 +10,7 @@ from gi.repository import Adw, Gtk  # noqa: E402
 
 from pace.ui import config  # noqa: E402
 from pace.ui.services import RELEASES_URL, version  # noqa: E402
-from pace.ui.widgets import box, label, open_uri  # noqa: E402
+from pace.ui.widgets import action_row, box, label, open_uri  # noqa: E402
 
 NUDGES = (
     ("friday", "Friday check", "Hours left to reach the target"),
@@ -93,7 +93,7 @@ class Preferences(Adw.PreferencesDialog):
             row.connect("notify::active", lambda r, k=key: self._set_nudge(k, r.get_active()))
             row.add_suffix(_time_button(s, key, self._set_time))
             notify.add(row)
-        expired = Adw.ActionRow(use_markup=False, title="Session expired", subtitle="Cannot be turned off")
+        expired = action_row(title="Session expired", subtitle="Cannot be turned off")
         expired.add_suffix(Gtk.Image(icon_name="changes-prevent-symbolic"))
         notify.add(expired)
         page.add(notify)
@@ -131,9 +131,7 @@ class Preferences(Adw.PreferencesDialog):
 
         account = Adw.PreferencesGroup(title="Account")
         profile = self.services.profile() or {}
-        who = Adw.ActionRow(
-            use_markup=False, title=f"Signed in as {profile.get('name') or 'you'}", subtitle=profile.get("email") or ""
-        )
+        who = action_row(title=f"Signed in as {profile.get('name') or 'you'}", subtitle=profile.get("email") or "")
         out = Gtk.Button(label="Sign out", valign=Gtk.Align.CENTER, css_classes=["destructive-action"])
         out.connect("clicked", lambda *_: (self.close(), self.window.confirm_sign_out()))
         who.add_suffix(out)
@@ -141,8 +139,8 @@ class Preferences(Adw.PreferencesDialog):
         page.add(account)
 
         about = Adw.PreferencesGroup(title="About")
-        about.add(Adw.ActionRow(use_markup=False, title="Version", subtitle=version()))
-        upd = Adw.ActionRow(use_markup=False, title="Updates", subtitle="Updates: install the newer package file you were sent")
+        about.add(action_row(title="Version", subtitle=version()))
+        upd = action_row(title="Updates", subtitle="Updates: install the newer package file you were sent")
         dl = Gtk.Button(label="Download", valign=Gtk.Align.CENTER)
         dl.connect("clicked", lambda *_: open_uri(self.window, RELEASES_URL))
         upd.add_suffix(dl)
@@ -150,8 +148,7 @@ class Preferences(Adw.PreferencesDialog):
         page.add(about)
 
         data = Adw.PreferencesGroup(title="Data")
-        rm = Adw.ActionRow(
-            use_markup=False,
+        rm = action_row(
             title="Remove my Pace data",
             subtitle="Deletes the keyring entry, status.json, ~/.config/pace and the autostart entry. Cannot be undone.",
         )
