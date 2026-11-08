@@ -61,3 +61,24 @@ def test_a_missing_app_says_so(monkeypatch, capsys):
 )
 def test_the_tray_is_for_desktops_that_are_not_gnome_and_have_a_watcher(desktop, watcher, wanted):
     assert tray_wanted(desktop, watcher) is wanted
+
+
+@pytest.mark.parametrize("choice, kind", [("file", "FileStore"), ("none", "MemoryStore")])
+def test_the_a9_choice_decides_where_the_session_lives(tmp_path, monkeypatch, choice, kind):
+    from pace.cli import session_store
+
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
+    (tmp_path / "pace").mkdir()
+    (tmp_path / "pace" / "settings.json").write_text(json.dumps({"token_store": choice}))
+    assert type(session_store()).__name__ == kind
+
+
+def test_memory_store_forgets_at_exit_by_never_writing():
+    from pace.tokens import MemoryStore
+
+    s = MemoryStore()
+    assert s.load() is None
+    s.save({"access": "A", "refresh": "R"})
+    assert s.load() == {"access": "A", "refresh": "R"}
+    s.clear()
+    assert s.load() is None

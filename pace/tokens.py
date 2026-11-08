@@ -56,3 +56,19 @@ class KeyringStore:
 
     def clear(self) -> None:
         self.secret.password_clear_sync(self.schema, self.attrs, None)
+
+
+class MemoryStore:
+    """A9 "sign in each login": the session lives only as long as this process."""
+
+    def __init__(self):
+        self.tokens = None
+
+    def load(self):
+        return self.tokens
+
+    def save(self, tokens):
+        self.tokens = tokens
+
+    def clear(self):
+        self.tokens = None

@@ -35,11 +35,17 @@ def load_config():
 
 
 def session_store():
-    """The keyring when there is one; otherwise the mode 600 file (decision 8)."""
-    from pace.tokens import FileStore, KeyringStore
+    """Where the session lives, per the A9 choice: keyring (falling back to the mode 600 file when there is
+    none, decision 8), the file, or nowhere ("sign in each login": memory only)."""
+    from pace.settings import Settings
+    from pace.tokens import FileStore, KeyringStore, MemoryStore
 
-    keyring = KeyringStore()
-    return keyring if keyring.available() else FileStore()
+    choice = Settings().data["token_store"]
+    if choice == "none":
+        return MemoryStore()
+    if choice == "keyring" and (keyring := KeyringStore()).available():
+        return keyring
+    return FileStore()
 
 
 def client(cfg):
@@ -48,14 +54,15 @@ def client(cfg):
     return Client(cfg.base_url, session_store(), urllib_transport)
 
 
-def sign_in() -> None:
-    """The browser sign-in. Raises on failure."""
+def sign_in(api=None) -> None:
+    """The browser sign-in. Raises on failure. paced passes its own client, so a memory-only session
+    (A9 "sign in each login") lands in the store it polls with."""
     import webbrowser
 
     from pace.signin import sign_in_flow
 
     cfg = load_config()
-    sign_in_flow(cfg, client(cfg), open_uri=webbrowser.open)
+    sign_in_flow(cfg, api or client(cfg), open_uri=webbrowser.open)
 
 
 def main(argv=None) -> int:
@@ -124,7 +131,8 @@ def paced(argv=None) -> int:
     from pace.daemon import Daemon
 
     try:
-        daemon = Daemon(client(load_config()), sign_in=sign_in)
+        api = client(load_config())
+        daemon = Daemon(api, sign_in=lambda: sign_in(api))
     except ConfigError as e:
         print(f"paced: {e}", file=sys.stderr)
         return 1

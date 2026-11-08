@@ -58,9 +58,26 @@ class Services:
         """Blocks until the browser comes back; call it off the main thread. Raises what sign_in_flow raises."""
         from pace.cli import client, load_config
         from pace.signin import sign_in_flow
+        from pace.ui import config
 
+        if config.load_settings()["token_store"] == "none":
+            return self._sign_in_through_paced()
         cfg = load_config()
         sign_in_flow(cfg, client(cfg), open_uri=open_uri)
+
+    def _sign_in_through_paced(self, timeout: float = 300) -> None:
+        """A memory-only session has to live in paced, so paced runs the browser flow; wait for status.json to say so."""
+        import time
+
+        from pace.files import read_json, state_dir
+
+        self._call("SignIn", lambda *_: None)
+        end = time.monotonic() + timeout
+        while time.monotonic() < end:
+            if (read_json(state_dir() / "status.json") or {}).get("state") not in (None, "signed_out"):
+                return
+            time.sleep(1)
+        raise TimeoutError("no answer from the browser")
 
     def cancel_sign_in(self, redirect: str) -> None:
         from pace.ui.onboarding import cancel_url
