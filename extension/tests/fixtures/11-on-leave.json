@@ -1,11 +1,120 @@
 {
   "version": 1,
-  "as_of": "2026-10-29T14:10:00",
+  "as_of": "2026-10-28T10:00:00",
   "state": "on_leave",
   "colour": "grey",
   "icon": "circle",
   "text": "On leave",
   "verdict": "ON LEAVE",
   "logged_min": 0,
-  "target_min": null
+  "target_min": null,
+  "stale_after": "2026-10-28T10:45:00",
+  "title": "On leave",
+  "subtitle": null,
+  "note": "No target this week",
+  "lines": null,
+  "days": [
+    {
+      "date": "2026-10-26",
+      "dow": "Mon",
+      "min": 0,
+      "kind": "leave",
+      "text": "leave"
+    },
+    {
+      "date": "2026-10-27",
+      "dow": "Tue",
+      "min": 0,
+      "kind": "leave",
+      "text": "leave"
+    },
+    {
+      "date": "2026-10-28",
+      "dow": "Wed",
+      "min": 0,
+      "kind": "leave",
+      "text": "leave"
+    },
+    {
+      "date": "2026-10-29",
+      "dow": "Thu",
+      "min": 0,
+      "kind": "leave",
+      "text": "leave"
+    },
+    {
+      "date": "2026-10-30",
+      "dow": "Fri",
+      "min": 0,
+      "kind": "leave",
+      "text": "leave"
+    }
+  ],
+  "warning": null,
+  "warning_detail": null,
+  "action": null,
+  "gap_text": null,
+  "month": {
+    "name": "October",
+    "working_days_left": 0,
+    "projects": [
+      {
+        "code": "TWE",
+        "name": "Tweelin",
+        "billed_min": 6750,
+        "target_min": 6491,
+        "gap_min": 259,
+        "need_per_day_min": null,
+        "text": "112.5 / 108.2 h · ahead 4.3",
+        "need_text": null,
+        "short": null
+      },
+      {
+        "code": "RES",
+        "name": "R&D",
+        "billed_min": 1104,
+        "target_min": null,
+        "gap_min": null,
+        "need_per_day_min": null,
+        "text": "18.4 h · no target",
+        "need_text": null,
+        "short": null
+      }
+    ]
+  },
+  "labels": {
+    "hours": "On leave",
+    "percent": "On leave",
+    "gap": "On leave",
+    "left_today": "On leave"
+  },
+  "problem": null,
+  "snoozed_until": null,
+  "pinestem_url": "https://pinestem.com/dashboard.html#/tasks",
+  "last_week": null,
+  "tray": {
+    "number": "0",
+    "tooltip_title": "Pace — Week · On leave",
+    "tooltip_lines": [
+      "On leave",
+      "Tweelin Oct 112.5 / 108.2 h (+4.3)"
+    ],
+    "info_rows": [
+      "Week · On leave — On leave",
+      "No target this week",
+      "Tweelin on track (Oct)"
+    ],
+    "fill": 0
+  },
+  "widget": {
+    "title": "Week on leave",
+    "big": "",
+    "side": "",
+    "lines": [],
+    "project": {
+      "title": "Tweelin on track",
+      "big": "112.5 / 108.2",
+      "side": ""
+    }
+  }
 }

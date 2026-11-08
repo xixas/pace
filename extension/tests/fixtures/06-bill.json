@@ -1,11 +1,128 @@
 {
   "version": 1,
-  "as_of": "2026-10-29T14:10:00",
+  "as_of": "2026-10-30T20:30:00",
   "state": "bill",
   "colour": "blue",
   "icon": "ring",
   "text": "34.0 / 42.5 h",
   "verdict": "BILL · Fri not billed yet",
   "logged_min": 2040,
-  "target_min": 2550
+  "target_min": 2550,
+  "stale_after": "2026-10-30T21:15:00",
+  "title": "Bill your hours",
+  "subtitle": "34.0 / 42.5 h",
+  "note": "Fri not billed yet",
+  "lines": {
+    "lop_min": 2460,
+    "target_min": 2550,
+    "expected_min": 2700,
+    "emphasis": null
+  },
+  "days": [
+    {
+      "date": "2026-10-26",
+      "dow": "Mon",
+      "min": 510,
+      "kind": "billed",
+      "text": "8.5"
+    },
+    {
+      "date": "2026-10-27",
+      "dow": "Tue",
+      "min": 510,
+      "kind": "billed",
+      "text": "8.5"
+    },
+    {
+      "date": "2026-10-28",
+      "dow": "Wed",
+      "min": 510,
+      "kind": "billed",
+      "text": "8.5"
+    },
+    {
+      "date": "2026-10-29",
+      "dow": "Thu",
+      "min": 510,
+      "kind": "billed",
+      "text": "8.5"
+    },
+    {
+      "date": "2026-10-30",
+      "dow": "Fri",
+      "min": null,
+      "kind": "pending",
+      "text": "not yet"
+    }
+  ],
+  "warning": null,
+  "warning_detail": null,
+  "action": {
+    "label": "Open PineStem to bill Fri",
+    "url": "https://pinestem.com/dashboard.html#/tasks"
+  },
+  "gap_text": null,
+  "month": {
+    "name": "October",
+    "working_days_left": 1,
+    "projects": [
+      {
+        "code": "TWE",
+        "name": "Tweelin",
+        "billed_min": 6750,
+        "target_min": 8400,
+        "gap_min": -1268,
+        "need_per_day_min": 1650,
+        "text": "112.5 / 140 h · behind 21.1",
+        "need_text": "needs 27.5 h/day on Tweelin",
+        "short": "Tweelin −21.1 h"
+      },
+      {
+        "code": "RES",
+        "name": "R&D",
+        "billed_min": 1104,
+        "target_min": null,
+        "gap_min": null,
+        "need_per_day_min": null,
+        "text": "18.4 h · no target",
+        "need_text": null,
+        "short": null
+      }
+    ]
+  },
+  "labels": {
+    "hours": "34.0 / 42.5 h",
+    "percent": "80%",
+    "gap": "−21.1 h TWE",
+    "left_today": "34.0 / 42.5 h"
+  },
+  "problem": null,
+  "snoozed_until": null,
+  "pinestem_url": "https://pinestem.com/dashboard.html#/tasks",
+  "last_week": null,
+  "tray": {
+    "number": "34",
+    "tooltip_title": "Pace — Week · Bill your hours",
+    "tooltip_lines": [
+      "34.0 / 42.5 h",
+      "Tweelin Oct 112.5 / 140 h (−21.1)"
+    ],
+    "info_rows": [
+      "Week · Bill your hours — 34.0 / 42.5 h",
+      "Fri not billed yet",
+      "Tweelin −21.1 h (Oct)"
+    ],
+    "fill": 0.8
+  },
+  "widget": {
+    "title": "Week bill",
+    "big": "34.0 / 42.5",
+    "side": "Fri not billed yet",
+    "lines": [],
+    "project": {
+      "title": "Tweelin −21.1 h",
+      "big": "112.5 / 140",
+      "side": "27.5/day"
+    }
+  }
 }

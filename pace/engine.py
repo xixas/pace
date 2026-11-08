@@ -36,6 +36,10 @@ class Verdict:
     lop_need: float | None = None  # minutes per working day to stay clear of LOP
     target: float | None = None  # the week's target in minutes; None on a week of leave
     pending: tuple[int, ...] = ()  # working days with nothing billed yet, still inside their grace (0 = Mon)
+    rem: float = 0  # working days still to bill, today included until its EOD
+    base: float = 0  # minutes counted before today's own progress (hours billed so far, plus pending credit)
+    lop: float = 0  # the pay line in minutes (41 h for a 5-day week)
+    today: int = 0  # minutes billed today so far
 
 
 def lop_count(total: float, d: float) -> float:
@@ -127,7 +131,7 @@ def week_verdict(work: Sequence[float], entries: Sequence[Entry], day: int, hour
     if label.startswith("PAY RISK") and short_days:
         label += " · " + ", ".join(short_days)
     label += tag
-    return Verdict(label, logged, today_left, need, lop_need, target, tuple(pending))
+    return Verdict(label, logged, today_left, need, lop_need, target, tuple(pending), rem, base, lop, today)
 
 
 def hours(minutes: float, trim: bool = False) -> str:

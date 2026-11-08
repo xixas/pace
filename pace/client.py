@@ -7,6 +7,8 @@ import urllib.error
 import urllib.request
 from datetime import date
 
+from pace import profile
+
 
 class Offline(Exception):
     """hrms-api or the network is unreachable: keep the last good numbers."""
@@ -22,8 +24,9 @@ class Client:
     def __init__(self, base_url: str, store, transport):
         self.base, self.store, self.transport = base_url.rstrip("/"), store, transport
 
-    def my_hours(self, start: date, end: date) -> list[dict]:
-        return self.get(f"/billing-report/my-hours/?from={start}&to={end}")
+    def my_hours(self, start: date, end: date, fresh: bool = False) -> list[dict]:
+        """fresh=True skips hrms-api's cache (it allows one such call a minute)."""
+        return self.get(f"/billing-report/my-hours/?from={start}&to={end}{'&fresh=1' if fresh else ''}")
 
     def my_days(self, start: date, end: date) -> list[dict]:
         return self.get(f"/calendar/my-days/?from={start}&to={end}")
@@ -57,6 +60,7 @@ class Client:
         if status != 200:
             raise SignedOut(body.get("message", f"sign-in returned {status}"))
         self.store.save({"access": body["data"]["access"], "refresh": body["data"]["refresh"]})
+        profile.write(body["data"].get("user"))
 
     def refresh(self) -> None:
         """Refresh tokens rotate: the old one is blacklisted, so save the new pair every time. The body is bare."""

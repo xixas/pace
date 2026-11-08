@@ -1,11 +1,130 @@
 {
   "version": 1,
-  "as_of": "2026-10-29T14:10:00",
+  "as_of": "2026-10-30T11:00:00",
   "state": "pay_risk",
   "colour": "red",
   "icon": "dot",
   "text": "27.1 / 42.5 h · pay risk",
-  "verdict": "PAY RISK · pay needs 13.9 h · Mon 0 h",
+  "verdict": "PAY RISK · pay needs 13.9 h · Wed 6 h, Thu 3.5 h",
   "logged_min": 1626,
-  "target_min": 2550
+  "target_min": 2550,
+  "stale_after": "2026-10-30T11:45:00",
+  "title": "Pay at risk",
+  "subtitle": "27.1 / 42.5 h",
+  "note": "Needs 13.9 h today to reach 41 h. The limit is 10.5 h/day.",
+  "lines": {
+    "lop_min": 2460,
+    "target_min": 2550,
+    "expected_min": 2700,
+    "emphasis": "lop"
+  },
+  "days": [
+    {
+      "date": "2026-10-26",
+      "dow": "Mon",
+      "min": 552,
+      "kind": "billed",
+      "text": "9.2"
+    },
+    {
+      "date": "2026-10-27",
+      "dow": "Tue",
+      "min": 504,
+      "kind": "billed",
+      "text": "8.4"
+    },
+    {
+      "date": "2026-10-28",
+      "dow": "Wed",
+      "min": 360,
+      "kind": "short",
+      "text": "6.0"
+    },
+    {
+      "date": "2026-10-29",
+      "dow": "Thu",
+      "min": 210,
+      "kind": "short",
+      "text": "3.5"
+    },
+    {
+      "date": "2026-10-30",
+      "dow": "Fri",
+      "min": 0,
+      "kind": "today",
+      "text": "0.0"
+    }
+  ],
+  "warning": "Short days: Wed 6.0 h · Thu 3.5 h",
+  "warning_detail": "Even 10.5 h today ends 3.4 h under the line, about 1 day of loss of pay.",
+  "action": {
+    "label": "Open PineStem to bill Fri",
+    "url": "https://pinestem.com/dashboard.html#/tasks"
+  },
+  "gap_text": null,
+  "month": {
+    "name": "October",
+    "working_days_left": 1,
+    "projects": [
+      {
+        "code": "TWE",
+        "name": "Tweelin",
+        "billed_min": 6750,
+        "target_min": 8400,
+        "gap_min": -1268,
+        "need_per_day_min": 1650,
+        "text": "112.5 / 140 h · behind 21.1",
+        "need_text": "needs 27.5 h/day on Tweelin",
+        "short": "Tweelin −21.1 h"
+      },
+      {
+        "code": "RES",
+        "name": "R&D",
+        "billed_min": 1104,
+        "target_min": null,
+        "gap_min": null,
+        "need_per_day_min": null,
+        "text": "18.4 h · no target",
+        "need_text": null,
+        "short": null
+      }
+    ]
+  },
+  "labels": {
+    "hours": "27.1 / 42.5 h · pay risk",
+    "percent": "64%",
+    "gap": "−21.1 h TWE",
+    "left_today": "15.4 h left today"
+  },
+  "problem": null,
+  "snoozed_until": null,
+  "pinestem_url": "https://pinestem.com/dashboard.html#/tasks",
+  "last_week": null,
+  "tray": {
+    "number": "27",
+    "tooltip_title": "Pace — Week · Pay at risk",
+    "tooltip_lines": [
+      "27.1 / 42.5 h · pay risk",
+      "Tweelin Oct 112.5 / 140 h (−21.1)"
+    ],
+    "info_rows": [
+      "Week · Pay at risk — 27.1 / 42.5 h",
+      "Needs 13.9 h today to reach 41 h. The limit is 10.5 h/day.",
+      "Tweelin −21.1 h (Oct)"
+    ],
+    "fill": 0.64
+  },
+  "widget": {
+    "title": "Week pay risk",
+    "big": "27.1 / 42.5",
+    "side": "13.9 today",
+    "lines": [
+      "Wed 6.0 h · Thu 3.5 h"
+    ],
+    "project": {
+      "title": "Tweelin −21.1 h",
+      "big": "112.5 / 140",
+      "side": "27.5/day"
+    }
+  }
 }

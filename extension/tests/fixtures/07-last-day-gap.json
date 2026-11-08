@@ -1,11 +1,128 @@
 {
   "version": 1,
-  "as_of": "2026-10-29T14:10:00",
+  "as_of": "2026-10-30T18:30:00",
   "state": "on_track",
   "colour": "green",
   "icon": "dot",
   "text": "40.0 / 42.5 h · pay needs 1.0 h",
   "verdict": "ON TRACK · pay needs 1.0 h",
   "logged_min": 2400,
-  "target_min": 2550
+  "target_min": 2550,
+  "stale_after": "2026-10-30T19:15:00",
+  "title": "On track",
+  "subtitle": "pay needs 1.0 h",
+  "note": "Last working day · 40.0 of the 41 h line",
+  "lines": {
+    "lop_min": 2460,
+    "target_min": 2550,
+    "expected_min": 2700,
+    "emphasis": "lop"
+  },
+  "days": [
+    {
+      "date": "2026-10-26",
+      "dow": "Mon",
+      "min": 552,
+      "kind": "billed",
+      "text": "9.2"
+    },
+    {
+      "date": "2026-10-27",
+      "dow": "Tue",
+      "min": 504,
+      "kind": "billed",
+      "text": "8.4"
+    },
+    {
+      "date": "2026-10-28",
+      "dow": "Wed",
+      "min": 540,
+      "kind": "billed",
+      "text": "9.0"
+    },
+    {
+      "date": "2026-10-29",
+      "dow": "Thu",
+      "min": 540,
+      "kind": "billed",
+      "text": "9.0"
+    },
+    {
+      "date": "2026-10-30",
+      "dow": "Fri",
+      "min": 264,
+      "kind": "today",
+      "text": "4.4"
+    }
+  ],
+  "warning": null,
+  "warning_detail": null,
+  "action": {
+    "label": "Bill 1 h to stay clear of loss of pay",
+    "url": "https://pinestem.com/dashboard.html#/tasks"
+  },
+  "gap_text": "1.0 h to the loss-of-pay line · 2.5 h to target",
+  "month": {
+    "name": "October",
+    "working_days_left": 1,
+    "projects": [
+      {
+        "code": "TWE",
+        "name": "Tweelin",
+        "billed_min": 6750,
+        "target_min": 8400,
+        "gap_min": -1268,
+        "need_per_day_min": 1650,
+        "text": "112.5 / 140 h · behind 21.1",
+        "need_text": "needs 27.5 h/day on Tweelin",
+        "short": "Tweelin −21.1 h"
+      },
+      {
+        "code": "RES",
+        "name": "R&D",
+        "billed_min": 1104,
+        "target_min": null,
+        "gap_min": null,
+        "need_per_day_min": null,
+        "text": "18.4 h · no target",
+        "need_text": null,
+        "short": null
+      }
+    ]
+  },
+  "labels": {
+    "hours": "40.0 / 42.5 h · pay needs 1.0 h",
+    "percent": "94%",
+    "gap": "−21.1 h TWE",
+    "left_today": "2.5 h left today"
+  },
+  "problem": null,
+  "snoozed_until": null,
+  "pinestem_url": "https://pinestem.com/dashboard.html#/tasks",
+  "last_week": null,
+  "tray": {
+    "number": "40",
+    "tooltip_title": "Pace — Week · On track",
+    "tooltip_lines": [
+      "40.0 / 42.5 h · pay needs 1.0 h",
+      "Tweelin Oct 112.5 / 140 h (−21.1)"
+    ],
+    "info_rows": [
+      "Week · On track — 40.0 / 42.5 h",
+      "Pay needs 1.0 h · Last working day · 40.0 of the 41 h line",
+      "Tweelin −21.1 h (Oct)"
+    ],
+    "fill": 0.94
+  },
+  "widget": {
+    "title": "Week on track",
+    "big": "40.0 / 42.5",
+    "side": "6.9/day",
+    "lines": [],
+    "project": {
+      "title": "Tweelin −21.1 h",
+      "big": "112.5 / 140",
+      "side": "27.5/day"
+    }
+  }
 }

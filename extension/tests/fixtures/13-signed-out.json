@@ -7,5 +7,41 @@
   "text": "Sign in again",
   "verdict": null,
   "logged_min": null,
-  "target_min": null
+  "target_min": null,
+  "stale_after": null,
+  "title": null,
+  "subtitle": null,
+  "note": null,
+  "lines": null,
+  "days": null,
+  "warning": null,
+  "warning_detail": null,
+  "action": null,
+  "gap_text": null,
+  "month": null,
+  "labels": null,
+  "problem": {
+    "kind": "signed_out",
+    "message": "Your sign-in expired. Sign in again.",
+    "retry_at": null
+  },
+  "snoozed_until": null,
+  "pinestem_url": "https://pinestem.com/dashboard.html#/tasks",
+  "last_week": null,
+  "tray": {
+    "number": "–",
+    "tooltip_title": "Pace — Sign in again",
+    "tooltip_lines": [],
+    "info_rows": [
+      "Sign in again"
+    ],
+    "fill": 0.0
+  },
+  "widget": {
+    "title": "Sign in again",
+    "big": "",
+    "side": "",
+    "lines": [],
+    "project": null
+  }
 }

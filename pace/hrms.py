@@ -40,6 +40,17 @@ def record(ledger: dict, rows: list[dict], now: datetime, polled: tuple[date, da
     return out
 
 
+def day_types(days: list[dict], monday: date) -> list[str]:
+    """The calendar type of each day Mon..Sun (working, weekend, holiday, leave, half_leave)."""
+    by_date = {row["date"]: row.get("type") for row in days}
+    return [by_date.get((monday + timedelta(i)).isoformat()) or ("weekend" if i > 4 else "working") for i in range(7)]
+
+
+def day_minutes(ledger: dict, monday: date) -> list[int]:
+    """Minutes billed on each day Mon..Sun."""
+    return [sum(m for _, m in ledger.get((monday + timedelta(i)).isoformat(), [])) for i in range(7)]
+
+
 def entries(ledger: dict, monday: date) -> list[Entry]:
     """The ledger's entries for the Mon..Sun week starting at monday."""
     out = []
