@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "as_of": "2026-10-29T14:10:00",
+  "state": "bill",
+  "colour": "blue",
+  "icon": "ring",
+  "text": "34.0 / 42.5 h",
+  "verdict": "BILL · Fri not billed yet",
+  "logged_min": 2040,
+  "target_min": 2550
+}

@@ -1,0 +1,12 @@
+{
+  "uuid": "pace@osmosys",
+  "name": "Pace",
+  "description": "Your PineStem hours this week against the target and the loss-of-pay line, in the top bar. Reads the status paced writes.",
+  "shell-version": [
+    "48",
+    "49",
+    "50"
+  ],
+  "version": 1,
+  "url": "https://github.com/xixas/pace"
+}

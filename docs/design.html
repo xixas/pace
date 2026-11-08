@@ -211,7 +211,7 @@
     </div></div>
     <div class="card card-border bg-base-100"><div class="card-body p-4">
       <b>Speed and memory budget</b>
-      <p>Number in the panel <b>&lt; 300 ms</b> after login (cached <span class="mono">status.json</span>). <span class="mono">paced</span> idles <b>&lt; 35 MB</b> with no GTK loaded. A UI window runs about 60–80 MB while open and frees it on close. CPU stays near 0 between polls.</p>
+      <p>Number in the panel <b>&lt; 300 ms</b> after login (cached <span class="mono">status.json</span>). <span class="mono">paced</span> idles <b>&lt; 40 MB</b> with no GTK loaded (measured 40 MB peak: libsecret through gi is about 33 MB of it). A UI window runs about 60–80 MB while open and frees it on close. CPU stays near 0 between polls.</p>
     </div></div>
   </div>
 </section>
@@ -1352,7 +1352,7 @@
       <tbody>
         <tr><td>1</td><td><b>hrms-api</b>: <span class="mono">my-hours</span> + <span class="mono">my-days</span>, a 60 s cache and <span class="mono">?fresh=1</span> (TDD, in its repo)</td><td>For a fixed week, my-hours totals equal the HR billing report's totals. my-days returns 0.5 for a half-day and excludes restricted holidays the person didn't opt into.</td></tr>
         <tr><td>2</td><td><b>Pace engine</b> (pure Python), ported from <span class="mono">sim/week-rules-v4.js</span></td><td>pytest replays all 18 simulated weeks and matches <span class="mono">week-rules-v4-out.txt</span> cell for cell on verdicts and need/day (display rounds minutes half-up, so 267 min shows 4.5 h where the sim prints 4.4), plus a Monday 09:00 poll while last Friday is still "not billed yet". Fable judges any new timeline before a rule changes.</td></tr>
-        <tr><td>3</td><td><b>paced</b>: sign-in (PKCE, loopback), Secret Service token, poll, <span class="mono">status.json</span></td><td>On Nobara the number reaches <span class="mono">status.json</span> within 300 ms of login. <span class="mono">ps</span> shows paced under 35 MB.</td></tr>
+        <tr><td>3</td><td><b>paced</b>: sign-in (PKCE, loopback), Secret Service token, poll, <span class="mono">status.json</span></td><td>On Nobara the number reaches <span class="mono">status.json</span> within 300 ms of login. <span class="mono">ps</span> shows paced under 40 MB.</td></tr>
         <tr><td>4</td><td><b>GNOME extension</b> <span class="mono">pace@osmosys</span> (forked from claude-usage)</td><td>All 13 label states render from fixture <span class="mono">status.json</span> files. Screenshots are reviewed by Fable.</td></tr>
         <tr><td>5</td><td><b>Tray icon</b> (StatusNotifierItem) + notifications</td><td>A KDE Plasma 6 VM and a COSMIC VM both show the icon. Left-click opens the mini widget, and right-click shows the text menu (a tray icon gets nothing richer).</td></tr>
         <tr><td>6</td><td><b>GTK4 UI</b>: sign-in, targets, dashboard, settings, mini widget</td><td>Every mock in sections A–C is rendered on Broadway (GTK's HTML5 display backend, used for headless screenshots) and looked at, and Fable reviews the PNGs.</td></tr>

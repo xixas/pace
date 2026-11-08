@@ -1,0 +1,55 @@
+/* B1 in docs/design.html: the marker takes the verdict colour, the number its lighter text shade (claude-usage palette) */
+.pace-box {
+  spacing: 6px;
+}
+
+.pace-label {
+  font-weight: 600;
+  font-feature-settings: "tnum";
+}
+
+.pace-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 5px;
+}
+
+.pace-glyph {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+/* BILL's dotted ring, drawn with cairo: fonts render ◌ thin and off-centre at panel size */
+.pace-ring {
+  width: 12px;
+  height: 12px;
+}
+
+.pace-green .pace-dot { background-color: #57e389; }
+.pace-green .pace-glyph, .pace-green .pace-ring { color: #57e389; }
+.pace-green .pace-label { color: #8ff0a4; }
+
+.pace-amber .pace-dot { background-color: #ffbe6f; }
+.pace-amber .pace-glyph, .pace-amber .pace-ring { color: #ffbe6f; }
+.pace-amber .pace-label { color: #f6d32d; }
+
+.pace-red .pace-dot { background-color: #ff7b63; }
+.pace-red .pace-glyph, .pace-red .pace-ring { color: #ff7b63; }
+.pace-red .pace-label { color: #ff7b63; }
+
+.pace-blue .pace-dot { background-color: #78aeed; }
+.pace-blue .pace-glyph, .pace-blue .pace-ring { color: #78aeed; }
+.pace-blue .pace-label { color: #99c1f1; }
+
+.pace-grey .pace-dot { background-color: #9a9996; }
+.pace-grey .pace-glyph, .pace-grey .pace-ring { color: #9a9996; }
+.pace-grey .pace-label { color: #c0bfbc; }
+
+.pace-verdict {
+  font-weight: bold;
+}
+
+.pace-sub {
+  font-size: 0.85em;
+  color: #9a9a9a;
+}
