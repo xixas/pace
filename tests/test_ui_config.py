@@ -176,6 +176,19 @@ def test_set_target_can_only_raise_a_lead_row_and_keeps_the_leads_prorate():
         assert back["projects"] == [LEAD_ROW]
 
 
+def test_pay_rules_default_to_dhihrms_and_feed_the_lop_line_text():
+    assert config.load_settings()["rules"] == {"daily_target_h": 8.5, "full_day_h": 9.0, "part_day_h": 5.0}
+    assert config.lop_line(config.DEFAULT_RULES) == ("9 h = a day, 5 h leftover = +1", "41 h / 5-day week")
+    assert config.lop_line({"daily_target_h": 8, "full_day_h": 8.5, "part_day_h": 4.5}) == (
+        "8.5 h = a day, 4.5 h leftover = +1",
+        "38.5 h / 5-day week",
+    )
+    s = config.load_settings()
+    s["rules"]["full_day_h"] = 8.5
+    config.save_settings(s)
+    assert config.load_settings()["rules"] == {"daily_target_h": 8.5, "full_day_h": 8.5, "part_day_h": 5.0}
+
+
 def test_parse_hours_empty_means_no_target():
     assert config.parse_hours("") is None and config.parse_hours("  ") is None
     assert config.parse_hours("140") == 140 and config.parse_hours(" 12,5 h") == 12.5

@@ -81,9 +81,10 @@ class TargetsPage(Adw.NavigationPage):
         expected = action_row(title="Expected", subtitle="What a good day looks like")
         expected.add_suffix(_spin(settings["expected_daily_h"], 5, 14, 0.5, self._set_expected))
         expected.add_suffix(label("h", "dim-label", valign=Gtk.Align.CENTER))
-        lop = action_row(title="Loss-of-pay line", subtitle="9 h = a day, 5 h leftover = +1")
+        how, week = config.lop_line(settings["rules"])
+        lop = action_row(title="Loss-of-pay line", subtitle=how)
         lop.add_suffix(_tag("read-only"))
-        lop.add_suffix(label("41 h / 5-day week", "heading", valign=Gtk.Align.CENTER))
+        lop.add_suffix(label(week, "heading", valign=Gtk.Align.CENTER))
         for r in (minimum, expected, lop):
             daily.add(r)
         page.add(daily)

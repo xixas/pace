@@ -12,8 +12,10 @@ from pathlib import Path
 
 from pace.files import config_dir, data_dir, read_json, state_dir, write_json
 
+DEFAULT_RULES = {"daily_target_h": 8.5, "full_day_h": 9.0, "part_day_h": 5.0}  # C7 Pay rules; core reads the same keys
 DEFAULT_SETTINGS = {
     "panel_text": "hours",
+    "rules": dict(DEFAULT_RULES),
     "refresh_minutes": 15,
     "start_at_login": True,
     "expected_daily_h": 9.0,
@@ -65,6 +67,12 @@ def load_settings() -> dict:
 
 def save_settings(settings: dict) -> None:
     write_json(settings_path(), settings)
+
+
+def lop_line(rules: dict) -> tuple[str, str]:
+    """A11's read-only loss-of-pay row: (how a day is counted, the 5-day week line that follows from it)."""
+    full, part = rules["full_day_h"], rules["part_day_h"]
+    return f"{full:g} h = a day, {part:g} h leftover = +1", f"{4 * full + part:g} h / 5-day week"
 
 
 def apply_autostart(settings: dict) -> None:
