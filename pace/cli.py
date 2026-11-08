@@ -8,9 +8,14 @@ import sys
 
 from pace.files import config_dir, read_json, state_dir
 
-# Osmosys Entra tenant and hrms-api's registration (MS_SSO_CLIENT_ID); dev and prod share them (hrms-portal, 2026-10-30).
-DEFAULTS = {"tenant": "95ca85cb-20c9-45c5-bbfc-be2d0ac2e657", "api_client_id": "97152fbf-dde7-4077-a876-ea74e8b40b0f"}
-REQUIRED = ("base_url", "client_id")
+# Osmosys Entra tenant, hrms-api's registration (MS_SSO_CLIENT_ID; dev and prod share them, hrms-portal 2026-10-30)
+# and Pace's own public-client registration (created 2026-11-08). Public ids, not secrets.
+DEFAULTS = {
+    "tenant": "95ca85cb-20c9-45c5-bbfc-be2d0ac2e657",
+    "api_client_id": "97152fbf-dde7-4077-a876-ea74e8b40b0f",
+    "client_id": "8c8d68c3-01e3-4e4b-aeab-975858570bf9",
+}
+REQUIRED = ("base_url",)
 POLL_SECONDS = 300
 
 
