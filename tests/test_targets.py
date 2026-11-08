@@ -82,3 +82,20 @@ def test_a_past_month_has_no_days_left_to_need():
 def test_load_fills_defaults(tmp_path, monkeypatch):
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
     assert load() == {"dailyMinimum": 8.5, "projects": []}
+
+
+def test_prorating_divides_by_the_months_working_days_holidays_out_leave_in():
+    # Design example: October 2026 has 22 weekdays, holidays 2 and 20 Oct (20 working days), leave 9 Oct (19 available).
+    from datetime import date as d_
+    from datetime import timedelta
+
+    from pace.targets import month
+
+    days = []
+    for n in range(31):
+        day = d_(2026, 10, 1) + timedelta(n)
+        kind = {2: "holiday", 20: "holiday", 9: "leave"}.get(day.day, "weekend" if day.weekday() >= 5 else "working")
+        days.append({"date": day.isoformat(), "type": kind, "working": 1 if kind == "working" else 0})
+    targets = {"projects": [{"code": "TWE", "name": "Tweelin", "monthly_h": 140, "prorate": True}]}
+    [twe] = month([], days, targets, d_(2026, 10, 1), today=d_(2026, 10, 1))
+    assert twe["target_min"] == 140 * 60 * 19 // 20  # 133 h

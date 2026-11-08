@@ -27,7 +27,13 @@ def month(rows: list[dict], days: list[dict], targets: dict, at: date, today: da
     mine = [d for d in days if d["date"][:7] == f"{at:%Y-%m}"]
     avail = sum(d["working"] for d in mine)
     left = days_left(mine, today)
-    weekdays = sum(1 for n in range(1, calendar.monthrange(at.year, at.month)[1] + 1) if date(at.year, at.month, n).weekday() < 5)
+    # The month's working days: weekdays less company holidays. Personal leave only lowers avail.
+    holidays = {d["date"] for d in mine if d.get("type") == "holiday"}
+    weekdays = sum(
+        1
+        for n in range(1, calendar.monthrange(at.year, at.month)[1] + 1)
+        if date(at.year, at.month, n).weekday() < 5 and date(at.year, at.month, n).isoformat() not in holidays
+    )
     billed: dict[str, int] = {}
     for r in rows:
         if r["date"][:7] == f"{at:%Y-%m}":
