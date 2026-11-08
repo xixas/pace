@@ -54,7 +54,9 @@ class PaceIndicator extends PanelMenu.Button {
         this._updated.label.add_style_class_name('pace-sub');
         this.menu.addMenuItem(this._updated);
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-        this._signIn = this.menu.addAction('Sign in…', () => this._spawn(['pace', 'sign-in']));
+        // The Shell's PATH often lacks ~/.local/bin, where a per-user install puts pace
+        const pace = GLib.find_program_in_path('pace') ?? GLib.build_filenamev([GLib.get_home_dir(), '.local', 'bin', 'pace']);
+        this._signIn = this.menu.addAction('Sign in…', () => this._spawn([pace, 'sign-in']));
 
         const dir = Gio.File.new_for_path(GLib.build_filenamev([GLib.get_user_state_dir(), 'pace']));
         try {
