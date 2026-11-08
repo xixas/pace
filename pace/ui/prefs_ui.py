@@ -10,7 +10,7 @@ from gi.repository import Adw, Gtk  # noqa: E402
 
 from pace.ui import config  # noqa: E402
 from pace.ui.services import RELEASES_URL, version  # noqa: E402
-from pace.ui.widgets import box, label, open_uri  # noqa: E402
+from pace.ui.widgets import action_row, box, label, open_uri  # noqa: E402
 
 NUDGES = (
     ("friday", "Friday check", "Hours left to reach the target"),
@@ -28,6 +28,11 @@ PANEL_TEXT = (
     ("icon", "Icon only"),
 )
 REFRESH = (5, 10, 15, 30, 60)
+RULES = (
+    ("daily_target_h", "Daily target", "Weekly average to aim for"),
+    ("full_day_h", "Full day for pay", "Hours HR counts as one day · DhiHRMS default 9"),
+    ("part_day_h", "Part day for pay", "Leftover that still counts as a day · DhiHRMS default 5"),
+)
 
 
 def _time_button(settings: dict, key: str, save) -> Gtk.MenuButton:
@@ -93,7 +98,7 @@ class Preferences(Adw.PreferencesDialog):
             row.connect("notify::active", lambda r, k=key: self._set_nudge(k, r.get_active()))
             row.add_suffix(_time_button(s, key, self._set_time))
             notify.add(row)
-        expired = Adw.ActionRow(use_markup=False, title="Session expired", subtitle="Cannot be turned off")
+        expired = action_row(title="Session expired", subtitle="Cannot be turned off")
         expired.add_suffix(Gtk.Image(icon_name="changes-prevent-symbolic"))
         notify.add(expired)
         page.add(notify)
@@ -121,6 +126,8 @@ class Preferences(Adw.PreferencesDialog):
             display.add(r)
         page.add(display)
 
+        page.add(self._rules_group())
+
         startup = Adw.PreferencesGroup(title="Startup")
         login = Adw.SwitchRow(
             use_markup=False, title="Start Pace at login", subtitle="Adds an autostart entry", active=s["start_at_login"]
@@ -131,9 +138,7 @@ class Preferences(Adw.PreferencesDialog):
 
         account = Adw.PreferencesGroup(title="Account")
         profile = self.services.profile() or {}
-        who = Adw.ActionRow(
-            use_markup=False, title=f"Signed in as {profile.get('name') or 'you'}", subtitle=profile.get("email") or ""
-        )
+        who = action_row(title=f"Signed in as {profile.get('name') or 'you'}", subtitle=profile.get("email") or "")
         out = Gtk.Button(label="Sign out", valign=Gtk.Align.CENTER, css_classes=["destructive-action"])
         out.connect("clicked", lambda *_: (self.close(), self.window.confirm_sign_out()))
         who.add_suffix(out)
@@ -141,8 +146,8 @@ class Preferences(Adw.PreferencesDialog):
         page.add(account)
 
         about = Adw.PreferencesGroup(title="About")
-        about.add(Adw.ActionRow(use_markup=False, title="Version", subtitle=version()))
-        upd = Adw.ActionRow(use_markup=False, title="Updates", subtitle="Updates: install the newer package file you were sent")
+        about.add(action_row(title="Version", subtitle=version()))
+        upd = action_row(title="Updates", subtitle="Updates: install the newer package file you were sent")
         dl = Gtk.Button(label="Download", valign=Gtk.Align.CENTER)
         dl.connect("clicked", lambda *_: open_uri(self.window, RELEASES_URL))
         upd.add_suffix(dl)
@@ -150,8 +155,7 @@ class Preferences(Adw.PreferencesDialog):
         page.add(about)
 
         data = Adw.PreferencesGroup(title="Data")
-        rm = Adw.ActionRow(
-            use_markup=False,
+        rm = action_row(
             title="Remove my Pace data",
             subtitle="Deletes the keyring entry, status.json, ~/.config/pace and the autostart entry. Cannot be undone.",
         )
@@ -161,6 +165,49 @@ class Preferences(Adw.PreferencesDialog):
         data.add(rm)
         page.add(data)
         return page
+
+    def _rules_group(self) -> Adw.PreferencesGroup:
+        """Pay rules: three half-hour steppers; the part day always stays below the full day."""
+        rules = self.settings["rules"]
+        group = Adw.PreferencesGroup(title="Pay rules", description="How DhiHRMS turns billed hours into paid days.")
+        rows = {}
+        for key, title, sub in RULES:
+            row = Adw.SpinRow(
+                use_markup=False,
+                title=title,
+                subtitle=sub,
+                digits=1,
+                adjustment=Gtk.Adjustment(value=rules[key], lower=0.5, upper=24, step_increment=0.5, page_increment=1),
+            )
+            rows[key] = row
+            group.add(row)
+        full, part = rows["full_day_h"], rows["part_day_h"]
+        full.get_adjustment().set_lower(part.get_value() + 0.5)
+        part.get_adjustment().set_upper(full.get_value() - 0.5)
+
+        def changed(row, key):
+            if key == "full_day_h":
+                part.get_adjustment().set_upper(row.get_value() - 0.5)
+            elif key == "part_day_h":
+                full.get_adjustment().set_lower(row.get_value() + 0.5)
+            self._set_rule(key, round(row.get_value(), 1))
+
+        for key, row in rows.items():
+            row.connect("notify::value", lambda r, _p, k=key: changed(r, k))
+        reset = Adw.ButtonRow(title="Reset to DhiHRMS defaults")
+        reset.connect("activated", lambda *_: self._reset_rules(rows))
+        group.add(reset)
+        return group
+
+    def _reset_rules(self, rows: dict) -> None:
+        for key in ("part_day_h", "full_day_h", "daily_target_h"):  # part first so the full day's floor allows the default
+            rows[key].get_adjustment().set_lower(0.5)
+            rows[key].get_adjustment().set_upper(24)
+            rows[key].set_value(config.DEFAULT_RULES[key])
+
+    def _set_rule(self, key: str, value: float) -> None:
+        self.settings["rules"][key] = value
+        self._save()
 
     def _set(self, key: str, value) -> None:
         self.settings[key] = value

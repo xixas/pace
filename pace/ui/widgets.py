@@ -9,7 +9,7 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import GLib, Gtk  # noqa: E402
+from gi.repository import Adw, GLib, Gtk  # noqa: E402
 
 
 def label(text: str = "", *classes: str, xalign: float = 0, wrap: bool = False, **props) -> Gtk.Label:
@@ -28,8 +28,16 @@ def box(*children, vertical: bool = True, spacing: int = 0, classes: tuple[str, 
     return b
 
 
-def pill(text: str, colour: str = "grey") -> Gtk.Label:
-    return label(text, "pace-pill", colour, halign=Gtk.Align.START, valign=Gtk.Align.CENTER)
+def action_row(title: str = "", subtitle: str = "", **props) -> Adw.ActionRow:
+    """An Adw.ActionRow that never parses markup, so "R&D" and "leave & holidays" show as typed."""
+    row = Adw.ActionRow(use_markup=False, **props)
+    row.set_title(title)
+    row.set_subtitle(subtitle)
+    return row
+
+
+def pill(text: str, colour: str = "grey", **props) -> Gtk.Label:
+    return label(text, "pace-pill", colour, **{"halign": Gtk.Align.START, "valign": Gtk.Align.CENTER, **props})
 
 
 def clear(container: Gtk.Box) -> None:

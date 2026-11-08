@@ -151,3 +151,67 @@ def test_ui_state_keeps_other_keys():
     config.save_ui_state(topbar_seen=True)
     config.save_widget_pos(1, 2)
     assert config.load_ui_state() == {"topbar_seen": True, "widget": {"x": 1, "y": 2}}
+
+
+def test_set_target_adds_updates_and_clears_a_personal_row():
+    t = {"dailyMinimum": 8.5, "projects": []}
+    t = config.set_target(t, "RES", "R&D", 20, False)
+    assert t["projects"] == [{"code": "RES", "name": "R&D", "monthly_h": 20, "prorate": False, "source": "personal"}]
+    t = config.set_target(t, "res", "R&D", 25.5, True)  # code is case-insensitive, one row per project
+    assert t["projects"] == [{"code": "RES", "name": "R&D", "monthly_h": 25.5, "prorate": True, "source": "personal"}]
+    t = config.set_target(t, "RES", "R&D", None, True)  # empty hours = tracked only, the row stays so the name is kept
+    assert t["projects"] == [{"code": "RES", "name": "R&D", "monthly_h": None, "prorate": False, "source": "personal"}]
+
+
+LEAD_ROW = {"code": "TWE", "name": "Tweelin", "monthly_h": 140, "prorate": True, "source": "lead", "lead": "Anand"}
+
+
+def test_set_target_can_only_raise_a_lead_row_and_keeps_the_leads_prorate():
+    t = {"dailyMinimum": 8.5, "projects": [dict(LEAD_ROW)]}
+    raised = config.set_target(t, "TWE", "Tweelin", 150, False)
+    assert raised["projects"] == [{**LEAD_ROW, "monthly_h": 150, "lead_h": 140}]  # prorate stays the lead's True
+    assert config.lead_hours(raised["projects"][0]) == 140
+    for lower in (120, 140, None):  # at or below the lead, or cleared: back to the lead's value, no leftover raise
+        back = config.set_target(raised, "TWE", "Tweelin", lower, False)
+        assert back["projects"] == [LEAD_ROW]
+
+
+def test_pay_rules_default_to_dhihrms_and_feed_the_lop_line_text():
+    assert config.load_settings()["rules"] == {"daily_target_h": 8.5, "full_day_h": 9.0, "part_day_h": 5.0}
+    assert config.lop_line(config.DEFAULT_RULES) == ("9 h = a day, 5 h leftover = +1", "41 h / 5-day week")
+    assert config.lop_line({"daily_target_h": 8, "full_day_h": 8.5, "part_day_h": 4.5}) == (
+        "8.5 h = a day, 4.5 h leftover = +1",
+        "38.5 h / 5-day week",
+    )
+    s = config.load_settings()
+    s["rules"]["full_day_h"] = 8.5
+    config.save_settings(s)
+    assert config.load_settings()["rules"] == {"daily_target_h": 8.5, "full_day_h": 8.5, "part_day_h": 5.0}
+
+
+def test_parse_hours_empty_means_no_target():
+    assert config.parse_hours("") is None and config.parse_hours("  ") is None
+    assert config.parse_hours("140") == 140 and config.parse_hours(" 12,5 h") == 12.5
+    for bad in ("abc", "-5", "1e9"):
+        with pytest.raises(ValueError):
+            config.parse_hours(bad)
+
+
+def test_remove_target_drops_personal_rows_and_only_unraises_lead_rows():
+    t = {
+        "dailyMinimum": 8.5,
+        "projects": [
+            {**LEAD_ROW, "monthly_h": 150, "lead_h": 140},
+            {"code": "RES", "name": "R&D", "monthly_h": 20, "prorate": False, "source": "personal"},
+        ],
+    }
+    assert config.remove_target(t, "RES")["projects"] == [{**LEAD_ROW, "monthly_h": 150, "lead_h": 140}]
+    assert config.remove_target(t, "TWE")["projects"][0] == LEAD_ROW
+
+
+def test_merge_preset_keeps_a_personal_raise_above_the_new_lead_value():
+    t = {"dailyMinimum": 8.5, "projects": [{**LEAD_ROW, "monthly_h": 150, "lead_h": 140}]}
+    out = config.merge_preset(t, PRESET)  # lead re-sends 140: the raise to 150 survives
+    assert out["projects"] == [{**LEAD_ROW, "monthly_h": 150, "lead_h": 140}]
+    out = config.merge_preset(t, {"from": "Anand", "projects": [{**PRESET["projects"][0], "monthly_h": 160}]})
+    assert out["projects"] == [{**LEAD_ROW, "monthly_h": 160}]  # lead now above the raise: the raise is gone

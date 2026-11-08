@@ -21,12 +21,12 @@ from pace.ui.style import CSS  # noqa: E402
 from pace.ui.targets_ui import TargetsPage, share_dialog  # noqa: E402
 
 APP_ID = "io.github.xixas.Pace.App"
-SIZES = {"onboarding": (560, 700), "dashboard": (820, 720)}
+SIZES = {"onboarding": (460, 640), "dashboard": (820, 720)}
 
 
 class MainWindow(Adw.ApplicationWindow):
     def __init__(self, app: PaceApp):
-        super().__init__(application=app, title="Pace", default_width=560, default_height=700)
+        super().__init__(application=app, title="Pace", default_width=460, default_height=640)
         self.app, self.services = app, app.services
         self._status: dict = {}
         self.toasts = Adw.ToastOverlay()

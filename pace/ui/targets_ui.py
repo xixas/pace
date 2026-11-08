@@ -13,11 +13,11 @@ gi.require_version("Adw", "1")
 from gi.repository import Adw, Gio, GLib, Gtk  # noqa: E402
 
 from pace.ui import config  # noqa: E402
-from pace.ui.widgets import box, label  # noqa: E402
+from pace.ui.widgets import action_row, box, label  # noqa: E402
 
 
 def _tag(text: str) -> Gtk.Label:
-    return label(text, "pace-tag", valign=Gtk.Align.CENTER)
+    return label(text, "caption-heading", "dim-label", valign=Gtk.Align.CENTER)
 
 
 def _spin(value: float, low: float, high: float, step: float, on_change) -> Gtk.SpinButton:
@@ -74,88 +74,150 @@ class TargetsPage(Adw.NavigationPage):
         targets, settings = config.load_targets(), config.load_settings()
         page = Adw.PreferencesPage()
         daily = Adw.PreferencesGroup(title="Daily")
-        minimum = Adw.ActionRow(use_markup=False, title="Minimum average", subtitle="Weekly average must stay above this")
+        minimum = action_row(title="Minimum average", subtitle="Weekly average must stay above this")
         minimum.add_suffix(Gtk.Image(icon_name="changes-prevent-symbolic", valign=Gtk.Align.CENTER))
         minimum.add_suffix(_tag("set by org"))
         minimum.add_suffix(label(f"{targets['dailyMinimum']:g} h", "heading", valign=Gtk.Align.CENTER))
-        expected = Adw.ActionRow(use_markup=False, title="Expected", subtitle="What a good day looks like")
+        expected = action_row(title="Expected", subtitle="What a good day looks like")
         expected.add_suffix(_spin(settings["expected_daily_h"], 5, 14, 0.5, self._set_expected))
         expected.add_suffix(label("h", "dim-label", valign=Gtk.Align.CENTER))
-        lop = Adw.ActionRow(use_markup=False, title="Loss-of-pay line", subtitle="9 h = a day, 5 h leftover = +1")
+        how, week = config.lop_line(settings["rules"])
+        lop = action_row(title="Loss-of-pay line", subtitle=how)
         lop.add_suffix(_tag("read-only"))
-        lop.add_suffix(label("41 h / 5-day week", "heading", valign=Gtk.Align.CENTER))
+        lop.add_suffix(label(week, "heading", valign=Gtk.Align.CENTER))
         for r in (minimum, expected, lop):
             daily.add(r)
         page.add(daily)
 
-        monthly = Adw.PreferencesGroup(title="Monthly by project (billable)")
+        monthly = Adw.PreferencesGroup(title="Monthly by project (billable)", description="Tap a project to set its target.")
         for row in project_rows(self.window.status(), targets):
-            monthly.add(self._project_row(row, targets))
-            if row["source"] == "lead" and row.get("monthly_h") is not None:
-                pr = Adw.ActionRow(
-                    use_markup=False, title="Prorate for leave & holidays", subtitle=f"Lead's choice for {row['name']}"
-                )
-                pr.add_suffix(_tag("set by lead"))
-                pr.add_suffix(Gtk.Switch(active=bool(row.get("prorate")), sensitive=False, valign=Gtk.Align.CENTER))
-                monthly.add(pr)
-        add = Adw.ActionRow(use_markup=False, title="Add personal target", activatable=True)
+            monthly.add(self._project_row(row))
+            if row.get("monthly_h") is not None:
+                monthly.add(self._prorate_row(row))
+        add = action_row(title="Add personal target", activatable=True)
         add.add_prefix(Gtk.Image(icon_name="list-add-symbolic"))
         add.connect("activated", lambda *_: self._add_dialog())
         monthly.add(add)
         page.add(monthly)
         note = Adw.PreferencesGroup()
-        note.add(
-            box(
-                label("Pay (LOP) always counts billable + non-billable.", "heading", wrap=True),
-                label("Project targets above count billable only.", "caption", wrap=True),
-                classes=("pace-info",),
-                spacing=2,
-            )
+        why = action_row(
+            title="Pay (LOP) always counts billable + non-billable.", subtitle="Project targets above count billable only."
         )
+        why.add_prefix(Gtk.Image(icon_name="dialog-information-symbolic", css_classes=["accent"], pixel_size=20))
+        note.add(why)
         page.add(note)
         self.holder.set_child(page)
 
-    def _project_row(self, row: dict, targets: dict) -> Adw.ActionRow:
-        ar = Adw.ActionRow(use_markup=False, title=row["name"], subtitle=row["code"])
-        if row.get("monthly_h") is None:
+    def _project_row(self, row: dict) -> Adw.ActionRow:
+        """Every project row opens the edit dialog; the suffix says who set what."""
+        ar = action_row(title=row["name"], subtitle=row["code"], activatable=True)
+        h, lead = row.get("monthly_h"), config.lead_hours(row)
+        if h is None:
             ar.add_suffix(_tag("no target · tracked"))
         elif row["source"] == "lead":
-            ar.add_suffix(_tag("set by lead"))
-            ar.add_suffix(label(f"{row['monthly_h']:g} h", "heading", valign=Gtk.Align.CENTER))
+            ar.add_suffix(_tag("set by lead" if h == lead else f"set by lead {lead:g} h · raised"))
+            ar.add_suffix(label(f"{h:g} h", "heading", valign=Gtk.Align.CENTER))
         else:
-            ar.add_suffix(_spin(row["monthly_h"], 0, 400, 1, lambda v, r=row: self._set_hours(r["code"], v)))
-            rm = Gtk.Button(icon_name="user-trash-symbolic", css_classes=["flat"], valign=Gtk.Align.CENTER, tooltip_text="Remove")
-            rm.connect("clicked", lambda *_: self._remove(row["code"]))
-            ar.add_suffix(rm)
+            ar.add_suffix(label(f"{h:g} h", "heading", valign=Gtk.Align.CENTER))
+        ar.add_suffix(Gtk.Image(icon_name="go-next-symbolic"))
+        ar.connect("activated", lambda *_: self._edit_dialog(row))
         return ar
+
+    def _prorate_row(self, row: dict) -> Adw.ActionRow:
+        pr = action_row(title="Prorate for leave & holidays")
+        if row["source"] == "lead":
+            pr.set_subtitle(f"Lead's choice for {row['name']}")
+            pr.add_suffix(_tag("set by lead"))
+            pr.add_suffix(Gtk.Switch(active=bool(row.get("prorate")), sensitive=False, valign=Gtk.Align.CENTER))
+        else:
+            pr.set_subtitle(f"Your choice for {row['name']}")
+            sw = Gtk.Switch(active=bool(row.get("prorate")), valign=Gtk.Align.CENTER)
+            sw.connect("notify::active", lambda s, *_: self._save(row["code"], row["name"], row["monthly_h"], s.get_active()))
+            pr.add_suffix(sw)
+            pr.set_activatable_widget(sw)
+        return pr
 
     def _set_expected(self, value: float) -> None:
         s = config.load_settings()
         s["expected_daily_h"] = value
         config.save_settings(s)
 
-    def _set_hours(self, code: str, value: float) -> None:
-        t = config.load_targets()
-        for p in t["projects"]:
-            if p["code"] == code and p["source"] != "lead":
-                p["monthly_h"] = value
-        config.save_targets(t)
-
-    def _remove(self, code: str) -> None:
-        t = config.load_targets()
-        t["projects"] = [p for p in t["projects"] if p["code"] != code or p["source"] == "lead"]
-        config.save_targets(t)
+    def _save(self, code: str, name: str, monthly_h: float | None, prorate: bool) -> None:
+        config.save_targets(config.set_target(config.load_targets(), code, name, monthly_h, prorate))
         self.rebuild()
 
-    def _add_dialog(self) -> None:
-        code, name, hours = (
-            Adw.EntryRow(title="Project code (e.g. TWE)"),
-            Adw.EntryRow(title="Project name"),
-            Adw.EntryRow(title="Monthly billable hours"),
-        )
+    @staticmethod
+    def _target_fields(row: dict | None) -> tuple[Adw.PreferencesGroup, Adw.EntryRow, Adw.SwitchRow]:
+        """The two inputs every target dialog has: hours (empty = no target) and the prorate switch."""
+        lead = row is not None and row.get("source") == "lead"
+        raised = lead and "lead_h" in row
+        hours = Adw.EntryRow(title="Monthly billable hours", input_purpose=Gtk.InputPurpose.NUMBER)
+        if row and row.get("monthly_h") is not None and (not lead or raised):
+            hours.set_text(f"{row['monthly_h']:g}")
+        prorate = Adw.SwitchRow(use_markup=False, active=bool(row and row.get("prorate")))
+        prorate.set_title("Prorate for leave & holidays")
+        prorate.set_subtitle("Lead's choice, kept" if lead else "The target shrinks for each leave day or holiday")
+        prorate.set_sensitive(not lead)
         group = Adw.PreferencesGroup()
-        for r in (code, name, hours):
+        group.add(hours)
+        group.add(prorate)
+        return group, hours, prorate
+
+    def _edit_dialog(self, row: dict) -> None:
+        lead = row.get("source") == "lead"
+        if lead:
+            body = (
+                f"{row.get('lead') or 'Your lead'} set {config.lead_hours(row):g} h. A personal target can only raise it; "
+                "leave the hours empty to use the lead's value."
+            )
+        else:
+            body = "Billable hours per month. Leave the hours empty to track the project without a target."
+        group, hours, prorate = self._target_fields(row)
+        d = Adw.AlertDialog(heading=f"{row['name']} · {row['code']}", body=body)
+        d.set_extra_child(group)
+        d.add_response("cancel", "Cancel")
+        if row.get("monthly_h") is not None and (not lead or "lead_h" in row):
+            d.add_response("remove", "Use lead's value" if lead else "Remove target")
+            d.set_response_appearance("remove", Adw.ResponseAppearance.DESTRUCTIVE)
+        d.add_response("save", "Save")
+        d.set_response_appearance("save", Adw.ResponseAppearance.SUGGESTED)
+        d.set_default_response("save")
+
+        def answered(_d, response):
+            if response == "remove":
+                config.save_targets(config.remove_target(config.load_targets(), row["code"]))
+                return self.rebuild()
+            if response != "save":
+                return
+            try:
+                h = config.parse_hours(hours.get_text())
+            except ValueError:
+                return self.window.toast("Monthly hours must be a number")
+            self._save(row["code"], row["name"], h, prorate.get_active())
+
+        d.connect("response", answered)
+        d.present(self.window)
+
+    def _add_dialog(self) -> None:
+        """Pick a project Pace has seen this month, or type a code and a name."""
+        known = {r["code"] for r in config.load_targets()["projects"]}
+        seen = [p for p in (self.window.status().get("month") or {}).get("projects", []) if p["code"] not in known]
+        names = [f"{p['name']} · {p['code']}" for p in seen] + ["Other project…"]
+        project = Adw.ComboRow(use_markup=False, title="Project", model=Gtk.StringList.new(names), visible=bool(seen))
+        code = Adw.EntryRow(title="Project code (e.g. TWE)", visible=not seen)
+        name = Adw.EntryRow(title="Project name", visible=not seen)
+        group, hours, prorate = self._target_fields(None)
+        for r in (prorate, hours):
+            group.remove(r)
+        for r in (project, code, name, hours, prorate):
             group.add(r)
+
+        def other(*_):
+            manual = project.get_selected() >= len(seen)
+            code.set_visible(manual)
+            name.set_visible(manual)
+
+        project.connect("notify::selected", other)
         d = Adw.AlertDialog(
             heading="Add personal target", body="Billable hours only. Lead-set targets can only be raised by a personal one."
         )
@@ -163,29 +225,23 @@ class TargetsPage(Adw.NavigationPage):
         d.add_response("cancel", "Cancel")
         d.add_response("add", "Add")
         d.set_response_appearance("add", Adw.ResponseAppearance.SUGGESTED)
+        d.set_default_response("add")
 
         def answered(_d, response):
             if response != "add":
                 return
             try:
-                h = float(hours.get_text().replace(",", "."))
+                h = config.parse_hours(hours.get_text())
             except ValueError:
                 return self.window.toast("Monthly hours must be a number")
-            if not code.get_text().strip() or not name.get_text().strip():
+            if seen and project.get_selected() < len(seen):
+                picked = seen[project.get_selected()]
+                c, n = picked["code"], picked["name"]
+            else:
+                c, n = code.get_text().strip().upper(), name.get_text().strip()
+            if not c or not n:
                 return self.window.toast("A target needs a code and a name")
-            t = config.load_targets()
-            t["projects"] = [p for p in t["projects"] if p["code"] != code.get_text().strip().upper()]
-            t["projects"].append(
-                {
-                    "code": code.get_text().strip().upper(),
-                    "name": name.get_text().strip(),
-                    "monthly_h": h,
-                    "prorate": False,
-                    "source": "personal",
-                }
-            )
-            config.save_targets(t)
-            self.rebuild()
+            self._save(c, n, h, prorate.get_active())
 
         d.connect("response", answered)
         d.present(self.window)

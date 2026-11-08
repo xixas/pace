@@ -13,7 +13,7 @@ gi.require_version("Adw", "1")
 from gi.repository import Adw, GLib, Gtk  # noqa: E402
 
 from pace.ui import config, onboarding  # noqa: E402
-from pace.ui.widgets import box, label, run_async  # noqa: E402
+from pace.ui.widgets import action_row, box, label, pill, run_async  # noqa: E402
 
 APP_ICON = "preferences-system-time-symbolic"
 EXTENSION = "pace@osmosys"
@@ -30,9 +30,9 @@ def pill_button(text: str, suggested: bool = True, destructive: bool = False) ->
 
 
 def page(icon: str, title: str, body: str, *children: Gtk.Widget) -> Adw.StatusPage:
-    sp = Adw.StatusPage(icon_name=icon, title=title, description=body, vexpand=True, css_classes=["compact"])
+    sp = Adw.StatusPage(icon_name=icon, title=title, description=body, vexpand=True)
     if children:
-        sp.set_child(box(*children, spacing=12, halign=Gtk.Align.CENTER))
+        sp.set_child(box(*children, spacing=12, halign=Gtk.Align.CENTER, margin_top=6))
     return sp
 
 
@@ -60,9 +60,7 @@ class Onboarding(Adw.Bin):
         self.stack = Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE, hhomogeneous=False, vhomogeneous=False)
         self.set_child(Gtk.ScrolledWindow(child=self.stack, hscrollbar_policy=Gtk.PolicyType.NEVER))
         self.attempt, self.redirect, self.url, self.after = 0, None, None, "summary"
-        self.waiting = Adw.StatusPage(
-            icon_name="web-browser-symbolic", title="Finish signing in in your browser…", vexpand=True, css_classes=["compact"]
-        )
+        self.waiting = Adw.StatusPage(icon_name="web-browser-symbolic", title="Finish signing in in your browser…", vexpand=True)
         self.failure_holder = Adw.Bin()
         self.summary_holder = Adw.Bin()
         for name, widget in (
@@ -104,7 +102,7 @@ class Onboarding(Adw.Bin):
         cancel.connect("clicked", lambda *_: self._cancel())
         self.waiting.set_child(
             box(
-                Gtk.Spinner(spinning=True, width_request=32, height_request=32),
+                Adw.Spinner(width_request=32, height_request=32),
                 box(
                     label("Didn't open?", "dim-label"),
                     copy,
@@ -183,13 +181,11 @@ class Onboarding(Adw.Bin):
 
     def _keyring(self) -> Adw.StatusPage:
         file_row, none_row = (
-            Adw.ActionRow(
-                use_markup=False,
+            action_row(
                 title="Store in a private file",
                 subtitle="~/.local/share/pace, mode 600 — readable only by your user, not encrypted (like rclone.conf)",
             ),
-            Adw.ActionRow(
-                use_markup=False,
+            action_row(
                 title="Sign in every login",
                 subtitle="Nothing is stored; you sign in each time you log in to the desktop",
             ),
@@ -199,7 +195,7 @@ class Onboarding(Adw.Bin):
         for row, check in ((file_row, a), (none_row, b)):
             row.add_prefix(check)
             row.set_activatable_widget(check)
-        file_row.add_suffix(Gtk.Label(label="recommended here", css_classes=["pace-pill", "green"], valign=Gtk.Align.CENTER))
+        file_row.add_suffix(pill("recommended here", "green"))
         group = Adw.PreferencesGroup()
         group.add(file_row)
         group.add(none_row)
@@ -214,16 +210,15 @@ class Onboarding(Adw.Bin):
 
         go.connect("clicked", proceed)
         sp = Adw.StatusPage(
-            icon_name="dialog-password-symbolic",
+            icon_name="system-lock-screen-symbolic",
             title="Pace can't reach a password keyring",
             vexpand=True,
-            css_classes=["compact"],
             description="Your desktop has no Secret Service (common on minimal KDE or COSMIC). Pace needs somewhere to keep your sign-in. You choose once.",
         )
         sp.set_child(
             Adw.Clamp(
                 maximum_size=520,
-                child=box(group, box(later, go, vertical=False, spacing=12, halign=Gtk.Align.CENTER, margin_top=12)),
+                child=box(group, box(later, go, vertical=False, spacing=12, halign=Gtk.Align.CENTER, margin_top=18)),
             )
         )
         return sp
@@ -253,7 +248,7 @@ class Onboarding(Adw.Bin):
     def _draw_summary(self, s: dict) -> None:
         group = Adw.PreferencesGroup()
         for title, value in s["rows"]:
-            row = Adw.ActionRow(use_markup=False, title=title)
+            row = action_row(title=title)
             row.add_prefix(
                 Gtk.Image(icon_name="object-select-symbolic" if not value or value == "linked" else "x-office-calendar-symbolic")
             )
@@ -264,11 +259,11 @@ class Onboarding(Adw.Bin):
         nxt.connect("clicked", lambda *_: self.host.push_targets(self.show_topbar))
         name = s["headline"].removeprefix("Signed in as ") or "?"
         content = box(
-            Adw.Avatar(size=72, text=name, show_initials=True, halign=Gtk.Align.CENTER),
-            label(s["headline"], "title-2", xalign=0.5, margin_top=12),
-            label(s["email"], "dim-label", xalign=0.5, margin_bottom=18),
+            Adw.Avatar(size=96, text=name, show_initials=True, halign=Gtk.Align.CENTER),
+            label(s["headline"], "title-1", xalign=0.5, margin_top=18, wrap=True, justify=Gtk.Justification.CENTER),
+            label(s["email"], "dim-label", xalign=0.5, margin_bottom=24),
             group,
-            box(nxt, margin_top=18, halign=Gtk.Align.CENTER),
+            box(nxt, margin_top=24, halign=Gtk.Align.CENTER),
         )
         wrap = Adw.Clamp(maximum_size=460, child=content, valign=Gtk.Align.CENTER, margin_start=16, margin_end=16)
         self.summary_holder.set_child(wrap)
