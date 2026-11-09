@@ -10,8 +10,10 @@ import sys
 from pace.files import config_dir, read_json, state_dir
 
 # Osmosys Entra tenant, hrms-api's registration (MS_SSO_CLIENT_ID; dev and prod share them, hrms-portal 2026-10-30)
-# and Pace's own public-client registration (created 2026-11-08). Public ids, not secrets.
+# and Pace's own public-client registration (created 2026-11-08). Public ids, not secrets. base_url is production;
+# config.json overrides it (dev: https://dev-api.dhihrms.com/api, local mock: http://127.0.0.1:8001/api).
 DEFAULTS = {
+    "base_url": "https://api.dhihrms.com/api",
     "tenant": "95ca85cb-20c9-45c5-bbfc-be2d0ac2e657",
     "api_client_id": "97152fbf-dde7-4077-a876-ea74e8b40b0f",
     "client_id": "8c8d68c3-01e3-4e4b-aeab-975858570bf9",

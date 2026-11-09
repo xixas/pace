@@ -19,8 +19,15 @@ def test_config_file_fills_in_what_the_defaults_leave_open(tmp_path, monkeypatch
     assert cfg.scope == "api://97152fbf-dde7-4077-a876-ea74e8b40b0f/access_as_user"
 
 
-def test_missing_config_names_the_file_and_the_keys_to_set(tmp_path, monkeypatch):
+def test_no_config_file_means_production_hrms_api(tmp_path, monkeypatch):
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
+    assert load_config().base_url == "https://api.dhihrms.com/api"
+
+
+def test_a_blank_server_names_the_file_and_the_key_to_set(tmp_path, monkeypatch):
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
+    (tmp_path / "pace").mkdir()
+    (tmp_path / "pace" / "config.json").write_text(json.dumps({"base_url": ""}))
     with pytest.raises(ConfigError, match=r"config\.json.*base_url"):
         load_config()
 
