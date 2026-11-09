@@ -20,15 +20,17 @@ Gio._promisify(Gio.File.prototype, 'load_contents_async');
 
 const COLOURS = ['green', 'amber', 'red', 'blue', 'grey'];
 
-// Dashed circle in the CSS colour, one dash per 30°
-function drawRing(area) {
+// Circle outline in the CSS colour: dashed (one dash per 30°) for BILL's ring, solid for the quiet grey circle
+function drawRing(area, dashed) {
     const cr = area.get_context();
     const [w, h] = area.get_surface_size();
     const r = Math.min(w, h) / 2 - 1;
     cr.setSourceColor(area.get_theme_node().get_foreground_color());
-    cr.setLineWidth(2.2);
-    const dash = Math.PI * r / 6;
-    cr.setDash([dash * 0.55, dash * 0.45], 0);
+    cr.setLineWidth(dashed ? 2.2 : 1.6);
+    if (dashed) {
+        const dash = Math.PI * r / 6;
+        cr.setDash([dash * 0.55, dash * 0.45], 0);
+    }
     cr.arc(w / 2, h / 2, r, 0, 2 * Math.PI);
     cr.stroke();
     cr.$dispose();
@@ -42,9 +44,11 @@ class PaceIndicator extends PanelMenu.Button {
         this._dot = new St.Widget({style_class: 'pace-dot', y_align: Clutter.ActorAlign.CENTER});
         this._glyph = new St.Label({style_class: 'pace-glyph', y_align: Clutter.ActorAlign.CENTER});
         this._ring = new St.DrawingArea({style_class: 'pace-ring', y_align: Clutter.ActorAlign.CENTER});
-        this._ring.connect('repaint', area => drawRing(area));
+        this._ring.connect('repaint', area => drawRing(area, true));
+        this._circle = new St.DrawingArea({style_class: 'pace-circle', y_align: Clutter.ActorAlign.CENTER});
+        this._circle.connect('repaint', area => drawRing(area, false));
         this._label = new St.Label({style_class: 'pace-label', y_align: Clutter.ActorAlign.CENTER});
-        for (const a of [this._dot, this._ring, this._glyph, this._label])
+        for (const a of [this._dot, this._ring, this._circle, this._glyph, this._label])
             this._box.add_child(a);
         this.add_child(this._box);
 
@@ -96,7 +100,8 @@ class PaceIndicator extends PanelMenu.Button {
         this._box.add_style_class_name(`pace-${COLOURS.includes(l.colour) ? l.colour : 'grey'}`);
         this._dot.visible = l.marker === 'dot';
         this._ring.visible = l.marker === '◌';
-        this._glyph.visible = !this._dot.visible && !this._ring.visible;
+        this._circle.visible = l.marker === '○';
+        this._glyph.visible = !this._dot.visible && !this._ring.visible && !this._circle.visible;
         this._glyph.text = this._glyph.visible ? l.marker : '';
         // Icon-only (B11): text is "" and only the marker shows
         this._label.visible = l.text !== '';

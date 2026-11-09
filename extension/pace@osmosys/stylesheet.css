@@ -25,24 +25,30 @@
   height: 12px;
 }
 
+/* The quiet grey circle, drawn like the ring: as a ○ glyph it reads as a capital O beside the label */
+.pace-circle {
+  width: 10px;
+  height: 10px;
+}
+
 .pace-green .pace-dot { background-color: #57e389; }
-.pace-green .pace-glyph, .pace-green .pace-ring { color: #57e389; }
+.pace-green .pace-glyph, .pace-green .pace-ring, .pace-green .pace-circle { color: #57e389; }
 .pace-green .pace-label { color: #8ff0a4; }
 
 .pace-amber .pace-dot { background-color: #ffbe6f; }
-.pace-amber .pace-glyph, .pace-amber .pace-ring { color: #ffbe6f; }
+.pace-amber .pace-glyph, .pace-amber .pace-ring, .pace-amber .pace-circle { color: #ffbe6f; }
 .pace-amber .pace-label { color: #f6d32d; }
 
 .pace-red .pace-dot { background-color: #ff7b63; }
-.pace-red .pace-glyph, .pace-red .pace-ring { color: #ff7b63; }
+.pace-red .pace-glyph, .pace-red .pace-ring, .pace-red .pace-circle { color: #ff7b63; }
 .pace-red .pace-label { color: #ff7b63; }
 
 .pace-blue .pace-dot { background-color: #78aeed; }
-.pace-blue .pace-glyph, .pace-blue .pace-ring { color: #78aeed; }
+.pace-blue .pace-glyph, .pace-blue .pace-ring, .pace-blue .pace-circle { color: #78aeed; }
 .pace-blue .pace-label { color: #99c1f1; }
 
 .pace-grey .pace-dot { background-color: #9a9996; }
-.pace-grey .pace-glyph, .pace-grey .pace-ring { color: #9a9996; }
+.pace-grey .pace-glyph, .pace-grey .pace-ring, .pace-grey .pace-circle { color: #9a9996; }
 .pace-grey .pace-label { color: #c0bfbc; }
 
 .pace-verdict {
