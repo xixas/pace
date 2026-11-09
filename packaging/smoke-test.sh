@@ -12,8 +12,9 @@ set +e
 paced --once
 rc=$?
 set -e
-echo "paced --once exit=$rc (1 with a config error is expected)"
-[ "$rc" = 1 ]
+echo "paced --once exit=$rc (0 and a signed-out status expected: no session yet)"
+[ "$rc" = 0 ]
+grep -q '"state": "signed_out"' "$XDG_STATE_HOME/pace/status.json"
 /usr/bin/python3 -c "import sys; sys.path.insert(0, '/usr/lib/pace'); import pace.engine; print('import pace.engine ok')"
 /usr/bin/python3 -c "import gi
 for n, v in (('Gtk', '4.0'), ('Adw', '1'), ('Secret', '1')):
