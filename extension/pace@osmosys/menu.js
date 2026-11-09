@@ -232,15 +232,12 @@ export function buildMenu(menu, m, flash, act) {
     item(menu, 'Open PineStem', () => act.open(m.pinestemUrl));
     if (m.state === 'skew')
         return;
-    if (m.snoozed) {
-        const r = new St.BoxLayout({x_expand: true});
-        r.add_child(label('Nudges snoozed until midnight', 'pace-snoozed', {style: null}));
-        r.get_children()[0].x_expand = true;
-        r.add_child(button('Undo', 'pace-link', act.unsnooze));
-        staticItem(menu, r);
-    } else {
-        item(menu, 'Snooze nudges today', act.snooze);
-    }
+    // One switch both ways, so snoozing and undoing behave the same (a click flips it and closes the menu)
+    const snooze = new PopupMenu.PopupSwitchMenuItem(m.snoozed ? 'Nudges snoozed until midnight' : 'Snooze nudges today', m.snoozed);
+    if (m.snoozed)
+        snooze.label.add_style_class_name('pace-snoozed');
+    snooze.connect('toggled', (_i, on) => (on ? act.snooze : act.unsnooze)());
+    menu.addMenuItem(snooze);
 
     menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
     const foot = new St.BoxLayout({x_expand: true});
