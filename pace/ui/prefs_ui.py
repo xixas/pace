@@ -143,7 +143,7 @@ class Preferences(Adw.PreferencesDialog):
 
         about = Adw.PreferencesGroup(title="About")
         about.add(action_row(title="Version", subtitle=version()))
-        upd = action_row(title="Updates", subtitle="Updates: install the newer package file you were sent")
+        upd = action_row(title="Updates", subtitle="Install the newer package file you were sent")
         dl = Gtk.Button(label="Download", valign=Gtk.Align.CENTER)
         dl.connect("clicked", lambda *_: open_uri(self.window, RELEASES_URL))
         upd.add_suffix(dl)
