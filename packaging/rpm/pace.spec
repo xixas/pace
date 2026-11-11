@@ -1,5 +1,5 @@
 Name:           pace
-Version:        0.1.0~rc1
+Version:        0.1.0
 Release:        1%{?dist}
 Summary:        PineStem billed hours against the weekly target, on the panel
 License:        MIT
@@ -50,5 +50,8 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/*.desktop
 %{_datadir}/metainfo/io.github.xixas.Pace.metainfo.xml
 
 %changelog
+* Wed Nov 11 2026 Vikas Kyatannawar <vikas.k@osmosys.co> - 0.1.0-1
+- First release: reads hrms-api production (v7.50.0 Pace endpoints)
+
 * Sun Nov 08 2026 Vikas Kyatannawar <vikas.k@osmosys.co> - 0.1.0~rc1-1
 - Initial package
