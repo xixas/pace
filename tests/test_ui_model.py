@@ -262,3 +262,12 @@ def test_back_date_skips_a_holiday_after_the_leave():
         if r["date"] == "2026-11-16":
             r.update(type="holiday", working=0)
     assert model.back_date(status_on_leave(), rows).isoformat() == "2026-11-17"
+
+
+def test_widget_view_on_leave_has_content_not_an_empty_card():
+    v = model.widget_view(status_on_leave(), rules())
+    assert v["title"] == "On leave" and v["big"] == "Mon 16 Nov" and v["side"] == "back" and v["colour"] == "grey"
+    assert v["lines"][0] == "Away 9–13 Nov"
+    assert v["lines"][1] == "November: TWE 33.0 h · RES 12.0 h"
+    assert v["lines"][2] == "Next week needs 42.5 h, pay line 41 h"
+    assert len(model.widget_view(status_on_leave())["lines"]) == 2  # without rules there is no next-week line

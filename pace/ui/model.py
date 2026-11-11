@@ -293,8 +293,36 @@ def week_bounds(today: date) -> tuple[date, date]:
     return monday, monday + timedelta(days=6)
 
 
-def widget_view(status: dict) -> dict:
+def leave_widget(status: dict, rules=None) -> dict:
+    """The card for a week of leave: when you are back, the month so far, what next week needs. Same data as leave_view."""
+    days = status["days"]
+    back = back_date(status)
+    lines = [f"Away {range_label(days)}"]
+    if projects := (status.get("month") or {}).get("projects"):
+        lines.append(
+            f"{(status.get('month') or {}).get('name') or 'Month'}: "
+            + " · ".join(f"{p['code']} {hours(p['billed_min'])} h" for p in projects[:3])
+        )
+    if rules is not None:
+        from pace.engine import lop_line
+
+        lines.append(
+            f"Next week needs {h_short(max(rules.target * 5, lop_line(5, rules)))} h, pay line {h_short(lop_line(5, rules))} h"
+        )
+    return {
+        "title": "On leave",
+        "big": f"{back:%a} {back.day} {back:%b}",
+        "side": "back",
+        "lines": lines,
+        "project": None,
+        "colour": "grey",
+    }
+
+
+def widget_view(status: dict, rules=None) -> dict:
     """What the card shows. Signed out or before the first poll there is no `widget` key."""
+    if status.get("state") == "on_leave" and status.get("days"):
+        return leave_widget(status, rules)
     w = status.get("widget")
     if not w:
         return {

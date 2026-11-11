@@ -76,7 +76,7 @@ button.heat-cell:focus-visible { outline: 2px solid var(--accent-bg-color); outl
 .swatch.heat-ok, .swatch.heat-mid, .swatch.heat-low, .swatch.heat-holiday { border: 0; }
 
 /* ---- B10 mini widget: a rounded card on a transparent, undecorated window -------------------------------------------- */
-window.pace-widget { background: transparent; }
+window.pace-widget, window.pace-widget.background, window.pace-widget.csd, window.pace-widget.solid-csd { background: transparent; box-shadow: none; border-radius: 0; }
 .pace-widget-card { background: var(--window-bg-color); color: var(--window-fg-color); border-radius: 18px; padding: 16px 18px 14px;
   box-shadow: 0 0 0 1px var(--card-shade-color), 0 8px 24px alpha(black, .22); }
 .pace-widget-card .big { font-size: 30px; font-weight: 800; line-height: 1; font-feature-settings: "tnum"; letter-spacing: -0.02em; }
