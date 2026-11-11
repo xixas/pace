@@ -70,9 +70,9 @@ def save_settings(settings: dict) -> None:
 
 
 def lop_line(rules: dict) -> tuple[str, str]:
-    """A11's read-only loss-of-pay row: (how a day is counted, the 5-day week line that follows from it)."""
+    """A11's loss-of-pay line in words: (how a day is counted, the 5-day week line that follows from it)."""
     full, part = rules["full_day_h"], rules["part_day_h"]
-    return f"{full:g} h = a day, {part:g} h leftover = +1", f"{4 * full + part:g} h / 5-day week"
+    return f"Each {full:g} h counts as a day, a {part:g} h leftover counts as one more", f"{4 * full + part:g} h / 5-day week"
 
 
 def apply_autostart(settings: dict) -> None:
@@ -140,13 +140,20 @@ def set_target(targets: dict, code: str, name: str, monthly_h: float | None, pro
     return {**targets, "projects": rows}
 
 
+HOURS = re.compile(r"^(\d{1,3})(?:[.,](\d))?$")
+
+
 def parse_hours(text: str) -> float | None:
-    """The hours field of the target dialogs: empty = no target; "12,5 h" is fine; 0-744 h a month."""
-    text = text.strip().rstrip("hH").strip().replace(",", ".")
+    """The hours field of the target dialogs: empty = no target (tracked only), else 1 to 400 h a month, one decimal.
+    "12,5 h" is fine; "abc", "0", "401" and "12.55" raise ValueError."""
+    text = text.strip().rstrip("hH").strip()
     if not text:
         return None
-    value = float(text)
-    if not 0 <= value <= 744:
+    m = HOURS.match(text)
+    if not m:
+        raise ValueError(text)
+    value = float(f"{m[1]}.{m[2] or 0}")
+    if not 1 <= value <= 400:
         raise ValueError(text)
     return value
 
