@@ -203,5 +203,16 @@ test('runway captions per stage', () => {
     eq(runwayCaption(week({logged_min: 1560, days: days('billed', 'billed', 'pending', 'today', 'future')})), '15.0 h to pay line · Wed not billed yet', 'pending');
 });
 
+test('the panel shows a snoozed bell-off only until the snooze runs out', () => {
+    const s = JSON.parse(fixture('01-on-track'));
+    const until = '2026-10-30T00:00:00';
+    const before = new Date('2026-10-29T14:20:00').getTime(), after = new Date('2026-10-30T00:05:00').getTime();
+    s.as_of = '2026-10-29T14:10:00';
+    s.stale_after = '2026-10-30T23:00:00';
+    eq(look(JSON.stringify({...s, snoozed_until: until}), before).snoozed, true, 'during');
+    eq(look(JSON.stringify({...s, snoozed_until: until}), after).snoozed, false, 'after midnight');
+    eq(look(JSON.stringify({...s, snoozed_until: null}), before).snoozed, false, 'not snoozed');
+});
+
 if (failed)
     System.exit(1);
