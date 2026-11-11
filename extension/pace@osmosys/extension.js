@@ -115,6 +115,7 @@ class PaceIndicator extends PanelMenu.Button {
         this.menu.removeAll();
         buildMenu(this.menu, model, this._flashText, {
             dashboard: () => this._spawn([this._pace]),
+            settings: () => this._spawn([this._pace, 'settings']),
             signIn: () => this._spawn([this._pace, 'sign-in']),
             open: url => this._open(url),
             refresh: () => this._paced('Refresh'),

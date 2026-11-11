@@ -166,7 +166,7 @@ function staticItem(menu, widget) {
     return it;
 }
 
-// menu: a PopupMenu; m: look.menuModel(); flash: transient footer message; act: {dashboard, signIn, open, refresh, snooze, unsnooze}
+// menu: a PopupMenu; m: look.menuModel(); flash: transient footer message; act: {dashboard, settings, signIn, open, refresh, snooze, unsnooze}
 export function buildMenu(menu, m, flash, act) {
     const content = vbox('pace-content');
     content.style = `width: ${WIDTH}px;`;
@@ -229,6 +229,7 @@ export function buildMenu(menu, m, flash, act) {
     if (m.signIn)
         item(menu, 'Sign in…', act.signIn);
     item(menu, 'Open dashboard', act.dashboard);
+    item(menu, 'Settings…', act.settings);
     item(menu, 'Open PineStem', () => act.open(m.pinestemUrl));
     if (m.state === 'skew')
         return;
