@@ -1,3 +1,10 @@
+pace (0.1.2) noble; urgency=medium
+
+  * App QA pass on live data: on-leave week, calendar redesign and day details,
+    editable targets, widget, snooze switch and indicator.
+
+ -- Vikas Kyatannawar <vikas.k@osmosys.co>  Wed, 11 Nov 2026 11:30:00 +0530
+
 pace (0.1.1) noble; urgency=medium
 
   * Settings entry in the top-bar menu.

@@ -1,5 +1,5 @@
 Name:           pace
-Version:        0.1.1
+Version:        0.1.2
 Release:        1%{?dist}
 Summary:        PineStem billed hours against the weekly target, on the panel
 License:        MIT
@@ -50,6 +50,9 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/*.desktop
 %{_datadir}/metainfo/io.github.xixas.Pace.metainfo.xml
 
 %changelog
+* Wed Nov 11 2026 Vikas Kyatannawar <vikas.k@osmosys.co> - 0.1.2-1
+- App QA pass on live data: on-leave week, calendar redesign and day details, editable targets, widget, snooze switch and indicator
+
 * Wed Nov 11 2026 Vikas Kyatannawar <vikas.k@osmosys.co> - 0.1.1-1
 - Settings entry in the top-bar menu
 
