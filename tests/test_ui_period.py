@@ -31,21 +31,27 @@ def test_heat_classes():
     assert cell(type="weekend") == "heat-off"
     assert (
         period.heat_class({"date": "2026-10-30", "type": "working", "billable_min": 0, "non_billable_min": 0}, TODAY, 8.5)
-        == "heat-pending"
+        == "heat-future"
     )
+    today_row = {"date": "2026-10-29", "type": "working", "billable_min": 100, "non_billable_min": 0}
+    assert period.heat_class(today_row, TODAY, 8.5) == "heat-pending"  # today is never red or amber while it is still going
     assert cell(billable_min=60, non_billable_min=450) == "heat-ok"  # colour uses billable + non-billable
 
 
 def test_calendar_grid_october_2026():
     grid = period.calendar_grid(rows(), date(2026, 10, 1), TODAY, 8.5)
     assert len(grid) == 5 and all(len(w) == 7 for w in grid)
-    assert [c["day"] for c in grid[0]] == [None, None, None, 1, 2, 3, 4]  # 1 Oct 2026 is a Thursday
+    assert [c["day"] for c in grid[0]] == [28, 29, 30, 1, 2, 3, 4]  # 1 Oct 2026 is a Thursday
+    assert [c["outside"] for c in grid[0]] == [True, True, True, False, False, False, False]  # Sept days are muted, not blank
+    assert grid[0][0]["date"] == "2026-09-28" and grid[0][0]["cls"] == "heat-none" and grid[0][0]["label"] == ""
+    assert grid[4][6]["day"] == 1 and grid[4][6]["outside"]  # Sun 1 Nov closes the last week
     assert grid[0][4]["label"] == "Holiday" and grid[0][4]["cls"] == "heat-holiday"
     assert grid[1][4]["label"] == "Leave"
     today_cell = grid[4][3]
     assert today_cell["day"] == 29 and today_cell["today"]
-    assert grid[4][4]["label"] == "–" and grid[4][4]["cls"] == "heat-pending"
-    assert grid[0][5]["label"] == "" and grid[0][5]["cls"] == "heat-off"
+    assert grid[4][4]["label"] == "" and grid[4][4]["cls"] == "heat-future"  # no dash on a day that has not happened
+    assert grid[0][5]["label"] == "" and grid[0][5]["cls"] == "heat-off" and grid[0][5]["weekend"]
+    assert grid[3][0]["split"] and grid[3][0]["split"][0][0] == "TWE" and grid[3][0]["total_min"] > 0
     assert "TWE" in grid[3][0]["tip"] and "RES" in grid[3][0]["tip"]
 
 
@@ -195,3 +201,25 @@ def test_month_projects_hands_core_my_hours_and_days_shapes():
     assert {"date", "project_name", "billable_min"} <= set(seen["hours"][0])
     assert seen["hours"][0]["project_name"] == "Tweelin"
     assert {"date", "working"} <= set(seen["days"][0]) and len(seen["days"]) == 31 and seen["today"] == TODAY
+
+
+def test_weekend_hours_show_and_count():
+    row = {"date": "2026-10-24", "type": "weekend", "working": 0, "billable_min": 120, "non_billable_min": 0, "projects": []}
+    grid = period.calendar_grid([row], date(2026, 10, 1), TODAY, 8.5)
+    cell = next(c for w in grid for c in w if c["date"] == "2026-10-24")
+    assert cell["label"] == "2.0" and cell["cls"] == "heat-off"
+    assert period.day_detail(row, TODAY, 8.5)["verdict"] == "Weekend hours count toward the week"
+
+
+def test_day_detail_for_a_working_day_a_holiday_and_the_future():
+    by_date = {r["date"]: r for r in rows()}
+    d = period.day_detail(by_date["2026-10-06"], TODAY, 8.5)
+    assert d["title"] == "Tuesday 6 October 2026" and d["kind"] == "Working day"
+    assert d["total"].endswith(" h") and d["target"] == "of 8.5 h target"
+    assert d["colour"] in ("green", "amber", "red") and d["projects"] and d["billable"] != "–"
+    holiday = period.day_detail(by_date["2026-10-20"], TODAY, 8.5)
+    assert holiday["kind"] == "Holiday" and holiday["colour"] == "blue" and holiday["fill"] is None and holiday["target"] == ""
+    future = period.day_detail(by_date["2026-10-30"], TODAY, 8.5)
+    assert future["verdict"] == "Not yet" and future["colour"] == "grey"
+    short = {"date": "2026-10-06", "type": "working", "billable_min": 300, "non_billable_min": 0, "projects": []}
+    assert period.day_detail(short, TODAY, 8.5)["verdict"] == "3.5 h under the target"

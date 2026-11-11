@@ -12,7 +12,7 @@ gi.require_version("Pango", "1.0")
 from gi.repository import Adw, GLib, GObject, Gtk, Pango  # noqa: E402
 
 from pace.ui import config, model, period  # noqa: E402
-from pace.ui.draw import Sparkline, SplitBar, WeekBar  # noqa: E402
+from pace.ui.draw import Sparkline, SplitBar, WeekBar, series_rgb  # noqa: E402
 from pace.ui.widgets import action_row, box, clear, label, open_uri, pill, run_async  # noqa: E402
 
 PINESTEM = "https://pinestem.com/dashboard.html#/tasks"
@@ -541,32 +541,40 @@ class Dashboard(Adw.BreakpointBin):
             return
         clear(body)
         body.append(self._nav())
-        floor = config.load_targets()["dailyMinimum"]
+        floor = config.load_settings()["rules"]["daily_target_h"]
+        weeks = period.calendar_grid(self.rows, self.month_first, self.now().date(), floor)
+        codes = self._series_codes([{"split": [(code, minutes / 60) for code, minutes in c["split"]]} for w in weeks for c in w])
         grid = Gtk.Grid(row_spacing=6, column_spacing=6, column_homogeneous=True)
         for i, dow in enumerate(("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")):
             grid.attach(label(dow, "caption-heading", "dim-label", xalign=0.5, margin_bottom=4), i, 0, 1, 1)
-        for r, week in enumerate(period.calendar_grid(self.rows, self.month_first, self.now().date(), floor), start=1):
+        for r, week in enumerate(weeks, start=1):
             for c, cell in enumerate(week):
-                grid.attach(self._cell(cell), c, r, 1, 1)
+                grid.attach(self._cell(cell, codes, floor), c, r, 1, 1)
         body.append(grid)
         low = floor - 1.5
         legend = Adw.WrapBox(
-            child_spacing=16, line_spacing=8, justify=Adw.JustifyMode.NONE, halign=Gtk.Align.CENTER, margin_top=4
+            child_spacing=14, line_spacing=6, justify=Adw.JustifyMode.NONE, halign=Gtk.Align.CENTER, margin_top=4
         )
         for cls, text in (
             ("heat-ok", f"≥ {floor:g} h"),
             ("heat-mid", f"{low:g}–{floor - 0.1:.1f} h"),
             ("heat-low", f"< {low:g} h"),
-            ("heat-pending", "not billed yet"),
             ("heat-holiday", "holiday"),
             ("heat-leave", "leave"),
         ):
             sw = Gtk.Box(css_classes=["swatch", cls], valign=Gtk.Align.CENTER)
             legend.append(box(sw, label(text, "caption", "dim-label"), vertical=False, spacing=6))
+        for i, code in enumerate(codes):
+            dot = Gtk.DrawingArea(content_width=10, content_height=10, valign=Gtk.Align.CENTER)
+            dot.set_draw_func(
+                lambda _a, cr, w, h, i=i: (cr.set_source_rgb(*series_rgb(i)), cr.arc(w / 2, h / 2, w / 2, 0, 6.3), cr.fill())
+            )
+            legend.append(box(dot, label(code, "caption", "dim-label"), vertical=False, spacing=6))
         body.append(legend)
         body.append(
             label(
-                f"Colour = total billed hours that day vs the {floor:g} h daily minimum. Weekends are never counted.",
+                f"Colour = hours billed that day (billable + non-billable) against the {floor:g} h daily target. "
+                "Weekend hours count toward the week. The thin bar splits billable hours by project.",
                 "caption",
                 "dim-label",
                 wrap=True,
@@ -575,14 +583,62 @@ class Dashboard(Adw.BreakpointBin):
             )
         )
 
-    def _cell(self, cell: dict) -> Gtk.Widget:
-        if cell["day"] is None:
-            return Gtk.Box(css_classes=["heat-cell"])
-        value = label(cell["label"], "heat-val", ellipsize=Pango.EllipsizeMode.END, max_width_chars=3)
-        inner = box(label(str(cell["day"]), "heat-day"), value, spacing=2, valign=Gtk.Align.START)
-        btn = Gtk.Button(child=inner, css_classes=["flat", "heat-cell", cell["cls"]] + (["today"] if cell["today"] else []))
+    def _cell(self, cell: dict, codes: list[str], floor: float) -> Gtk.Widget:
+        day = label(str(cell["day"]), "heat-day", xalign=0, halign=Gtk.Align.START)
+        if cell["today"]:
+            day.add_css_class("today")
+        if cell["outside"]:
+            return box(day, classes=("heat-cell", "heat-outside"))
+        inner = box(day, spacing=1, valign=Gtk.Align.START)
+        inner.append(label(cell["label"], "heat-val", xalign=0, ellipsize=Pango.EllipsizeMode.END, max_width_chars=6))
+        if cell["split"]:
+            total = sum(m for _, m in cell["split"]) or 1
+            strip = SplitBar()
+            strip.set_margin_top(3)
+            strip.set_data([(m / total, codes.index(code)) for code, m in cell["split"]])
+            inner.append(strip)
+        btn = Gtk.Button(child=inner, css_classes=["flat", "heat-cell", cell["cls"]])
         if cell["tip"]:
             btn.set_tooltip_text(cell["tip"])
-        if cell["cls"] != "heat-off":
-            btn.connect("clicked", lambda *_: open_uri(self, self.status.get("pinestem_url") or PINESTEM))
+        btn.connect("clicked", lambda *_: self._day_dialog(cell["date"], floor))
         return btn
+
+    def _day_dialog(self, iso: str, floor: float) -> None:
+        """Click a day: date, kind, billed against the daily target, billable vs non-billable, hours per project."""
+        row = next((r for r in self.rows or [] if r["date"] == iso), None)
+        if row is None:
+            return
+        d = period.day_detail(row, self.now().date(), floor)
+        dialog = Adw.Dialog(title=d["title"], content_width=400)
+        head = box(spacing=6, halign=Gtk.Align.CENTER)
+        head.append(pill(d["kind"].upper(), "grey" if d["has_hours"] else d["colour"], halign=Gtk.Align.CENTER))
+        if d["has_hours"]:
+            head.append(label(d["total"], "pace-hero", xalign=0.5, margin_top=10))
+        if d["target"]:
+            head.append(label(d["target"], "caption", "dim-label", xalign=0.5))
+        if d["verdict"] != d["kind"]:
+            head.append(pill(d["verdict"], d["colour"], halign=Gtk.Align.CENTER, margin_top=8))
+        content = box(head, spacing=18, margin_top=18, margin_bottom=22, margin_start=18, margin_end=18)
+        if d["has_hours"]:
+            split = Adw.PreferencesGroup()
+            for title, value in (("Billable", d["billable"]), ("Non-billable", d["non_billable"])):
+                r = action_row(title=title, focusable=False)
+                r.add_suffix(label(value, "numeric", valign=Gtk.Align.CENTER))
+                split.add(r)
+            content.append(split)
+        if d["projects"]:
+            group = Adw.PreferencesGroup(title="Projects")
+            for p in d["projects"]:
+                r = action_row(title=p["name"], subtitle=p["code"], focusable=False)
+                r.add_suffix(label(p["text"], "numeric", valign=Gtk.Align.CENTER))
+                group.add(r)
+            content.append(group)
+        pine = Gtk.Button(label="Open PineStem", halign=Gtk.Align.CENTER, css_classes=["pill"])
+        pine.connect("clicked", lambda *_: open_uri(self, self.status.get("pinestem_url") or PINESTEM))
+        content.append(pine)
+        tv = Adw.ToolbarView(
+            content=Gtk.ScrolledWindow(child=content, propagate_natural_height=True, hscrollbar_policy=Gtk.PolicyType.NEVER)
+        )
+        tv.add_top_bar(Adw.HeaderBar())
+        dialog.set_child(tv)
+        dialog.present(self)
