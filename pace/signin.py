@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import html
 import secrets
 import threading
 import urllib.parse
@@ -59,8 +60,61 @@ class SignInError(Exception):
     """Microsoft refused, the person cancelled, or the redirect didn't come back from our own request."""
 
 
-DONE_PAGE = b"""<!doctype html><meta charset=utf-8><title>Pace</title>
-<body style="font:16px system-ui;margin:4em auto;max-width:28em"><h2>Signed in to Pace</h2><p>You can close this tab.</p>"""
+# The page the browser lands on after Microsoft redirects back. Self-contained (no network), light and dark.
+PAGE = """<!doctype html><html lang=en><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>{title} · Pace</title>
+<style>
+:root{{--bg:#f5f6f8;--card:#fff;--ink:#1c2430;--sub:#5d6775;--line:#e3e6ea;--ok:#2ea56f;--bad:#d6453d}}
+@media (prefers-color-scheme:dark){{:root{{--bg:#16191e;--card:#1f242b;--ink:#eef1f4;--sub:#9aa4b1;--line:#2d343d;--ok:#57d19a;--bad:#ff7b63}}}}
+*{{box-sizing:border-box}}
+body{{margin:0;min-height:100vh;display:grid;place-items:center;background:var(--bg);color:var(--ink);
+font:15px/1.5 -apple-system,"Segoe UI",Inter,Cantarell,system-ui,sans-serif;padding:24px}}
+main{{width:100%;max-width:420px;background:var(--card);border:1px solid var(--line);border-radius:16px;
+padding:40px 36px 28px;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.08)}}
+.mark{{width:64px;height:64px;margin:0 auto 20px;position:relative}}
+.badge{{position:absolute;right:-6px;bottom:-6px;width:28px;height:28px;border-radius:50%;background:var({tone});
+border:3px solid var(--card);display:grid;place-items:center}}
+h1{{font-size:21px;font-weight:650;margin:0 0 8px;letter-spacing:-.01em}}
+p{{margin:0;color:var(--sub)}}
+.detail{{margin-top:16px;padding:10px 12px;border-radius:10px;background:var(--bg);font:12.5px/1.45 ui-monospace,monospace;
+color:var(--sub);text-align:left;word-break:break-word}}
+footer{{margin-top:28px;padding-top:16px;border-top:1px solid var(--line);font-size:12.5px;color:var(--sub)}}
+</style>
+<main>
+<div class=mark>
+<svg viewBox="0 0 128 128" width="64" height="64" aria-hidden="true"><rect x="8" y="8" width="112" height="112" rx="26" fill="#1c2a3a"/>
+<circle cx="64" cy="64" r="36" fill="none" stroke="#3b4d63" stroke-width="12"/><circle cx="64" cy="64" r="36" fill="none" stroke="#57d19a"
+stroke-width="12" stroke-linecap="round" stroke-dasharray="170 226" transform="rotate(-90 64 64)"/><circle cx="64" cy="64" r="6" fill="#fff"/></svg>
+<span class=badge><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">{glyph}</svg></span>
+</div>
+<h1>{title}</h1>
+<p>{text}</p>{detail}
+<footer>Pace · billed hours and the loss-of-pay line, at a glance</footer>
+</main></html>"""
+OK_GLYPH = (
+    '<path d="M3.5 8.5l3 3 6-7" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>'
+)
+BAD_GLYPH = '<path d="M4.5 4.5l7 7M11.5 4.5l-7 7" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>'
+
+
+def result_page(query: dict) -> bytes:
+    """What the browser shows: signed in, or why not (Microsoft's own words, escaped)."""
+    if "error" in query:
+        why = html.escape(query.get("error_description") or query["error"])
+        return PAGE.format(
+            title="Sign-in didn't finish",
+            tone="--bad",
+            glyph=BAD_GLYPH,
+            text="Microsoft didn't complete the sign-in. Go back to Pace and choose Sign in to try again.",
+            detail=f"<div class=detail>{why}</div>",
+        ).encode()
+    return PAGE.format(
+        title="You're signed in",
+        tone="--ok",
+        glyph=OK_GLYPH,
+        text="Pace is fetching your hours now. You can close this tab.",
+        detail="",
+    ).encode()
 
 
 class Loopback:
@@ -81,7 +135,7 @@ class Loopback:
                 self.send_response(200)
                 self.send_header("Content-Type", "text/html; charset=utf-8")
                 self.end_headers()
-                self.wfile.write(DONE_PAGE)
+                self.wfile.write(result_page(query))
                 loopback.got.set()
 
             def log_message(self, *_):

@@ -136,3 +136,19 @@ def test_sign_in_flow_runs_browser_redirect_redeem_and_hrms_exchange():
 
     sign_in_flow(cfg, Hrms(), open_uri=microsoft, post_form=post_form, timeout=5)
     assert seen["verifier_ok"] and seen["hrms_token"] == "ENTRA-JWT"
+
+
+def test_the_browser_page_says_whether_sign_in_worked():
+    import urllib.request
+
+    from pace.signin import Loopback
+
+    def page(query):
+        with Loopback() as lb:
+            return urllib.request.urlopen(lb.redirect + "?" + urllib.parse.urlencode(query), timeout=5).read().decode()
+
+    ok = page({"code": "C0DE", "state": "S"})
+    assert "signed in" in ok.lower()
+    bad = page({"error": "access_denied", "error_description": "AADSTS65004: User <declined> to consent"})
+    assert "signed in" not in bad.lower()
+    assert "AADSTS65004: User &lt;declined&gt; to consent" in bad
