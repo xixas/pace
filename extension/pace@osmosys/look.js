@@ -45,6 +45,8 @@ export function look(json, now = null) {
         text: s.text,
         verdict: s.verdict,
         asOf: s.as_of,
+        // Bell-off in the panel while nudges are muted, so a missing nudge doesn't look like a bug
+        snoozed: !!s.snoozed_until && (now === null || now < new Date(s.snoozed_until).getTime()),
     };
 }
 

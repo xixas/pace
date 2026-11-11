@@ -1,5 +1,5 @@
 // Test-only (never shipped): lets extension/tests/screenshots.py open and close the Pace menu in a headless Shell.
-// The harness writes "open" or "close" to $XDG_STATE_HOME/pace/menu-cmd.
+// The harness writes "open", "close" or "toggle-snooze" to $XDG_STATE_HOME/pace/menu-cmd.
 
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
@@ -31,6 +31,8 @@ export default class PaceTestHelper extends Extension {
                 menu?.open(false);
             else if (cmd === 'close')
                 menu?.close(false);
+            else if (cmd === 'toggle-snooze')
+                menu?._getMenuItems().find(i => i._switch)?.activate(null);
         });
     }
 

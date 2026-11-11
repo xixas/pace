@@ -41,6 +41,8 @@ class PaceIndicator extends PanelMenu.Button {
     _init() {
         super._init(0.5, 'Pace');
         this._box = new St.BoxLayout({style_class: 'pace-box'});
+        this._snoozed = new St.Icon({icon_name: 'notifications-disabled-symbolic', style_class: 'pace-snoozed-icon',
+            y_align: Clutter.ActorAlign.CENTER, visible: false});
         this._dot = new St.Widget({style_class: 'pace-dot', y_align: Clutter.ActorAlign.CENTER});
         this._glyph = new St.Label({style_class: 'pace-glyph', y_align: Clutter.ActorAlign.CENTER});
         this._ring = new St.DrawingArea({style_class: 'pace-ring', y_align: Clutter.ActorAlign.CENTER});
@@ -48,7 +50,7 @@ class PaceIndicator extends PanelMenu.Button {
         this._circle = new St.DrawingArea({style_class: 'pace-circle', y_align: Clutter.ActorAlign.CENTER});
         this._circle.connect('repaint', area => drawRing(area, false));
         this._label = new St.Label({style_class: 'pace-label', y_align: Clutter.ActorAlign.CENTER});
-        for (const a of [this._dot, this._ring, this._circle, this._glyph, this._label])
+        for (const a of [this._snoozed, this._dot, this._ring, this._circle, this._glyph, this._label])
             this._box.add_child(a);
         this.add_child(this._box);
 
@@ -101,6 +103,7 @@ class PaceIndicator extends PanelMenu.Button {
         this._dot.visible = l.marker === 'dot';
         this._ring.visible = l.marker === '◌';
         this._circle.visible = l.marker === '○';
+        this._snoozed.visible = !!l.snoozed;
         this._glyph.visible = !this._dot.visible && !this._ring.visible && !this._circle.visible;
         this._glyph.text = this._glyph.visible ? l.marker : '';
         // Icon-only (B11): text is "" and only the marker shows

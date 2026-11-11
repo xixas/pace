@@ -233,11 +233,19 @@ export function buildMenu(menu, m, flash, act) {
     item(menu, 'Open PineStem', () => act.open(m.pinestemUrl));
     if (m.state === 'skew')
         return;
-    // One switch both ways, so snoozing and undoing behave the same (a click flips it and closes the menu)
-    const snooze = new PopupMenu.PopupSwitchMenuItem(m.snoozed ? 'Nudges snoozed until midnight' : 'Snooze nudges today', m.snoozed);
-    if (m.snoozed)
-        snooze.label.add_style_class_name('pace-snoozed');
-    snooze.connect('toggled', (_i, on) => (on ? act.snooze : act.unsnooze)());
+    // One switch both ways that flips in place like a quick-settings toggle: the menu stays open
+    const snoozeText = on => (on ? 'Nudges snoozed until midnight' : 'Snooze nudges today');
+    const snooze = new PopupMenu.PopupSwitchMenuItem(snoozeText(m.snoozed), m.snoozed);
+    snooze.activate = () => snooze.toggle();  // the Shell's activate() also closes the menu
+    const showSnooze = on => {
+        snooze.label.text = snoozeText(on);
+        snooze.label[on ? 'add_style_class_name' : 'remove_style_class_name']('pace-snoozed');
+    };
+    showSnooze(m.snoozed);
+    snooze.connect('toggled', (_i, on) => {
+        showSnooze(on);
+        (on ? act.snooze : act.unsnooze)();
+    });
     menu.addMenuItem(snooze);
 
     menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());

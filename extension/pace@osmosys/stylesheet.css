@@ -25,6 +25,12 @@
   height: 12px;
 }
 
+/* Nudges snoozed until midnight: a quiet bell-off before the status, like GNOME's Do Not Disturb */
+.pace-snoozed-icon {
+  icon-size: 14px;
+  opacity: 0.6;
+}
+
 /* The quiet grey circle, drawn like the ring: as a ○ glyph it reads as a capital O beside the label */
 .pace-circle {
   width: 10px;
