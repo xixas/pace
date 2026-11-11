@@ -369,6 +369,10 @@ class Dashboard(Adw.BreakpointBin):
         return sorted(totals, key=lambda c: -totals[c])
 
     def _day(self, c: dict, codes: list[str]) -> Gtk.Button:
+        c = {
+            **c,
+            "today": c["today"] or c["date"] == self.now().date().isoformat(),
+        }  # today stays marked on a hatched half-leave chip
         inner = box(spacing=3)
         dow = label(c["dow"], "caption-heading", "dim-label", xalign=0.5)
         if c["today"]:
@@ -402,7 +406,7 @@ class Dashboard(Adw.BreakpointBin):
         )
         for p in projects:
             text, colour = period.project_badge(p)
-            sub = " · ".join(x for x in (p.get("text"), p.get("need_text")) if x)
+            sub = period.project_sub(p)
             row = action_row(p["name"], sub, activatable=True)
             row.add_suffix(pill(text, colour))
             row.add_suffix(Gtk.Image(icon_name="go-next-symbolic"))
@@ -521,7 +525,7 @@ class Dashboard(Adw.BreakpointBin):
         card = box(head, classes=("card", "pace-hero-card"), spacing=4)
         if not p.get("target_min"):
             card.append(label(f"{model.hours(p['billed_min'])} h", "title-1", "numeric", margin_top=6))
-            card.append(label("tracked only · billable", "caption", "dim-label"))
+            card.append(label("No target set · billable hours", "caption", "dim-label"))
             return card
         card.append(
             box(
@@ -657,8 +661,7 @@ class Dashboard(Adw.BreakpointBin):
         body.append(legend)
         body.append(
             label(
-                f"Colour = hours billed that day (billable + non-billable) against the {floor:g} h daily target. "
-                "Weekend hours count toward the week. The thin bar splits billable hours by project.",
+                f"Colour = hours billed vs the {floor:g} h daily target. Weekend hours count toward the week. Thin bar = project split.",
                 "caption",
                 "dim-label",
                 wrap=True,

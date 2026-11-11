@@ -131,7 +131,7 @@ def test_project_badge_and_sub():
     assert period.project_badge({**p, "target_min": None, "gap_min": None}) == ("no target", "grey")
     t = {"projects": [{"code": "TWE", "monthly_h": 140, "prorate": True, "source": "lead", "lead": "Anand"}]}
     assert period.target_note(t, "TWE") == "140 prorated · lead's choice"
-    assert period.target_note(t, "RES") == "tracked only · billable"
+    assert period.target_note(t, "RES") == "No target set"
     t["projects"][0].update(prorate=False, source="personal")
     assert period.target_note(t, "TWE") == "140 fixed"
 
@@ -223,3 +223,9 @@ def test_day_detail_for_a_working_day_a_holiday_and_the_future():
     assert future["verdict"] == "Not yet" and future["colour"] == "grey"
     short = {"date": "2026-10-06", "type": "working", "billable_min": 300, "non_billable_min": 0, "projects": []}
     assert period.day_detail(short, TODAY, 8.5)["verdict"] == "3.5 h under the target"
+
+
+def test_project_sub_leaves_the_verdict_to_the_pill():
+    twe, res = status_on_track()["month"]["projects"]
+    assert period.project_sub(twe) == "112.5 / 133 h · needs 10.3 h/day on Tweelin"
+    assert period.project_sub(res) == "18.4 h"

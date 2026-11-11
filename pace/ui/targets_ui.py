@@ -13,7 +13,7 @@ gi.require_version("Adw", "1")
 from gi.repository import Adw, Gio, GLib, Gtk  # noqa: E402
 
 from pace.ui import config  # noqa: E402
-from pace.ui.rules_ui import rule_rows, save_rule  # noqa: E402
+from pace.ui.rules_ui import hours_format, reset_row, rule_rows, save_rule  # noqa: E402
 from pace.ui.widgets import action_row, box, label  # noqa: E402
 
 
@@ -67,20 +67,17 @@ class TargetsPage(Adw.NavigationPage):
         rows = rule_rows(
             settings["rules"],
             lambda key, value: (save_rule(key, value), pay.set_description(self._lop_text(key, value))),
-            {
-                "daily_target_h": ("Minimum average", "What each working day should average, per week"),
-                "full_day_h": ("Full day for pay", "Hours HR counts as one day · DhiHRMS default 9"),
-                "part_day_h": ("Part day for pay", "Leftover that still counts as a day · DhiHRMS default 5"),
-            },
         )
-        expected = Adw.SpinRow(
-            use_markup=False,
-            title="Expected",
-            subtitle="What a good day looks like",
-            digits=1,
-            adjustment=Gtk.Adjustment(
-                value=settings["expected_daily_h"], lower=5, upper=14, step_increment=0.5, page_increment=1
-            ),
+        expected = hours_format(
+            Adw.SpinRow(
+                use_markup=False,
+                title="Expected",
+                subtitle="What a good day looks like",
+                digits=1,
+                adjustment=Gtk.Adjustment(
+                    value=settings["expected_daily_h"], lower=5, upper=14, step_increment=0.5, page_increment=1
+                ),
+            )
         )
         expected.connect("notify::value", lambda r, _p: self._set_expected(r.get_value()))
         daily.add(rows["daily_target_h"])
@@ -90,6 +87,7 @@ class TargetsPage(Adw.NavigationPage):
         pay = Adw.PreferencesGroup(title="Loss-of-pay line", description=self._lop_text())
         pay.add(rows["full_day_h"])
         pay.add(rows["part_day_h"])
+        pay.add(reset_row(rows))
         page.add(pay)
 
         monthly = Adw.PreferencesGroup(title="Monthly by project (billable)", description="Tap a project to set its target.")
@@ -104,7 +102,8 @@ class TargetsPage(Adw.NavigationPage):
         page.add(monthly)
         note = Adw.PreferencesGroup()
         why = action_row(
-            title="Pay (LOP) always counts billable + non-billable.", subtitle="Project targets above count billable only."
+            title="Pay (loss of pay) always counts billable + non-billable.",
+            subtitle="Project targets above count billable only.",
         )
         why.add_prefix(Gtk.Image(icon_name="dialog-information-symbolic", css_classes=["accent"], pixel_size=20))
         note.add(why)
@@ -145,7 +144,7 @@ class TargetsPage(Adw.NavigationPage):
         if key:
             self._rules[key] = value
         how, week = config.lop_line(self._rules)
-        return f"{how}. A 5-day week needs {week.removesuffix(' / 5-day week')} h."
+        return f"{how}. A 5-day week needs {week.removesuffix(' / 5-day week')}."
 
     def _set_expected(self, value: float) -> None:
         s = config.load_settings()

@@ -29,7 +29,8 @@ ABOUT_COMMENTS = (
     "Loss-of-pay rule: each 9 h of a day counts as a day, and a 5 h leftover counts as one more. "
     "You can change both numbers in Preferences."
 )
-SIZES = {"onboarding": (460, 640), "dashboard": (820, 720)}
+# tall enough for the longest week view (a pay-risk week with its warning body is about 725 plus margins and header), so no card is cut at the bottom
+SIZES = {"onboarding": (460, 640), "dashboard": (820, 840)}
 
 
 class MainWindow(Adw.ApplicationWindow):

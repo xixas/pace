@@ -20,6 +20,24 @@ RULES = (
 )
 
 
+def hours_format(row: Adw.SpinRow) -> Adw.SpinRow:
+    """Show the stepper's value as "8.5 h" and read it back without the unit: one style for every hour row."""
+
+    def output(r):
+        r.set_text(f"{r.get_value():.1f} h")
+        return True
+
+    def parse(r):
+        try:
+            return float(r.get_text().lower().replace("h", "").replace(",", ".").strip())
+        except ValueError:
+            return Gtk.INPUT_ERROR
+
+    row.connect("output", output)
+    row.connect("input", parse)
+    return row
+
+
 def rule_rows(
     rules: dict, save: Callable[[str, float], None], titles: dict[str, tuple[str, str]] | None = None
 ) -> dict[str, Adw.SpinRow]:
@@ -27,12 +45,14 @@ def rule_rows(
     rows: dict[str, Adw.SpinRow] = {}
     for key, title, sub in RULES:
         title, sub = (titles or {}).get(key, (title, sub))
-        rows[key] = Adw.SpinRow(
-            use_markup=False,
-            title=title,
-            subtitle=sub,
-            digits=1,
-            adjustment=Gtk.Adjustment(value=rules[key], lower=0.5, upper=24, step_increment=0.5, page_increment=1),
+        rows[key] = hours_format(
+            Adw.SpinRow(
+                use_markup=False,
+                title=title,
+                subtitle=sub,
+                digits=1,
+                adjustment=Gtk.Adjustment(value=rules[key], lower=0.5, upper=24, step_increment=0.5, page_increment=1),
+            )
         )
     full, part = rows["full_day_h"], rows["part_day_h"]
     full.get_adjustment().set_lower(part.get_value() + 0.5)
@@ -55,6 +75,12 @@ def reset_rules(rows: dict[str, Adw.SpinRow]) -> None:
         rows[key].get_adjustment().set_lower(0.5)
         rows[key].get_adjustment().set_upper(24)
         rows[key].set_value(config.DEFAULT_RULES[key])
+
+
+def reset_row(rows: dict[str, Adw.SpinRow]) -> Adw.ButtonRow:
+    row = Adw.ButtonRow(title="Reset to DhiHRMS defaults")
+    row.connect("activated", lambda *_: reset_rules(rows))
+    return row
 
 
 def save_rule(key: str, value: float) -> None:

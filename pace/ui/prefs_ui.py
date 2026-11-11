@@ -9,7 +9,6 @@ gi.require_version("Adw", "1")
 from gi.repository import Adw, Gtk  # noqa: E402
 
 from pace.ui import config  # noqa: E402
-from pace.ui.rules_ui import reset_rules, rule_rows  # noqa: E402
 from pace.ui.services import RELEASES_URL, version  # noqa: E402
 from pace.ui.widgets import action_row, box, label, open_uri  # noqa: E402
 
@@ -122,7 +121,12 @@ class Preferences(Adw.PreferencesDialog):
             display.add(r)
         page.add(display)
 
-        page.add(self._rules_group())
+        pay = Adw.PreferencesGroup(title="Pay rules")
+        targets = action_row(title="Targets…", subtitle="Daily target, loss-of-pay line and project targets", activatable=True)
+        targets.add_suffix(Gtk.Image(icon_name="go-next-symbolic"))
+        targets.connect("activated", lambda *_: (self.close(), self.window.show_targets()))
+        pay.add(targets)
+        page.add(pay)
 
         startup = Adw.PreferencesGroup(title="Startup")
         login = Adw.SwitchRow(
@@ -161,21 +165,6 @@ class Preferences(Adw.PreferencesDialog):
         data.add(rm)
         page.add(data)
         return page
-
-    def _rules_group(self) -> Adw.PreferencesGroup:
-        """Pay rules: three half-hour steppers (shared with the targets page) and a reset."""
-        group = Adw.PreferencesGroup(title="Pay rules", description="How DhiHRMS turns billed hours into paid days.")
-        rows = rule_rows(self.settings["rules"], self._set_rule)
-        for row in rows.values():
-            group.add(row)
-        reset = Adw.ButtonRow(title="Reset to DhiHRMS defaults")
-        reset.connect("activated", lambda *_: reset_rules(rows))
-        group.add(reset)
-        return group
-
-    def _set_rule(self, key: str, value: float) -> None:
-        self.settings["rules"][key] = value
-        self._save()
 
     def _set(self, key: str, value) -> None:
         self.settings[key] = value

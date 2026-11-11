@@ -100,17 +100,18 @@ class WeekBar(Gtk.DrawingArea):
         b, bar_h = self.bar, self.BAR
         radius = bar_h / 2
         _round_rect(cr, 0, 0, w, bar_h, radius)
-        cr.set_source_rgba(*_neutral(area, 0.10))
+        dark = Adw.StyleManager.get_default().get_dark()  # on dark, the same alpha reads far weaker
+        cr.set_source_rgba(*_neutral(area, 0.14 if dark else 0.10))
         cr.fill_preserve()
         cr.save()
         cr.clip()
         band_x = round(w * b["band"])
         if band_x < w:
             red = b["emphasis"]
-            cr.set_source_rgba(*(_rgba(area, 0.28) if red else _neutral(area, 0.18)))
+            cr.set_source_rgba(*(_rgba(area, 0.4 if dark else 0.28) if red else _neutral(area, 0.36 if dark else 0.18)))
             cr.rectangle(band_x, 0, w - band_x, bar_h)
             cr.fill()
-            cr.set_source_rgba(*(_rgba(area) if red else _neutral(area, 0.5)))
+            cr.set_source_rgba(*(_rgba(area) if red else _neutral(area, 0.8 if dark else 0.5)))
             cr.rectangle(band_x, 0, 1, bar_h)
             cr.fill()
         cr.restore()

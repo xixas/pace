@@ -102,7 +102,11 @@ def day_detail(row: dict, today: date, daily_min_h: float) -> dict:
     kind, minutes, target = row["type"], total_min(row), round(daily_min_h * 60)
     counts = kind in ("working", "half_leave") and d <= today
     if kind in ("holiday", "leave"):
-        verdict = TYPE_TEXT[kind] + (f" · {row['name']}" if row.get("name") else "")
+        verdict = (
+            TYPE_TEXT[kind]
+            + (" · hours still count toward the week" if minutes else "")
+            + (f" · {row['name']}" if row.get("name") else "")
+        )
     elif kind == "weekend":
         verdict = "Weekend hours count toward the week" if minutes else "Weekend"
     elif d > today:
@@ -252,7 +256,7 @@ def project_badge(p: dict) -> tuple[str, str]:
 def target_note(targets: dict, code: str) -> str:
     row = next((p for p in targets.get("projects", []) if p.get("code") == code), None)
     if not row or row.get("monthly_h") is None:
-        return "tracked only · billable"
+        return "No target set"
     text = f"{row['monthly_h']:g} {'prorated' if row.get('prorate') else 'fixed'}"
     return text + (" · lead's choice" if row.get("source") == "lead" else "")
 
@@ -298,3 +302,10 @@ def axis_labels(target_min: int, rows: list[dict]) -> tuple[list[str], str, str]
     ys = [f"{round(top, 1):g}", *(str(int(round(top * f / 5) * 5)) for f in (2 / 3, 1 / 3)), "0"]
     days = [parse_dt(r["date"]) for r in rows if r["working"]]
     return ys, f"{days[0].day} {days[0]:%b}", f"{days[-1].day} {days[-1]:%b}"
+
+
+def project_sub(p: dict) -> str:
+    """The project row's second line: what the pill (BEHIND 6.5 h, ON TRACK, no target) does not already say."""
+    billed = hours(p.get("billed_min") or 0)
+    head = f"{billed} / {round((p['target_min'] / 60), 1):g} h" if p.get("target_min") else f"{billed} h"
+    return " · ".join(x for x in (head, p.get("need_text")) if x)

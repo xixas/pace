@@ -168,10 +168,10 @@ def day_cards(status: dict, split: dict | None = None) -> list[dict]:
             "today": _left_text(status.get("note")),
             "future": need,
             "half_leave": "½ leave",
-            "holiday": "Holiday",
-            "leave": "Leave",
         }.get(d["kind"], "")
         text = hours(d["min"]) if d["kind"] == "half_leave" and d["min"] else d["text"]  # the tag says "½ leave"
+        if d["kind"] in ("holiday", "leave"):
+            text = text.capitalize()  # the chip says it once, in its big text
         cards.append(
             {
                 "date": d["date"],
@@ -195,7 +195,7 @@ def week_view(status: dict, expected_daily_h: float, split: dict | None = None, 
     done = [d for d in days if d["kind"] in ("billed", "short")]
     done_min = sum(d["min"] or 0 for d in done)
     pay_sub = "reached" if logged >= lop else f"{hours(lop - logged)} h to go"
-    suffix = {"pay_risk": "LOP risk", "lop": "LOP"}.get(status.get("state"))
+    suffix = {"pay_risk": "loss-of-pay risk", "lop": "loss of pay"}.get(status.get("state"))
     if suffix and logged < lop:
         pay_sub += f" · {suffix}"
     stats = [
@@ -310,9 +310,9 @@ def leave_widget(status: dict, rules=None) -> dict:
             f"Next week needs {h_short(max(rules.target * 5, lop_line(5, rules)))} h, pay line {h_short(lop_line(5, rules))} h"
         )
     return {
-        "title": "On leave",
-        "big": f"{back:%a} {back.day} {back:%b}",
-        "side": "back",
+        "title": f"Back {back:%a} {back.day} {back:%b}",
+        "big": "On leave",
+        "side": "",
         "lines": lines,
         "project": None,
         "colour": "grey",

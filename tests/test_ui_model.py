@@ -84,7 +84,7 @@ def test_half_leave_week_has_target_card_and_warning():
     assert target["value"] == "41 h" and target["sub"] == "half-day leave Thu"
     assert v["warning"].startswith("Short days")
     pay = next(s for s in v["stats"] if s["label"] == "Pay line")
-    assert pay["sub"] == "13.9 h to go · LOP risk"
+    assert pay["sub"] == "13.9 h to go · loss-of-pay risk"
     assert v["cards"][3]["foot"] == "½ leave" and v["cards"][3]["text"] == "3.5"
 
 
@@ -266,7 +266,7 @@ def test_back_date_skips_a_holiday_after_the_leave():
 
 def test_widget_view_on_leave_has_content_not_an_empty_card():
     v = model.widget_view(status_on_leave(), rules())
-    assert v["title"] == "On leave" and v["big"] == "Mon 16 Nov" and v["side"] == "back" and v["colour"] == "grey"
+    assert v["title"] == "Back Mon 16 Nov" and v["big"] == "On leave" and v["side"] == "" and v["colour"] == "grey"
     assert v["lines"][0] == "Away 9–13 Nov"
     assert v["lines"][1] == "November: TWE 33.0 h · RES 12.0 h"
     assert v["lines"][2] == "Next week needs 42.5 h, pay line 41 h"

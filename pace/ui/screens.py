@@ -9,7 +9,8 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Adw, GLib, Gtk  # noqa: E402
+gi.require_version("GdkPixbuf", "2.0")
+from gi.repository import Adw, Gdk, GdkPixbuf, Gio, GLib, Gtk  # noqa: E402
 
 from pace.ui import config, onboarding  # noqa: E402
 from pace.ui.widgets import action_row, box, label, pill, run_async  # noqa: E402
@@ -28,8 +29,29 @@ def pill_button(text: str, suggested: bool = True, destructive: bool = False) ->
     return b
 
 
+TOPBAR_SVG = (
+    '<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">'
+    '<rect x="14" y="22" width="100" height="84" rx="12" fill="none" stroke="#8a8a8a" stroke-width="8"/>'
+    '<rect x="14" y="22" width="100" height="22" rx="10" fill="#8a8a8a"/>'
+    '<rect x="26" y="29" width="30" height="8" rx="4" fill="#fafafa"/>'
+    '<rect x="78" y="29" width="24" height="8" rx="4" fill="#fafafa"/>'
+    "</svg>"
+)
+
+
+def topbar_art() -> Gdk.Texture | None:
+    """The top-bar illustration as a real scalable SVG, so it stays sharp at status-page size on any theme."""
+    try:
+        stream = Gio.MemoryInputStream.new_from_bytes(GLib.Bytes.new(TOPBAR_SVG.encode()))
+        return Gdk.Texture.new_for_pixbuf(GdkPixbuf.Pixbuf.new_from_stream_at_scale(stream, 128, 128, True, None))
+    except GLib.Error:
+        return None
+
+
 def page(icon: str, title: str, body: str, *children: Gtk.Widget) -> Adw.StatusPage:
     sp = Adw.StatusPage(icon_name=icon, title=title, description=body, vexpand=True)
+    if icon == "view-pin-symbolic" and (art := topbar_art()):
+        sp.set_paintable(art)
     if children:
         sp.set_child(box(*children, spacing=12, halign=Gtk.Align.CENTER, margin_top=6))
     return sp
@@ -299,7 +321,7 @@ class Onboarding(Adw.Bin):
             got.connect("clicked", lambda *_: self._finish_topbar())
             return self._put(
                 "topbar",
-                page("object-select-symbolic", "Pace is in your top bar", "The panel extension is switched on and running.", got),
+                page("view-pin-symbolic", "Pace is in your top bar", "The panel extension is switched on and running.", got),
             )
         enable, skip = pill_button("Enable"), pill_button("Skip, use the window only", suggested=False)
         enable.connect("clicked", self._enable_extension)
