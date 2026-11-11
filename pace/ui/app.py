@@ -15,7 +15,7 @@ from pace.files import state_dir  # noqa: E402
 from pace.ui.dashboard import Dashboard  # noqa: E402
 from pace.ui.miniwidget import MiniWidget  # noqa: E402
 from pace.ui.prefs_ui import Preferences  # noqa: E402
-from pace.ui.screens import Onboarding, confirm_sign_out  # noqa: E402
+from pace.ui.screens import Onboarding, ask_topbar, confirm_sign_out  # noqa: E402
 from pace.ui.services import Services  # noqa: E402
 from pace.ui.style import CSS  # noqa: E402
 from pace.ui.targets_ui import TargetsPage, share_dialog  # noqa: E402
@@ -144,9 +144,7 @@ class MainWindow(Adw.ApplicationWindow):
         self.prefs.present(self)
 
     def show_topbar(self) -> None:
-        self.onboarding.after = "topbar"
-        self.onboarding.show_topbar()
-        self._page("onboarding")
+        ask_topbar(self, self.services)
 
     def show_about(self) -> None:
         from pace.ui.services import version
