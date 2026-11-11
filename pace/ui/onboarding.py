@@ -114,3 +114,11 @@ def summary(profile: dict | None, holidays: int | None, leave_days: float | None
             ("Leave this month", "–" if leave_days is None else _days(leave_days)),
         ],
     }
+
+
+EXTENSION_ACTIVE = 1  # GNOME Shell's ExtensionState.ACTIVE
+
+
+def extension_active(info: dict | None) -> bool:
+    """GetExtensionInfo says the panel extension is switched on and running (state ACTIVE and enabled), so A10 has nothing to ask."""
+    return bool(info) and info.get("state") == EXTENSION_ACTIVE and info.get("enabled") is True

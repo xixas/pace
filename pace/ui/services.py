@@ -6,10 +6,13 @@ import urllib.request
 from datetime import date
 from importlib import metadata
 
+from gi.repository import Gio, GLib
+
 from pace.files import read_json, state_dir
 
 BUS_NAME, BUS_PATH, BUS_IFACE = "io.github.xixas.Pace", "/io/github/xixas/Pace", "io.github.xixas.Pace1"
 RELEASES_URL = "https://github.com/xixas/pace/releases"
+SHELL_EXTENSIONS = ("org.gnome.Shell.Extensions", "/org/gnome/Shell/Extensions", "org.gnome.Shell.Extensions")
 
 
 def version() -> str:
@@ -103,6 +106,25 @@ class Services:
             return False
         return True
 
+    # the GNOME panel extension, asked of the shell itself (blocking calls: run them off the main thread)
+    def extension_info(self, uuid: str) -> dict | None:
+        """GetExtensionInfo(uuid) as a plain dict ({} when the shell doesn't know the extension), None without a shell."""
+        reply = self._shell_call("GetExtensionInfo", GLib.Variant("(s)", (uuid,)))
+        return reply.unpack()[0] if reply else None
+
+    def enable_extension(self, uuid: str) -> bool:
+        reply = self._shell_call("EnableExtension", GLib.Variant("(s)", (uuid,)))
+        return bool(reply and reply.unpack()[0])
+
+    @staticmethod
+    def _shell_call(method: str, args):
+        try:
+            conn = Gio.bus_get_sync(Gio.BusType.SESSION, None)
+            name, path, iface = SHELL_EXTENSIONS
+            return conn.call_sync(name, path, iface, method, args, None, Gio.DBusCallFlags.NONE, 5000, None)
+        except GLib.Error:
+            return None
+
     # paced
     def refresh(self, done) -> None:
         """Ask paced to poll now. done(ok: bool) runs on the main loop."""
@@ -112,8 +134,6 @@ class Services:
         self._call("SignIn", done)
 
     def _call(self, method: str, done) -> None:
-        from gi.repository import Gio
-
         def finished(conn, result):
             try:
                 conn.call_finish(result)

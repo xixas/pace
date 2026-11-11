@@ -87,3 +87,18 @@ def test_summary_rows_from_profile_and_history():
 def test_no_leave_reads_none_not_zero_day():
     assert ("Leave this month", "none") in onboarding.summary({}, 3, 0)["rows"]
     assert ("Leave this month", "2 days") in onboarding.summary({}, 3, 2.0)["rows"]
+
+
+@pytest.mark.parametrize(
+    ("info", "active"),
+    [
+        ({"uuid": "pace@osmosys", "state": 1.0, "enabled": True}, True),
+        ({"state": 1, "enabled": False}, False),  # a disabled one can still be shown as running until the next shell cycle
+        ({"state": 6, "enabled": True}, False),  # INITIALIZED: switched on, loads at the next login
+        ({"state": 3, "enabled": True}, False),  # ERROR
+        ({}, False),  # the shell does not know it
+        (None, False),  # no shell on the bus
+    ],
+)
+def test_extension_active(info, active):
+    assert onboarding.extension_active(info) is active

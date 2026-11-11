@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import os
-import subprocess
 from datetime import date
 
 import gi
@@ -273,24 +272,10 @@ class Onboarding(Adw.Bin):
     def show_topbar(self) -> None:
         if config.load_ui_state().get("topbar_seen") and self.after != "topbar":
             return self.host.go_dashboard()
-        if onboarding.topbar_kind(self.desktop) == "gnome":
-            enable, skip = pill_button("Enable"), pill_button("Skip, use the window only", suggested=False)
-            enable.connect("clicked", self._enable_extension)
-            skip.connect("clicked", lambda *_: self._finish_topbar())
-            self._put(
-                "topbar",
-                page(
-                    "view-pin-symbolic",
-                    "Turn on Pace in the top bar",
-                    "GNOME has no system tray, so Pace ships a small panel extension inside the package. It only needs switching on.",
-                    enable,
-                    skip,
-                ),
-            )
-        else:
+        if onboarding.topbar_kind(self.desktop) != "gnome":
             got = pill_button("Got it")
             got.connect("clicked", lambda *_: self._finish_topbar())
-            self._put(
+            return self._put(
                 "topbar",
                 page(
                     "object-select-symbolic",
@@ -299,6 +284,36 @@ class Onboarding(Adw.Bin):
                     got,
                 ),
             )
+        self._topbar_asked = n = getattr(self, "_topbar_asked", 0) + 1
+        run_async(
+            lambda: self.services.extension_info(EXTENSION),
+            lambda info, _error: n == self._topbar_asked and self._topbar_checked(info),
+        )
+
+    def _topbar_checked(self, info: dict | None) -> None:
+        """A10 on GNOME: ask the shell first. Already running means there is nothing to turn on."""
+        if onboarding.extension_active(info):
+            if self.after != "topbar":  # in the first-run flow there is no screen to show
+                return self._finish_topbar()
+            got = pill_button("Done")
+            got.connect("clicked", lambda *_: self._finish_topbar())
+            return self._put(
+                "topbar",
+                page("object-select-symbolic", "Pace is in your top bar", "The panel extension is switched on and running.", got),
+            )
+        enable, skip = pill_button("Enable"), pill_button("Skip, use the window only", suggested=False)
+        enable.connect("clicked", self._enable_extension)
+        skip.connect("clicked", lambda *_: self._finish_topbar())
+        self._put(
+            "topbar",
+            page(
+                "view-pin-symbolic",
+                "Turn on Pace in the top bar",
+                "GNOME has no system tray, so Pace ships a small panel extension inside the package. It only needs switching on.",
+                enable,
+                skip,
+            ),
+        )
 
     def _put(self, name: str, widget: Gtk.Widget) -> None:
         old = self.stack.get_child_by_name(name)
@@ -308,29 +323,19 @@ class Onboarding(Adw.Bin):
         self.show(name)
 
     def _enable_extension(self, *_):
-        def work():
-            subprocess.run(["gnome-extensions", "enable", EXTENSION], check=True, capture_output=True, timeout=20)
+        """Switch the extension on through the shell, then always go to the dashboard: the toast says how it went."""
 
-        def done(_r, error):
-            if error:
+        def done(ok, error):
+            self._finish_topbar()
+            if error or not ok:
                 return self.host.toast("Couldn't enable the extension. Try: gnome-extensions enable pace@osmosys")
-            out, later = pill_button("Log out now"), pill_button("Later", suggested=False)
-            out.connect(
-                "clicked", lambda *_: (self._finish_topbar(), GLib.spawn_command_line_async("gnome-session-quit --logout"))
-            )
-            later.connect("clicked", lambda *_: self._finish_topbar())
-            self._put(
-                "topbar",
-                page(
-                    "object-select-symbolic",
-                    "Enabled",
-                    "Log out and back in once to show it. GNOME loads new extensions at login.",
-                    out,
-                    later,
-                ),
+            self.host.toast(
+                "Pace is switched on. If it isn't in the top bar yet, log out and back in.",
+                "Log out",
+                lambda: GLib.spawn_command_line_async("gnome-session-quit --logout"),
             )
 
-        run_async(work, done)
+        run_async(lambda: self.services.enable_extension(EXTENSION), done)
 
     def _finish_topbar(self) -> None:
         config.save_ui_state(topbar_seen=True)
