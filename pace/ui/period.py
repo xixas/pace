@@ -31,7 +31,9 @@ def heat_class(row: dict, today: date, daily_min_h: float) -> str:
     if kind == "leave":
         return "heat-leave"
     d, minutes, floor = parse_dt(row["date"]).date(), total_min(row), daily_min_h * 60
-    if d > today or (d == today and minutes < floor):
+    if d > today:
+        return "heat-future"
+    if d == today and minutes < floor:
         return "heat-pending"
     if minutes >= floor:
         return "heat-ok"
@@ -39,15 +41,13 @@ def heat_class(row: dict, today: date, daily_min_h: float) -> str:
 
 
 def _label(row: dict, cls: str) -> str:
-    if cls == "heat-off":
-        return ""
     if cls == "heat-holiday":
         return "Holiday"
     if cls == "heat-leave":
         return "Leave"
-    if cls == "heat-pending" and not total_min(row):
-        return "–"
-    return hours(total_min(row))
+    if cls == "heat-future":
+        return ""
+    return hours(total_min(row)) if total_min(row) else ""  # a weekend or a day just begun shows hours only when it has some
 
 
 def _tip(row: dict) -> str:
@@ -58,33 +58,87 @@ def _tip(row: dict) -> str:
     return "\n".join(lines)
 
 
+def _split(row: dict) -> list[tuple[str, int]]:
+    return [(p["code"], p["billable_min"]) for p in row.get("projects", []) if p.get("billable_min")]
+
+
 def calendar_grid(rows: list[dict], first: date, today: date, daily_min_h: float) -> list[list[dict]]:
-    """Mon-first weeks of cells {day, date, label, cls, tip, today}; None day pads the edges."""
+    """Mon-first weeks of cells {day, date, label, cls, tip, today, outside, split, total_min}. Days of the neighbouring
+    months fill the first and last week as muted number-only cells (outside=True); they have no data."""
     by_date = {r["date"]: r for r in rows}
-    start = first - timedelta(days=first.weekday())
     last = month_bounds(first)[1]
-    weeks, d = [], start
-    while d <= last:
+    d = first - timedelta(days=first.weekday())
+    end = last + timedelta(days=6 - last.weekday())
+    weeks = []
+    while d <= end:
         week = []
         for _ in range(7):
             row = by_date.get(d.isoformat())
-            if d.month != first.month or row is None:
-                week.append({"day": None, "date": None, "label": "", "cls": "heat-none", "tip": "", "today": False})
-            else:
+            cell = {"day": d.day, "date": d.isoformat(), "label": "", "cls": "heat-none", "tip": "", "today": d == today}
+            cell.update(outside=d.month != first.month, split=[], total_min=0, weekend=d.weekday() >= 5)
+            if not cell["outside"] and row is not None:
                 cls = heat_class(row, today, daily_min_h)
-                week.append(
-                    {
-                        "day": d.day,
-                        "date": d.isoformat(),
-                        "label": _label(row, cls),
-                        "cls": cls,
-                        "tip": _tip(row),
-                        "today": d == today,
-                    }
-                )
+                cell.update(label=_label(row, cls), cls=cls, tip=_tip(row), split=_split(row), total_min=total_min(row))
+            week.append(cell)
             d += timedelta(days=1)
         weeks.append(week)
     return weeks
+
+
+TYPE_TEXT = {
+    "working": "Working day",
+    "weekend": "Weekend",
+    "holiday": "Holiday",
+    "leave": "Leave",
+    "half_leave": "Half-day leave",
+}
+HEAT_COLOUR = {"heat-ok": "green", "heat-mid": "amber", "heat-low": "red", "heat-holiday": "blue", "heat-leave": "blue"}
+
+
+def day_detail(row: dict, today: date, daily_min_h: float) -> dict:
+    """What the day dialog shows: date, kind, billed against the daily target with the verdict colour, the split."""
+    d = parse_dt(row["date"]).date()
+    cls = heat_class(row, today, daily_min_h)
+    kind, minutes, target = row["type"], total_min(row), round(daily_min_h * 60)
+    counts = kind in ("working", "half_leave") and d <= today
+    if kind in ("holiday", "leave"):
+        verdict = (
+            TYPE_TEXT[kind]
+            + (" · hours still count toward the week" if minutes else "")
+            + (f" · {row['name']}" if row.get("name") else "")
+        )
+    elif kind == "weekend":
+        verdict = "Weekend hours count toward the week" if minutes else "Weekend"
+    elif d > today:
+        verdict = "Not yet"
+    elif cls == "heat-pending":
+        verdict = f"{hours(target - minutes)} h to go today"
+    elif minutes >= target:
+        verdict = "Target met"
+    else:
+        verdict = f"{hours(target - minutes)} h under the target"
+    return {
+        "title": f"{d:%A} {d.day} {d:%B %Y}",
+        "kind": TYPE_TEXT.get(kind, kind),
+        "colour": HEAT_COLOUR.get(cls, "grey"),
+        "verdict": verdict,
+        "has_hours": bool(minutes) or kind in ("working", "half_leave"),
+        "total": f"{hours(minutes)} h",
+        "target": f"of {hours(target)} h target" if counts and kind == "working" else "",
+        "fill": min(minutes / target, 1.0) if counts and target else None,
+        "billable": f"{hours(row.get('billable_min') or 0)} h",
+        "non_billable": f"{hours(row.get('non_billable_min') or 0)} h",
+        "projects": [
+            {
+                "code": p["code"],
+                "name": p["name"],
+                "text": f"{hours(p.get('billable_min') or 0)} h"
+                + (f" + {hours(p['non_billable_min'])} h non-billable" if p.get("non_billable_min") else ""),
+            }
+            for p in row.get("projects", [])
+            if p.get("billable_min") or p.get("non_billable_min")
+        ],
+    }
 
 
 def week_table(rows: list[dict], first: date) -> dict:
@@ -202,7 +256,7 @@ def project_badge(p: dict) -> tuple[str, str]:
 def target_note(targets: dict, code: str) -> str:
     row = next((p for p in targets.get("projects", []) if p.get("code") == code), None)
     if not row or row.get("monthly_h") is None:
-        return "tracked only · billable"
+        return "No target set"
     text = f"{row['monthly_h']:g} {'prorated' if row.get('prorate') else 'fixed'}"
     return text + (" · lead's choice" if row.get("source") == "lead" else "")
 
@@ -248,3 +302,10 @@ def axis_labels(target_min: int, rows: list[dict]) -> tuple[list[str], str, str]
     ys = [f"{round(top, 1):g}", *(str(int(round(top * f / 5) * 5)) for f in (2 / 3, 1 / 3)), "0"]
     days = [parse_dt(r["date"]) for r in rows if r["working"]]
     return ys, f"{days[0].day} {days[0]:%b}", f"{days[-1].day} {days[-1]:%b}"
+
+
+def project_sub(p: dict) -> str:
+    """The project row's second line: what the pill (BEHIND 6.5 h, ON TRACK, no target) does not already say."""
+    billed = hours(p.get("billed_min") or 0)
+    head = f"{billed} / {round((p['target_min'] / 60), 1):g} h" if p.get("target_min") else f"{billed} h"
+    return " · ".join(x for x in (head, p.get("need_text")) if x)

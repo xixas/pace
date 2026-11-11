@@ -21,7 +21,16 @@ from pace.ui.style import CSS  # noqa: E402
 from pace.ui.targets_ui import TargetsPage, share_dialog  # noqa: E402
 
 APP_ID = "io.github.xixas.Pace.App"
-SIZES = {"onboarding": (460, 640), "dashboard": (820, 720)}
+ABOUT_COMMENTS = (
+    "Pace tells you early if your week or month is slipping: your billed hours against the weekly target, "
+    "the loss-of-pay line and your project targets.\n\n"
+    "Data: billed hours come from PineStem through hrms-api; leave and holidays from the DhiHRMS calendar. "
+    "Nothing leaves your computer except those requests.\n\n"
+    "Loss-of-pay rule: each 9 h of a day counts as a day, and a 5 h leftover counts as one more. "
+    "You can change both numbers in Preferences."
+)
+# tall enough for the longest week view (a pay-risk week with its warning body is about 725 plus margins and header), so no card is cut at the bottom
+SIZES = {"onboarding": (460, 640), "dashboard": (820, 840)}
 
 
 class MainWindow(Adw.ApplicationWindow):
@@ -147,7 +156,10 @@ class MainWindow(Adw.ApplicationWindow):
             application_icon="preferences-system-time-symbolic",
             version=version(),
             developer_name="Vikas Kyatannawar",
-            comments="Your PineStem billed hours against targets and the loss-of-pay line.",
+            developers=["Vikas Kyatannawar"],
+            website="https://github.com/xixas/pace",
+            issue_url="https://github.com/xixas/pace/issues",
+            comments=ABOUT_COMMENTS,
             license_type=Gtk.License.MIT_X11,
         )
         about.present(self)

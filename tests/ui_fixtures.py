@@ -159,3 +159,60 @@ def history_rows(first: date, last: date, today: date, work: dict | None = None,
         )  # fmt: skip
         d += timedelta(days=1)
     return rows
+
+
+def status_on_leave() -> dict:
+    """The live shape of a week that is all leave and holiday (9-13 Nov 2026: Diwali Mon, leave Tue-Fri)."""
+    s = status_on_track()
+    s.update(
+        as_of="2026-11-11T10:00:00",
+        stale_after="2026-11-11T10:45:00",
+        state="on_leave",
+        colour="grey",
+        icon="circle",
+        text="On leave",
+        verdict="ON LEAVE",
+        logged_min=0,
+        target_min=None,
+        title="On leave",
+        subtitle=None,
+        note="No target this week",
+        lines=None,
+        days=[day("2026-11-09", "Mon", 0, "holiday", "holiday")]
+        + [day(f"2026-11-{n}", dow, 0, "leave", "leave") for n, dow in ((10, "Tue"), (11, "Wed"), (12, "Thu"), (13, "Fri"))],
+        warning=None,
+        warning_detail=None,
+        action=None,
+        month={
+            "name": "November",
+            "working_days_left": 11,
+            "projects": [
+                {"code": "TWE", "name": "Tweelin", "billed_min": 1980, "target_min": None, "gap_min": None,
+                 "need_per_day_min": None, "text": "33.0 h · no target", "need_text": None, "short": None},
+                {"code": "RES", "name": "Research and Development", "billed_min": 720, "target_min": None, "gap_min": None,
+                 "need_per_day_min": None, "text": "12.0 h · no target", "need_text": None, "short": None},
+            ],
+        },
+        labels={"hours": "On leave", "percent": "On leave", "gap": "On leave", "left_today": "On leave"},
+        widget={"title": "Week on leave", "big": "", "side": "", "lines": [], "project": None},
+    )  # fmt: skip
+    return s
+
+
+def leave_rows(last_week_min=(540, 540, 540, 540, 540)) -> list[dict]:
+    """History rows 2 Nov - 22 Nov 2026 around status_on_leave(): last week billed, this week off, next week normal."""
+    out, d = [], date(2026, 11, 2)
+    while d <= date(2026, 11, 22):
+        iso, kind, working, bill = d.isoformat(), "working", 1.0, 0
+        if d.weekday() >= 5:
+            kind, working = "weekend", 0
+        elif iso == "2026-11-09":
+            kind, working = "holiday", 0
+        elif date(2026, 11, 10) <= d <= date(2026, 11, 13):
+            kind, working = "leave", 0
+        elif d < date(2026, 11, 9):
+            bill = last_week_min[d.weekday()]
+        proj = [{"code": "TWE", "name": "Tweelin", "billable_min": bill, "non_billable_min": 0}] if bill else []
+        out.append({"date": iso, "type": kind, "working": working, "billable_min": bill, "non_billable_min": 0, "projects": proj})
+        d += timedelta(days=1)
+    return out

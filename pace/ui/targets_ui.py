@@ -13,22 +13,12 @@ gi.require_version("Adw", "1")
 from gi.repository import Adw, Gio, GLib, Gtk  # noqa: E402
 
 from pace.ui import config  # noqa: E402
+from pace.ui.rules_ui import hours_format, reset_row, rule_rows, save_rule  # noqa: E402
 from pace.ui.widgets import action_row, box, label  # noqa: E402
 
 
 def _tag(text: str) -> Gtk.Label:
     return label(text, "caption-heading", "dim-label", valign=Gtk.Align.CENTER)
-
-
-def _spin(value: float, low: float, high: float, step: float, on_change) -> Gtk.SpinButton:
-    spin = Gtk.SpinButton(
-        adjustment=Gtk.Adjustment(value=value, lower=low, upper=high, step_increment=step),
-        digits=1,
-        valign=Gtk.Align.CENTER,
-        width_chars=5,
-    )
-    spin.connect("value-changed", lambda s: on_change(s.get_value()))
-    return spin
 
 
 def project_rows(window_status: dict, targets: dict) -> list[dict]:
@@ -74,20 +64,31 @@ class TargetsPage(Adw.NavigationPage):
         targets, settings = config.load_targets(), config.load_settings()
         page = Adw.PreferencesPage()
         daily = Adw.PreferencesGroup(title="Daily")
-        minimum = action_row(title="Minimum average", subtitle="Weekly average must stay above this")
-        minimum.add_suffix(Gtk.Image(icon_name="changes-prevent-symbolic", valign=Gtk.Align.CENTER))
-        minimum.add_suffix(_tag("set by org"))
-        minimum.add_suffix(label(f"{targets['dailyMinimum']:g} h", "heading", valign=Gtk.Align.CENTER))
-        expected = action_row(title="Expected", subtitle="What a good day looks like")
-        expected.add_suffix(_spin(settings["expected_daily_h"], 5, 14, 0.5, self._set_expected))
-        expected.add_suffix(label("h", "dim-label", valign=Gtk.Align.CENTER))
-        how, week = config.lop_line(settings["rules"])
-        lop = action_row(title="Loss-of-pay line", subtitle=how)
-        lop.add_suffix(_tag("read-only"))
-        lop.add_suffix(label(week, "heading", valign=Gtk.Align.CENTER))
-        for r in (minimum, expected, lop):
-            daily.add(r)
+        rows = rule_rows(
+            settings["rules"],
+            lambda key, value: (save_rule(key, value), pay.set_description(self._lop_text(key, value))),
+        )
+        expected = hours_format(
+            Adw.SpinRow(
+                use_markup=False,
+                title="Expected",
+                subtitle="What a good day looks like",
+                digits=1,
+                adjustment=Gtk.Adjustment(
+                    value=settings["expected_daily_h"], lower=5, upper=14, step_increment=0.5, page_increment=1
+                ),
+            )
+        )
+        expected.connect("notify::value", lambda r, _p: self._set_expected(r.get_value()))
+        daily.add(rows["daily_target_h"])
+        daily.add(expected)
         page.add(daily)
+        self._rules = dict(settings["rules"])
+        pay = Adw.PreferencesGroup(title="Loss-of-pay line", description=self._lop_text())
+        pay.add(rows["full_day_h"])
+        pay.add(rows["part_day_h"])
+        pay.add(reset_row(rows))
+        page.add(pay)
 
         monthly = Adw.PreferencesGroup(title="Monthly by project (billable)", description="Tap a project to set its target.")
         for row in project_rows(self.window.status(), targets):
@@ -101,7 +102,8 @@ class TargetsPage(Adw.NavigationPage):
         page.add(monthly)
         note = Adw.PreferencesGroup()
         why = action_row(
-            title="Pay (LOP) always counts billable + non-billable.", subtitle="Project targets above count billable only."
+            title="Pay (loss of pay) always counts billable + non-billable.",
+            subtitle="Project targets above count billable only.",
         )
         why.add_prefix(Gtk.Image(icon_name="dialog-information-symbolic", css_classes=["accent"], pixel_size=20))
         note.add(why)
@@ -137,6 +139,13 @@ class TargetsPage(Adw.NavigationPage):
             pr.set_activatable_widget(sw)
         return pr
 
+    def _lop_text(self, key: str | None = None, value: float | None = None) -> str:
+        """The rule in plain words, following the steppers as they change."""
+        if key:
+            self._rules[key] = value
+        how, week = config.lop_line(self._rules)
+        return f"{how}. A 5-day week needs {week.removesuffix(' / 5-day week')}."
+
     def _set_expected(self, value: float) -> None:
         s = config.load_settings()
         s["expected_daily_h"] = value
@@ -147,11 +156,26 @@ class TargetsPage(Adw.NavigationPage):
         self.rebuild()
 
     @staticmethod
+    def _validate_live(hours: Adw.EntryRow, dialog: Adw.AlertDialog, response: str) -> None:
+        """Empty is fine (no target); anything but 1-400 h turns the field red and disables the dialog's save button."""
+
+        def check(*_):
+            try:
+                config.parse_hours(hours.get_text())
+                ok = True
+            except ValueError:
+                ok = False
+            (hours.remove_css_class if ok else hours.add_css_class)("error")
+            dialog.set_response_enabled(response, ok)
+
+        hours.connect("changed", check)
+
+    @staticmethod
     def _target_fields(row: dict | None) -> tuple[Adw.PreferencesGroup, Adw.EntryRow, Adw.SwitchRow]:
         """The two inputs every target dialog has: hours (empty = no target) and the prorate switch."""
         lead = row is not None and row.get("source") == "lead"
         raised = lead and "lead_h" in row
-        hours = Adw.EntryRow(title="Monthly billable hours", input_purpose=Gtk.InputPurpose.NUMBER)
+        hours = Adw.EntryRow(title="Monthly billable hours (1–400)", input_purpose=Gtk.InputPurpose.NUMBER)
         if row and row.get("monthly_h") is not None and (not lead or raised):
             hours.set_text(f"{row['monthly_h']:g}")
         prorate = Adw.SwitchRow(use_markup=False, active=bool(row and row.get("prorate")))
@@ -182,6 +206,7 @@ class TargetsPage(Adw.NavigationPage):
         d.add_response("save", "Save")
         d.set_response_appearance("save", Adw.ResponseAppearance.SUGGESTED)
         d.set_default_response("save")
+        self._validate_live(hours, d, "save")
 
         def answered(_d, response):
             if response == "remove":
@@ -192,7 +217,7 @@ class TargetsPage(Adw.NavigationPage):
             try:
                 h = config.parse_hours(hours.get_text())
             except ValueError:
-                return self.window.toast("Monthly hours must be a number")
+                return self.window.toast("Monthly hours: leave empty, or 1 to 400")
             self._save(row["code"], row["name"], h, prorate.get_active())
 
         d.connect("response", answered)
@@ -226,6 +251,7 @@ class TargetsPage(Adw.NavigationPage):
         d.add_response("add", "Add")
         d.set_response_appearance("add", Adw.ResponseAppearance.SUGGESTED)
         d.set_default_response("add")
+        self._validate_live(hours, d, "add")
 
         def answered(_d, response):
             if response != "add":
@@ -233,7 +259,7 @@ class TargetsPage(Adw.NavigationPage):
             try:
                 h = config.parse_hours(hours.get_text())
             except ValueError:
-                return self.window.toast("Monthly hours must be a number")
+                return self.window.toast("Monthly hours: leave empty, or 1 to 400")
             if seen and project.get_selected() < len(seen):
                 picked = seen[project.get_selected()]
                 c, n = picked["code"], picked["name"]

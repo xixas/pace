@@ -37,6 +37,7 @@ CSS = """
 /* ---- week: hero card and the day strip ------------------------------------------------------------------------------- */
 .pace-hero-card { padding: 22px 24px 18px; }
 .pace-stat { padding: 0; }
+.pace-leave-banner { padding: 14px 18px; background: alpha(var(--accent-bg-color), .08); }
 
 .pace-days > flowboxchild { padding: 0; }
 .pace-day { padding: 12px 4px 10px; border-radius: 12px; }
@@ -54,22 +55,28 @@ CSS = """
 .pace-table-total { font-weight: 700; padding: 10px 16px 6px; border-top: 1px solid var(--border-color); }
 .pace-table-title { padding: 14px 16px 4px; }
 
-/* ---- calendar: heat map ------------------------------------------------------------------------------------------------ */
-.heat-cell { border-radius: 10px; padding: 7px 6px; min-height: 58px; min-width: 32px; }
-.heat-ok { background: alpha(var(--success-color), .22); }
-.heat-mid { background: alpha(var(--warning-color), .26); }
-.heat-low { background: alpha(var(--error-color), .22); }
-.heat-pending { background: alpha(currentColor, .06); }
-.heat-holiday { background: alpha(var(--accent-color), .18); }
-.heat-leave { background-image: repeating-linear-gradient(135deg, alpha(var(--accent-color), .22) 0 6px, transparent 6px 12px); }
-.heat-off { opacity: .4; }
-.heat-cell.today { box-shadow: inset 0 0 0 2px var(--accent-bg-color); }
-.heat-day { font-size: 11px; font-weight: 700; opacity: .6; }
-.heat-val { font-size: 15px; font-weight: 700; font-feature-settings: "tnum"; }
+/* ---- calendar: day cells ----------------------------------------------------------------------------------------------- */
+.heat-cell { border-radius: 12px; padding: 6px 7px 6px; min-height: 66px; min-width: 36px; border: 1px solid transparent; }
+.heat-ok { background: alpha(var(--success-color), .17); }
+.heat-mid { background: alpha(var(--warning-color), .22); }
+.heat-low { background: alpha(var(--error-color), .17); }
+.heat-pending { background: alpha(currentColor, .05); border-color: alpha(var(--accent-bg-color), .55); }
+.heat-future { background: transparent; border-color: alpha(currentColor, .14); }
+.heat-off { background: alpha(currentColor, .045); }
+.heat-off .heat-day { opacity: .5; }
+.heat-holiday { background: alpha(var(--accent-color), .15); }
+.heat-leave { background-image: repeating-linear-gradient(135deg, alpha(var(--accent-color), .20) 0 6px, transparent 6px 12px); }
+.heat-none { background: transparent; }
+.heat-outside { opacity: .32; background: transparent; }
+button.heat-cell:focus-visible { outline: 2px solid var(--accent-bg-color); outline-offset: -2px; }
+.heat-day { font-size: 12px; font-weight: 700; opacity: .65; padding: 1px 0; min-width: 18px; }
+.heat-day.today { background: var(--accent-bg-color); color: var(--accent-fg-color); opacity: 1; border-radius: 99px; padding: 1px 6px; min-width: 0; }
+.heat-val { font-size: 14px; font-weight: 700; font-feature-settings: "tnum"; }
 .swatch { border-radius: 4px; min-width: 14px; min-height: 14px; }
+.swatch.heat-ok, .swatch.heat-mid, .swatch.heat-low, .swatch.heat-holiday { border: 0; }
 
 /* ---- B10 mini widget: a rounded card on a transparent, undecorated window -------------------------------------------- */
-window.pace-widget { background: transparent; }
+window.pace-widget, window.pace-widget.background, window.pace-widget.csd, window.pace-widget.solid-csd { background: transparent; box-shadow: none; border-radius: 0; }
 .pace-widget-card { background: var(--window-bg-color); color: var(--window-fg-color); border-radius: 18px; padding: 16px 18px 14px;
   box-shadow: 0 0 0 1px var(--card-shade-color), 0 8px 24px alpha(black, .22); }
 .pace-widget-card .big { font-size: 30px; font-weight: 800; line-height: 1; font-feature-settings: "tnum"; letter-spacing: -0.02em; }
