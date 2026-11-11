@@ -159,6 +159,33 @@ def runway(status: dict, stale: bool = False) -> dict:
     }
 
 
+def day_cards(status: dict, split: dict | None = None) -> list[dict]:
+    """The Mon-Fri chips of the week: hours, kind, the small foot line and the project split."""
+    need = _need_text(status)
+    cards = []
+    for d in status.get("days") or []:
+        foot = {
+            "today": _left_text(status.get("note")),
+            "future": need,
+            "half_leave": "½ leave",
+            "holiday": "Holiday",
+            "leave": "Leave",
+        }.get(d["kind"], "")
+        text = hours(d["min"]) if d["kind"] == "half_leave" and d["min"] else d["text"]  # the tag says "½ leave"
+        cards.append(
+            {
+                "date": d["date"],
+                "dow": d["dow"],
+                "text": text,
+                "kind": d["kind"],
+                "foot": foot,
+                "today": d["kind"] == "today",
+                "split": (split or {}).get(d["date"], []),
+            }
+        )
+    return cards
+
+
 def week_view(status: dict, expected_daily_h: float, split: dict | None = None, stale: bool = False) -> dict | None:
     """C1/C2. split: {iso date: [(code, "7.7"), ...]} from pace.history, optional."""
     if status.get("logged_min") is None:
@@ -190,28 +217,7 @@ def week_view(status: dict, expected_daily_h: float, split: dict | None = None, 
         stats.insert(1, _stat("Target", f"{h_short(target)} h", f"half-day leave {half[0]['dow']}"))
     elif (p := _projected(status, expected_daily_h)) is not None:
         stats.append(_stat(f"Projected {p[0]}", f"{p[1] / 60:.1f} h", f"at the {expected_daily_h:.1f} h/day expected pace"))
-    need = _need_text(status)
-    cards = []
-    for d in days:
-        foot = {
-            "today": _left_text(status.get("note")),
-            "future": need,
-            "half_leave": "½ leave",
-            "holiday": "Holiday",
-            "leave": "Leave",
-        }.get(d["kind"], "")
-        text = hours(d["min"]) if d["kind"] == "half_leave" and d["min"] else d["text"]  # the tag says "½ leave"
-        cards.append(
-            {
-                "date": d["date"],
-                "dow": d["dow"],
-                "text": text,
-                "kind": d["kind"],
-                "foot": foot,
-                "today": d["kind"] == "today",
-                "split": (split or {}).get(d["date"], []),
-            }
-        )
+    cards = day_cards(status, split)
     first = parse_dt(days[0]["date"]) if days else None
     return {
         "stats": stats,
@@ -244,7 +250,7 @@ def banner(status: dict) -> dict | None:
     return None
 
 
-def _range_label(days: list[dict]) -> str:
+def range_label(days: list[dict]) -> str:
     first, last = parse_dt(days[0]["date"]), parse_dt(days[-1]["date"])
     return f"{first.day}–{last.day} {last:%b}"
 
@@ -252,13 +258,6 @@ def _range_label(days: list[dict]) -> str:
 def empty_state(status: dict) -> dict | None:
     """C5 (AdwStatusPage). None means there are numbers to show."""
     days = status.get("days") or []
-    if status.get("state") == "on_leave" and days:
-        return {
-            "icon": "weather-clear-symbolic",
-            "title": "Enjoy your leave",
-            "body": "The whole week is leave or holiday, so there is no target and nothing to bill. Nudges are paused.",
-            "pill": f"ON LEAVE · {_range_label(days)}",
-        }
     if joined := status.get("joined"):  # optional key, see report: not in contract v1
         return {
             "icon": "avatar-default-symbolic",
@@ -307,3 +306,95 @@ def widget_view(status: dict) -> dict:
             "colour": "grey",
         }
     return {**w, "colour": colour_class(status.get("colour"))}
+
+
+def _is_working(row: dict) -> bool:
+    return bool(row.get("working"))
+
+
+def back_date(status: dict, rows: list[dict] | None = None) -> date:
+    """The first working day after this week's leave: from the history rows when there are any, else next Monday."""
+    days = status.get("days") or []
+    last = parse_dt(days[-1]["date"]).date() if days else date.today()
+    monday = last - timedelta(days=last.weekday())
+    nxt = monday + timedelta(days=7)
+    if rows:
+        later = sorted(r["date"] for r in rows if r["date"] > last.isoformat() and _is_working(r))
+        if later:
+            return date.fromisoformat(later[0])
+    return nxt
+
+
+def _week_total(rows: list[dict]) -> int:
+    return sum((r.get("billable_min") or 0) + (r.get("non_billable_min") or 0) for r in rows)
+
+
+def leave_view(status: dict, rows: list[dict] | None, rules, split: dict | None = None) -> dict | None:
+    """C5 for a week that is all leave or holiday: a calm banner, the day chips, and what still matters around it.
+
+    rows: pace.history rows covering last week and next week (optional). rules: pace.engine.Rules. Everything here is
+    derived from status.json, history and settings; nothing new from core.
+    """
+    from pace.engine import lop_count, lop_line
+
+    days = status.get("days") or []
+    if status.get("state") != "on_leave" or not days:
+        return None
+    first = parse_dt(days[0]["date"]).date()
+    back = back_date(status, rows)
+    banner = {
+        "title": f"On leave · {range_label(days)}, back {back:%a} {back.day} {back:%b}",
+        "detail": "No target this week and nothing to bill. Nudges are paused.",
+    }
+    view = {
+        "banner": banner,
+        "cards": day_cards(status, split),
+        "last_week": None,
+        "next_week": None,
+        "month": status.get("month"),
+    }
+    if not rows:
+        return view
+    prev_monday = first - timedelta(days=7)
+    prev = [r for r in rows if prev_monday.isoformat() <= r["date"] < first.isoformat()]
+    if any(_is_working(r) for r in prev):
+        d = sum(r.get("working") or 0 for r in prev)
+        total = _week_total(prev)
+        target, lop = max(rules.target * d, lop_line(d, rules)), lop_line(d, rules)
+        lost = lop_count(total, d, rules)
+        if total >= target:
+            verdict, colour = "TARGET MET", "green"
+        elif lost == 0:
+            verdict, colour = f"PAY SAFE · {_h1(target - total)} under target", "amber"
+        else:
+            verdict, colour = f"LOSS OF PAY · {lost:g} day{'s' if lost != 1 else ''}", "red"
+        view["last_week"] = {
+            "label": f"Last week · {prev_monday.day}–{(first - timedelta(days=1)).day} {first - timedelta(days=1):%b}",
+            "total": f"{hours(total)} h",
+            "caption": f"of {h_short(target)} h target · pay line {h_short(lop)} h",
+            "verdict": verdict,
+            "colour": colour,
+            "days": [
+                {
+                    "dow": f"{parse_dt(r['date']):%a}",
+                    "text": hours((r.get("billable_min") or 0) + (r.get("non_billable_min") or 0)),
+                    "kind": r["type"],
+                }
+                for r in prev
+                if r["type"] != "weekend" or _week_total([r])
+            ],
+        }
+    nxt_monday = first + timedelta(days=7)
+    nxt = [r for r in rows if nxt_monday.isoformat() <= r["date"] < (nxt_monday + timedelta(days=7)).isoformat()]
+    d = sum(r.get("working") or 0 for r in nxt) if nxt else 5.0
+    lop = lop_line(d, rules)
+    target = max(rules.target * d, lop)
+    view["next_week"] = {
+        "label": f"Next week · {nxt_monday.day}–{(nxt_monday + timedelta(days=4)).day} {nxt_monday + timedelta(days=4):%b}",
+        "days": f"{d:g} working day{'s' if d != 1 else ''}",
+        "target": f"{h_short(target)} h",
+        "per_day": f"{h_short(target / d)} h/day" if d else "",
+        "lop": f"Pay line {h_short(lop)} h. Each {h_short(rules.full)} h counts as a day, a {h_short(rules.part)} h leftover counts as one more; below the line is loss of pay.",
+        "estimated": not nxt,
+    }
+    return view

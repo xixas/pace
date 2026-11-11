@@ -3,7 +3,7 @@ from datetime import datetime
 import pytest
 
 from pace.ui import model
-from tests.ui_fixtures import status_on_track, status_pay_risk_half_leave
+from tests.ui_fixtures import leave_rows, status_on_leave, status_on_track, status_pay_risk_half_leave
 
 NOW = datetime(2026, 10, 29, 14, 14)
 
@@ -110,8 +110,7 @@ def test_empty_state_kinds():
     s = status_on_track()
     assert model.empty_state(s) is None
     s["state"] = "on_leave"
-    e = model.empty_state(s)
-    assert e["title"] == "Enjoy your leave" and e["pill"] == "ON LEAVE · 26–30 Oct"
+    assert model.empty_state(s) is None  # a leave week has its own view, leave_view
     s = status_on_track()
     s.update(logged_min=0, days=[{**d, "min": None, "kind": "future", "text": "–"} for d in s["days"]])
     e = model.empty_state(s)
@@ -222,3 +221,44 @@ def test_runway_captions():
     assert cap(state="lop", logged=2370, kinds=("billed",) * 5) == "1.5 h under the pay line"
     assert cap(state="done", logged=2550, kinds=("billed",) * 5) == "target met"
     assert cap(state="done", logged=2670, kinds=("billed",) * 5) == "target met · +2.0 h"
+
+
+def rules():
+    from pace.engine import DEFAULT
+
+    return DEFAULT
+
+
+def test_leave_view_banner_without_history():
+    v = model.leave_view(status_on_leave(), None, rules())
+    assert v["banner"]["title"] == "On leave · 9–13 Nov, back Mon 16 Nov"
+    assert [c["kind"] for c in v["cards"]] == ["holiday", "leave", "leave", "leave", "leave"]
+    assert v["last_week"] is None and v["next_week"] is None
+    assert v["month"]["projects"][0]["code"] == "TWE"
+    assert model.leave_view(status_on_track(), None, rules()) is None
+
+
+def test_leave_view_last_week_result_and_next_week_needs():
+    v = model.leave_view(status_on_leave(), leave_rows(), rules())
+    last = v["last_week"]
+    assert last["label"] == "Last week · 2–8 Nov" and last["total"] == "45.0 h" and last["verdict"] == "TARGET MET"
+    assert last["colour"] == "green" and [d["dow"] for d in last["days"]] == ["Mon", "Tue", "Wed", "Thu", "Fri"]
+    nxt = v["next_week"]
+    assert nxt["label"] == "Next week · 16–20 Nov" and nxt["days"] == "5 working days"
+    assert nxt["target"] == "42.5 h" and nxt["per_day"] == "8.5 h/day" and "Pay line 41 h" in nxt["lop"]
+    assert not nxt["estimated"]
+
+
+def test_leave_view_last_week_below_the_pay_line_is_loss_of_pay():
+    v = model.leave_view(status_on_leave(), leave_rows((540, 540, 540, 300, 0)), rules())  # 32 h
+    assert v["last_week"]["verdict"].startswith("LOSS OF PAY") and v["last_week"]["colour"] == "red"
+    v = model.leave_view(status_on_leave(), leave_rows((540, 540, 540, 540, 300)), rules())  # 41 h: on the line
+    assert v["last_week"]["verdict"].startswith("PAY SAFE") and v["last_week"]["colour"] == "amber"
+
+
+def test_back_date_skips_a_holiday_after_the_leave():
+    rows = leave_rows()
+    for r in rows:
+        if r["date"] == "2026-11-16":
+            r.update(type="holiday", working=0)
+    assert model.back_date(status_on_leave(), rows).isoformat() == "2026-11-17"

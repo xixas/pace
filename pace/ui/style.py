@@ -37,6 +37,7 @@ CSS = """
 /* ---- week: hero card and the day strip ------------------------------------------------------------------------------- */
 .pace-hero-card { padding: 22px 24px 18px; }
 .pace-stat { padding: 0; }
+.pace-leave-banner { padding: 14px 18px; background: alpha(var(--accent-bg-color), .08); }
 
 .pace-days > flowboxchild { padding: 0; }
 .pace-day { padding: 12px 4px 10px; border-radius: 12px; }

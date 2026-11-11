@@ -11,6 +11,7 @@ gi.require_version("Adw", "1")
 gi.require_version("Pango", "1.0")
 from gi.repository import Adw, GLib, GObject, Gtk, Pango  # noqa: E402
 
+from pace import settings  # noqa: E402
 from pace.ui import config, model, period  # noqa: E402
 from pace.ui.draw import Sparkline, SplitBar, WeekBar, series_rgb  # noqa: E402
 from pace.ui.widgets import action_row, box, clear, label, open_uri, pill, run_async  # noqa: E402
@@ -198,6 +199,8 @@ class Dashboard(Adw.BreakpointBin):
         want_ahead = self.status.get("state") == "no_mapping" or (self.status.get("problem") or {}).get("kind") == "no_mapping"
         start = today.replace(day=1) if want_ahead else monday
         end = today + timedelta(days=60) if want_ahead else sunday
+        if self.status.get("state") == "on_leave":  # last week's result and next week's needs sit around the leave
+            start, end = monday - timedelta(days=7), sunday + timedelta(days=7)
         gen = self._week_gen = self._week_gen + 1
 
         def done(rows, error):
@@ -215,6 +218,10 @@ class Dashboard(Adw.BreakpointBin):
         (self.week_body.add_css_class if stale else self.week_body.remove_css_class)("pace-stale")
         if s.get("state") == "no_mapping" or (s.get("problem") or {}).get("kind") == "no_mapping":
             return self._render_no_mapping()
+        if leave := model.leave_view(
+            s, self.week_rows or None, settings.rules_from(config.load_settings()), model.week_split(self.week_rows)
+        ):
+            return self._render_leave(leave)
         if empty := model.empty_state(s):
             button = (empty["button"], lambda: open_uri(self, s.get("pinestem_url") or PINESTEM)) if empty.get("button") else None
             self.week_body.append(status_page(empty["icon"], empty["title"], empty["body"], empty.get("pill"), button))
@@ -245,6 +252,83 @@ class Dashboard(Adw.BreakpointBin):
         self.week_body.append(days)
         if projects := (s.get("month") or {}).get("projects"):
             self.week_body.append(self._month_group(s["month"], projects))
+
+    def _render_leave(self, v: dict) -> None:
+        """C5: a week of leave or holidays. A calm banner, the day chips, last week's result, the month by project, next week."""
+        banner = box(
+            Gtk.Image(icon_name="weather-clear-symbolic", pixel_size=28, valign=Gtk.Align.CENTER, css_classes=["dim-label"]),
+            box(
+                label(v["banner"]["title"], "heading", wrap=True),
+                label(v["banner"]["detail"], "caption", "dim-label", wrap=True),
+                spacing=2,
+                hexpand=True,
+                valign=Gtk.Align.CENTER,
+            ),
+            vertical=False,
+            spacing=14,
+            classes=("card", "pace-leave-banner"),
+        )
+        self.week_body.append(banner)
+        codes = self._series_codes(v["cards"])
+        days = Gtk.FlowBox(
+            homogeneous=True,
+            min_children_per_line=3,
+            max_children_per_line=5,
+            row_spacing=10,
+            column_spacing=10,
+            selection_mode=Gtk.SelectionMode.NONE,
+            css_classes=["pace-days"],
+        )
+        for c in v["cards"]:
+            days.append(self._day(c, codes))
+        self.week_body.append(days)
+        if last := v["last_week"]:
+            self.week_body.append(self._last_week_card(last))
+        if projects := (v["month"] or {}).get("projects"):
+            self.week_body.append(self._month_group(v["month"], projects))
+        if nxt := v["next_week"]:
+            self.week_body.append(self._next_week_card(nxt))
+
+    @staticmethod
+    def _last_week_card(last: dict) -> Gtk.Box:
+        per_day = Adw.WrapBox(child_spacing=22, line_spacing=8, margin_top=12, justify=Adw.JustifyMode.NONE)
+        for d in last["days"]:
+            per_day.append(stat(d["dow"], d["text"]))
+        return box(
+            label(last["label"], "caption-heading", "dim-label"),
+            box(
+                label(last["total"], "pace-hero", valign=Gtk.Align.CENTER),
+                box(
+                    pill(last["verdict"], last["colour"]),
+                    label(last["caption"], "caption", "dim-label", wrap=True),
+                    spacing=6,
+                    valign=Gtk.Align.CENTER,
+                ),
+                vertical=False,
+                spacing=16,
+                margin_top=6,
+            ),
+            per_day,
+            classes=("card", "pace-hero-card"),
+            spacing=2,
+        )
+
+    @staticmethod
+    def _next_week_card(nxt: dict) -> Gtk.Box:
+        note = nxt["lop"] + (" Working days are assumed to be 5 until the calendar loads." if nxt["estimated"] else "")
+        return box(
+            label(nxt["label"], "caption-heading", "dim-label"),
+            box(
+                stat("Target", nxt["target"], nxt["days"]),
+                stat("Per working day", nxt["per_day"]),
+                vertical=False,
+                spacing=36,
+                margin_top=6,
+            ),
+            label(note, "caption", "dim-label", wrap=True, margin_top=10),
+            classes=("card", "pace-hero-card"),
+            spacing=2,
+        )
 
     def _hero(self, view: dict) -> Gtk.Box:
         """C1 top card: the week's hours as the one big number, the verdict pill and advice, the bar, then the small stats."""
