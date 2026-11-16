@@ -39,6 +39,7 @@ jobs:
           persist-credentials: false
       - run: sudo apt-get update && sudo apt-get install -y gjs
       - run: gjs -m extension/tests/look.test.js
+      - run: gjs -m extension/tests/widget.test.js
 
   data:
     runs-on: ubuntu-24.04
