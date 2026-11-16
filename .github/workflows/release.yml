@@ -40,6 +40,23 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with: { name: deb, path: out/*.deb }
 
+  arch:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Build the Arch package in archlinux
+        run: |
+          mkdir -p out
+          docker run --rm -v "$PWD":/src:ro -v "$PWD/out":/out archlinux:latest sh /src/packaging/build-arch.sh /src /out
+      - name: Smoke test in a clean CachyOS
+        run: docker run --rm -v "$PWD/packaging":/p:ro -v "$PWD/out":/out:ro cachyos/cachyos:latest sh /p/smoke-test.sh arch /out
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with: { name: arch, path: out/*.pkg.tar.zst }
+
   appimage:
     runs-on: ubuntu-24.04
     continue-on-error: true   # best-effort: see packaging/appimage/build.sh
@@ -55,8 +72,8 @@ jobs:
         with: { name: appimage, path: out/*.AppImage }
 
   publish:
-    needs: [rpm, deb, appimage]
-    if: ${{ !cancelled() && needs.rpm.result == 'success' && needs.deb.result == 'success' }}
+    needs: [rpm, deb, arch, appimage]
+    if: ${{ !cancelled() && needs.rpm.result == 'success' && needs.deb.result == 'success' && needs.arch.result == 'success' }}
     runs-on: ubuntu-24.04
     permissions:
       contents: write
