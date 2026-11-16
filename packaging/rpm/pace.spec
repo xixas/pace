@@ -14,7 +14,6 @@ Requires:       python3-cairo
 Requires:       gtk4
 Requires:       libadwaita
 Requires:       libsecret
-Recommends:     gnome-shell-extension-common
 
 %description
 Pace shows your PineStem billed hours for the week against your target and the

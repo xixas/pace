@@ -9,7 +9,6 @@ Homepage: https://github.com/xixas/pace
 Package: pace
 Architecture: all
 Depends: ${misc:Depends}, python3 (>= 3.11), python3-gi, python3-cairo, gir1.2-gtk-4.0, gir1.2-adw-1, gir1.2-secret-1
-Recommends: gnome-shell-extension-prefs
 Description: PineStem billed hours against the weekly target, on the panel
  Shows your PineStem billed hours for the week against your target and the
  loss-of-pay line: GNOME Shell panel extension, tray icon on other desktops,
