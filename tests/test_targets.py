@@ -33,9 +33,10 @@ def test_prorated_target_gap_and_need_per_day_match_the_b2_mock():
         "target_min": 7980,
         "gap_min": -390,
         "need_per_day_min": 615,
-        "text": "112.5 / 133 h · behind 6.5",
+        "text": "112.5 / 133 h · behind 6.5 h",
         "need_text": "needs 10.3 h/day on Tweelin",
         "short": "Tweelin −6.5 h",
+        "at_risk": True,
     }
     assert out[1] == {
         "code": "RES",
@@ -47,6 +48,7 @@ def test_prorated_target_gap_and_need_per_day_match_the_b2_mock():
         "text": "18.4 h · no target",
         "need_text": None,
         "short": None,
+        "at_risk": False,
     }
 
 
@@ -66,7 +68,7 @@ def test_project_ahead_has_no_short_and_a_met_target_needs_nothing():
     out = month(rows("Tweelin", 9000), feb_days(), {"projects": [TWE]}, FEB, today=date(2027, 2, 25))
     p = out[0]
     assert (p["gap_min"], p["need_per_day_min"], p["need_text"], p["short"]) == (1860, None, None, None)
-    assert p["text"] == "150.0 / 133 h · ahead 31.0"
+    assert p["text"] == "150.0 / 133 h · ahead 31.0 h"
 
 
 def test_a_target_with_no_hours_yet_still_shows():
@@ -99,3 +101,60 @@ def test_prorating_divides_by_the_months_working_days_holidays_out_leave_in():
     targets = {"projects": [{"code": "TWE", "name": "Tweelin", "monthly_h": 140, "prorate": True}]}
     [twe] = month([], days, targets, d_(2026, 10, 1), today=d_(2026, 10, 1))
     assert twe["target_min"] == 140 * 60 * 19 // 20  # 133 h
+
+
+# -- under pace is not behind: only a need beyond the daily target is a risk (112 h target, 20 working days) ----------------
+def _project(billed_h, left, **kw):
+    from pace.targets import project
+
+    t = {"code": "TWE", "name": "Tweelin", "monthly_h": 112, "prorate": False}
+    return project("TWE", "Tweelin", round(billed_h * 60), t, 20, left, 20, **kw)
+
+
+def test_a_gap_the_daily_target_can_close_is_under_pace_not_behind():
+    p = _project(33, 11)  # expected 50.4 h by now: 17.4 h under, but needs only 7.2 h/day
+    assert p["gap_min"] < 0 and p["need_per_day_min"] == 431
+    assert (p["short"], p["at_risk"]) == (None, False)
+    assert p["text"] == "33.0 / 112 h · 17.4 h under pace"
+
+
+def test_a_need_above_the_daily_target_is_behind_and_at_risk():
+    p = _project(33, 6)  # needs 13.2 h/day
+    assert p["at_risk"] is True and p["short"] == "Tweelin −45.4 h"
+    assert p["text"] == "33.0 / 112 h · behind 45.4 h"
+
+
+def test_the_daily_target_is_a_parameter():
+    assert _project(33, 10)["at_risk"] is False  # needs 7.9 h/day
+    assert _project(33, 10, daily_min=360)["at_risk"] is True  # but not within 6 h/day
+
+
+def test_no_days_left_and_still_short_is_at_risk():
+    p = _project(100, 0)
+    assert (p["at_risk"], p["need_per_day_min"]) == (True, None) and p["short"]
+
+
+def test_on_pace_and_ahead_are_not_at_risk():
+    p = _project(0, 20)
+    assert p["text"].endswith("· on pace") and not p["at_risk"]
+    p = _project(120, 5)
+    assert p["text"].endswith("· ahead 36.0 h") and not p["at_risk"] and p["short"] is None
+
+
+def test_month_threads_the_daily_minimum_from_targets():
+    r = rows("Tweelin", 6750)
+    t = {"projects": [TWE], "dailyMinimum": 12}
+    assert month(r, feb_days(), t, FEB, today=date(2027, 2, 25))[0]["at_risk"] is False  # needs 10.3 h/day <= 12
+    assert month(r, feb_days(), {"projects": [TWE]}, FEB, today=date(2027, 2, 25))[0]["at_risk"] is True
+
+
+def test_two_projects_each_doable_alone_but_not_together_are_both_at_risk():
+    a = {"code": "AAA", "name": "Alpha", "monthly_h": 100, "prorate": False}
+    b = {"code": "BBB", "name": "Beta", "monthly_h": 100, "prorate": False}
+    # 20 working days, 10 days left: each needs ~5.5 h/day, together over 8.5 h
+    r = rows("Alpha", 3000) + rows("Beta", 3000)
+    out = month(r, feb_days(), {"projects": [a, b], "dailyMinimum": 8.5}, FEB, today=date(2027, 2, 16))
+    assert all(p["need_per_day_min"] <= 510 for p in out) and sum(p["need_per_day_min"] for p in out) > 510
+    assert [p["at_risk"] for p in out] == [True, True] and all(p["short"] for p in out)
+    alone = month(rows("Alpha", 3000), feb_days(), {"projects": [a], "dailyMinimum": 8.5}, FEB, today=date(2027, 2, 16))
+    assert alone[0]["at_risk"] is False and "under pace" in alone[0]["text"]
