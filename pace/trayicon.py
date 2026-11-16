@@ -16,6 +16,7 @@ COLOURS = {
     "grey": (0x9A, 0x99, 0x96),
 }
 TRACK_ALPHA = 0.3
+DISC = (0x1C / 255, 0x2A / 255, 0x3A / 255)  # the app icon's tile colour
 
 
 def _rgb(colour: str) -> tuple[float, float, float]:
@@ -30,6 +31,10 @@ def _draw(colour: str, tray: dict, size: int) -> cairo.ImageSurface:
     thick = max(2.0, size * 0.14)
     radius = (size - thick) / 2 - size * 0.02
     c = size / 2
+    # The pastel marker colours are made for a dark panel and wash out on Breeze Light, so the ring sits on a dark disc.
+    ctx.set_source_rgb(*DISC)
+    ctx.arc(c, c, c, 0, 2 * math.pi)
+    ctx.fill()
     ctx.set_line_width(thick)
     ctx.set_source_rgba(r, g, b, TRACK_ALPHA)
     ctx.arc(c, c, radius, 0, 2 * math.pi)
