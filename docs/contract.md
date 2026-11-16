@@ -73,7 +73,7 @@ Added keys (all may be `null` when there is no data, e.g. signed out):
   (targets.json, default 8.5 h) cannot cover the summed per-day need of every targeted project still below target, or a
   project is short with no working day left. Amber colouring and the `project_behind` nudge key off `at_risk`/`short`, never the gap sign.
 - `widget` (B10, drawn by the shell extension on GNOME and by the GTK card elsewhere): `{"week": SECTION, "project": SECTION | null}`,
-  SECTION = `{"label": "THIS WEEK" | "TWEELIN · OCTOBER", "word": "on track" | "pay risk" | "behind 6.5 h" | …, "colour": green|amber|red|blue|grey,
+  SECTION = `{"label": "THIS WEEK" | "TWEELIN · OCT", "word": "on track" | "pay risk" | "behind 6.5 h" | …, "colour": green|amber|red|blue|grey,
   "big": "30.1 / 42.5" (whole hours trimmed: "0 / 45"; "" hides it), "unit": "h", "fill": 0..1 | null (the 4 px bar),
   "lines": ["8.0 h/day to reach 42.5 h"]}`. Project lines: "10.3 h/day · 2 days left". On leave the week section is
   `{"label": "ON LEAVE", "word": "back Mon 16 Nov", "big": "", …}`.

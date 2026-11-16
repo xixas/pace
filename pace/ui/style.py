@@ -77,9 +77,23 @@ button.heat-cell:focus-visible { outline: 2px solid var(--accent-bg-color); outl
 
 /* ---- B10 mini widget: a rounded card on a transparent, undecorated window -------------------------------------------- */
 window.pace-widget, window.pace-widget.background, window.pace-widget.csd, window.pace-widget.solid-csd { background: transparent; box-shadow: none; border-radius: 0; }
-.pace-widget-card { background: var(--window-bg-color); color: var(--window-fg-color); border-radius: 18px; padding: 16px 18px 14px;
-  box-shadow: 0 0 0 1px var(--card-shade-color), 0 8px 24px alpha(black, .22); }
-.pace-widget-card .big { font-size: 30px; font-weight: 800; line-height: 1; font-feature-settings: "tnum"; letter-spacing: -0.02em; }
-.pace-widget-card .title { font-size: 13px; font-weight: 700; }
-.pace-widget-sep { background: var(--card-shade-color); min-height: 1px; margin: 10px 0 8px; }
+.pace-widget-card { background: var(--window-bg-color); color: var(--window-fg-color); border-radius: 18px; padding: 14px 16px 14px;
+  box-shadow: 0 0 0 1px alpha(currentColor, .12), 0 2px 8px alpha(black, .2); }
+.pace-widget-card .big { font-size: 28px; font-weight: 800; line-height: 1; font-feature-settings: "tnum"; letter-spacing: -0.02em; }
+.pace-w-label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; opacity: .55; }
+.pace-w-word { font-size: 12px; font-weight: 700; }
+.pace-w-word.green { color: var(--success-color); }
+.pace-w-word.amber { color: var(--warning-color); }
+.pace-w-word.red { color: var(--error-color); }
+.pace-w-word.blue { color: var(--accent-color); }
+.pace-w-word.grey { opacity: .6; }
+.pace-w-unit { font-size: 14px; font-weight: 600; opacity: .5; }
+progressbar.pace-w-bar { min-height: 4px; }
+progressbar.pace-w-bar > trough { min-height: 4px; border-radius: 99px; background: alpha(currentColor, .12); }
+progressbar.pace-w-bar > trough > progress { min-height: 4px; border-radius: 99px; background: alpha(currentColor, .5); }
+progressbar.pace-w-bar.green > trough > progress { background: var(--success-bg-color); }
+progressbar.pace-w-bar.amber > trough > progress { background: var(--warning-bg-color); }
+progressbar.pace-w-bar.red > trough > progress { background: var(--error-bg-color); }
+progressbar.pace-w-bar.blue > trough > progress { background: var(--accent-bg-color); }
+.pace-widget-sep { background: alpha(currentColor, .12); min-height: 1px; margin: 12px 0 10px; }
 """

@@ -70,7 +70,7 @@ def status_on_track() -> dict:
         "last_week": None,
         "widget": {
             "week": section("THIS WEEK", "on track", "green", "30.1 / 42.5", 0.71, ["8.0 h/day to reach 42.5 h"]),
-            "project": section("TWEELIN · OCTOBER", "behind 6.5 h", "amber", "112.5 / 133", 0.85, ["10.3 h/day · 2 days left"]),
+            "project": section("TWEELIN · OCT", "behind 6.5 h", "amber", "112.5 / 133", 0.85, ["10.3 h/day · 2 days left"]),
         },
     }
 

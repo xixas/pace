@@ -375,7 +375,7 @@ def project_section(month: dict, p: dict) -> dict:
         caption.append(f"{left} {'day' if left == 1 else 'days'} left")
     big = f"{hours(p['billed_min'], trim=True)} / {hours(p['target_min'], trim=True)}"
     fill = min(1, p["billed_min"] / p["target_min"]) if p["target_min"] else 0
-    return widget_section(f"{p['name']} · {month['name']}".upper(), word, colour, big, round(fill, 2), [" · ".join(caption)] if caption else [])
+    return widget_section(f"{p['name']} · {month['name'][:3]}".upper(), word, colour, big, round(fill, 2), [" · ".join(caption)] if caption else [])
 
 
 def widget(s: dict, v: Verdict, base: str, ctx: Ctx, as_of: datetime) -> dict:

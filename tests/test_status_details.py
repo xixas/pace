@@ -139,7 +139,7 @@ def test_tray_and_widget_are_ready_made_for_every_frontend():
     assert (w["label"], w["word"], w["colour"]) == ("THIS WEEK", "on track", "green")
     assert (w["big"], w["unit"], w["fill"], w["lines"]) == ("30.1 / 42.5", "h", 0.71, ["8.0 h/day to reach 42.5 h"])
     p = s["widget"]["project"]
-    assert p["label"] == "TWEELIN · OCTOBER" and p["big"].startswith("112.5 / ") and p["unit"] == "h"
+    assert p["label"] == "TWEELIN · OCT" and p["big"].startswith("112.5 / ") and p["unit"] == "h"
     assert p["lines"] == ["13.8 h/day · 2 days left"]
     assert p["word"] == "behind 14.8 h" and p["colour"] == "amber" and p["fill"] == 0.8
 
