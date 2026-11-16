@@ -1,5 +1,5 @@
 Name:           pace
-Version:        0.1.5
+Version:        0.1.6
 Release:        1%{?dist}
 Summary:        PineStem billed hours against the weekly target, on the panel
 License:        MIT
@@ -49,6 +49,9 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/*.desktop
 %{_datadir}/metainfo/io.github.xixas.Pace.metainfo.xml
 
 %changelog
+* Mon Nov 16 2026 Vikas Kyatannawar <vikas.k@osmosys.co> - 0.1.6-1
+- Arch / CachyOS package (.pkg.tar.zst) on every release
+
 * Mon Nov 16 2026 Vikas Kyatannawar <vikas.k@osmosys.co> - 0.1.5-1
 - KDE Plasma: no wallet wizard, readable tray ring, Sign in in the tray, task manager icon
 - Retry from 30 s when offline at login; poll when the network comes up
