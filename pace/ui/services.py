@@ -16,10 +16,17 @@ SHELL_EXTENSIONS = ("org.gnome.Shell.Extensions", "/org/gnome/Shell/Extensions",
 
 
 def version() -> str:
+    """The packaged version (make install writes pace/_version.py from the rpm spec), else the dist metadata."""
+    try:
+        from pace._version import VERSION
+
+        return VERSION
+    except ImportError:
+        pass
     try:
         return metadata.version("pace")
     except metadata.PackageNotFoundError:
-        return "0.1.0"
+        return "dev"
 
 
 class Services:

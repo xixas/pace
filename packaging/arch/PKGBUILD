@@ -8,6 +8,7 @@ url='https://github.com/xixas/pace'
 license=('MIT')
 depends=('python' 'python-gobject' 'python-cairo' 'gtk4' 'libadwaita' 'libsecret')
 makedepends=('make')
+backup=('etc/xdg/autostart/io.github.xixas.Pace.daemon.desktop')
 
 package() {
     make -C "$startdir/tree" install DESTDIR="$pkgdir" PREFIX=/usr SYSCONFDIR=/etc LIBDIR=/usr/lib/pace

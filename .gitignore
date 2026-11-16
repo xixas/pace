@@ -5,3 +5,4 @@ __pycache__/
 *.egg-info/
 .claude/
 uv.lock
+pace/_version.py
