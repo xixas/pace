@@ -1,0 +1,14 @@
+# Arch / CachyOS / Manjaro package. Built by packaging/build-arch.sh, which sets pkgver from the rpm spec.
+pkgname=pace
+pkgver=0.0.0
+pkgrel=1
+pkgdesc='PineStem billed hours against the weekly target, on the panel'
+arch=('any')
+url='https://github.com/xixas/pace'
+license=('MIT')
+depends=('python' 'python-gobject' 'python-cairo' 'gtk4' 'libadwaita' 'libsecret')
+makedepends=('make')
+
+package() {
+    make -C "$startdir/tree" install DESTDIR="$pkgdir" PREFIX=/usr SYSCONFDIR=/etc LIBDIR=/usr/lib/pace
+}

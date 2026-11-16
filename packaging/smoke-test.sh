@@ -1,10 +1,11 @@
 #!/bin/sh
-# Install a built package in a clean container and check Pace starts. Usage: smoke-test.sh rpm|deb PKG_DIR
+# Install a built package in a clean container and check Pace starts. Usage: smoke-test.sh rpm|deb|arch PKG_DIR
 set -eu
 kind=$1 dir=$2
 case $kind in
     rpm) dnf -y -q install "$dir"/*.rpm >/dev/null ;;
     deb) export DEBIAN_FRONTEND=noninteractive; apt-get update -qq; apt-get install -y -qq "$dir"/*.deb >/dev/null ;;
+    arch) pacman -Sy --noconfirm >/dev/null; pacman -U --noconfirm "$dir"/*.pkg.tar.zst >/dev/null ;;
 esac
 export HOME=/tmp/pace-home XDG_CONFIG_HOME=/tmp/pace-home/c XDG_STATE_HOME=/tmp/pace-home/s
 mkdir -p "$HOME"
@@ -26,6 +27,7 @@ echo "files ok"
 case $kind in
     rpm) dnf -y -q remove pace >/dev/null ;;
     deb) apt-get remove -y -qq pace >/dev/null ;;
+    arch) pacman -R --noconfirm pace >/dev/null ;;
 esac
 test ! -e /usr/bin/pace && test ! -e /usr/lib/pace && test ! -e /etc/xdg/autostart/io.github.xixas.Pace.daemon.desktop
 echo "remove clean ok"
