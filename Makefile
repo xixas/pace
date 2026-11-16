@@ -6,6 +6,7 @@ LIBDIR     ?= $(PREFIX)/lib/pace
 DATADIR    ?= $(PREFIX)/share
 SYSCONFDIR ?= /etc
 PYTHON     ?= /usr/bin/python3
+VERSION    ?= $(shell sed -n 's/^Version:[[:space:]]*//p' packaging/rpm/pace.spec)
 APPID      := io.github.xixas.Pace
 EXT        := pace@osmosys
 EXTDIR     := $(DESTDIR)$(DATADIR)/gnome-shell/extensions/$(EXT)
@@ -22,6 +23,7 @@ install:
 	install -d $(DESTDIR)$(LIBDIR) $(DESTDIR)$(BINDIR) $(EXTDIR)
 	cp -r pace $(DESTDIR)$(LIBDIR)/
 	find $(DESTDIR)$(LIBDIR) -name __pycache__ -type d -prune -exec rm -rf {} +
+	printf 'VERSION = "%s"\n' "$(VERSION)" > $(DESTDIR)$(LIBDIR)/pace/_version.py
 	cp -r extension/$(EXT)/. $(EXTDIR)/
 	find $(DESTDIR)$(LIBDIR) $(EXTDIR) -type d -exec chmod 755 {} +
 	find $(DESTDIR)$(LIBDIR) $(EXTDIR) -type f -exec chmod 644 {} +
