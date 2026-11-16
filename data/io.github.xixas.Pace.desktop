@@ -8,3 +8,4 @@ Terminal=false
 Categories=Utility;GTK;
 Keywords=hours;billing;pinestem;timesheet;
 StartupNotify=true
+StartupWMClass=io.github.xixas.Pace.App
