@@ -27,6 +27,12 @@ export default class PaceTestHelper extends Extension {
             } catch {
                 return;
             }
+            // One write fires several 'changed' events; a toggle must run once per write (the harness spaces writes >1 s)
+            const now = GLib.get_monotonic_time();
+            if (cmd === this._lastCmd && now - this._lastAt < 500000)
+                return;
+            this._lastCmd = cmd;
+            this._lastAt = now;
             const menu = Main.panel.statusArea['pace@osmosys']?.menu;
             if (cmd === 'open')
                 menu?.open(false);
@@ -37,8 +43,11 @@ export default class PaceTestHelper extends Extension {
             else if (cmd === 'scheme-light' || cmd === 'scheme-dark')
                 new Gio.Settings({schema_id: 'org.gnome.desktop.interface'}).set_string('color-scheme', cmd === 'scheme-dark' ? 'prefer-dark' : 'default');
             else if (cmd === 'toggle-snooze' || cmd === 'toggle-widget') {
-                const want = cmd === 'toggle-snooze' ? /snooze/i : /mini widget/i;
-                menu?._getMenuItems().find(i => i._switch && want.test(i.label.text))?.activate(null);
+                const want = cmd === 'toggle-snooze' ? 'Snooze today' : 'Mini widget';
+                const find = a => (a.accessible_name === want ? a : a.get_children().map(find).find(Boolean));
+                const pill = (menu?._getMenuItems() ?? []).map(find).find(Boolean);
+                if (pill)
+                    pill.checked = !pill.checked;
             }
         });
     }
