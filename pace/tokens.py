@@ -24,7 +24,7 @@ class FileStore:
 
 
 class KeyringStore:
-    """Secret Service (GNOME Keyring, KWallet) via libsecret. available() is False on COSMIC or minimal KDE without one."""
+    """Secret Service (GNOME Keyring, KWallet) via libsecret. available() is False on COSMIC, or on KDE until a default wallet exists."""
 
     def __init__(self, account: str = "hrms-session"):
         import gi
@@ -39,9 +39,11 @@ class KeyringStore:
         self.attrs = {"account": account}
 
     def available(self) -> bool:
+        """A Secret Service is running and has a default collection. On a KDE profile with no wallet yet, storing would open
+        KWallet's "create a new wallet" wizard (blocking, with a GPG choice), so that counts as no keyring: the file fallback applies."""
         try:
-            self.secret.Service.get_sync(self.secret.ServiceFlags.NONE, None)
-            return True
+            service = self.secret.Service.get_sync(self.secret.ServiceFlags.NONE, None)
+            return self.secret.Collection.for_alias_sync(service, "default", self.secret.CollectionFlags.NONE, None) is not None
         except Exception:
             return False
 
