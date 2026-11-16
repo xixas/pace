@@ -6,6 +6,7 @@ import json
 import os
 import signal
 import sys
+import traceback
 
 from pace.files import config_dir, read_json, state_dir
 
@@ -158,18 +159,37 @@ def paced(argv=None) -> int:
     timer = {}
 
     def schedule() -> None:
+        """One timer at a time: the refresh interval, or a short backoff while offline."""
         if timer:
-            GLib.source_remove(timer["id"])
-        timer["id"] = GLib.timeout_add_seconds(daemon.settings.data["refresh_minutes"] * 60, lambda: daemon.tick() or True)
+            GLib.source_remove(timer.pop("id"))
+        timer["id"] = GLib.timeout_add_seconds(daemon.next_poll_in(), poll_now)
+
+    def poll_now(backoff: bool = True) -> bool:
+        timer.pop("id", None)  # this source ends here (returns False), so schedule() must not remove it
+        try:
+            daemon.tick(backoff=backoff)
+        except Exception:  # a bad reply must not end polling for the rest of the session: retry it like offline
+            traceback.print_exc()
+            daemon.offline_tries += 1
+        finally:
+            schedule()
+        return False
+
+    def network_changed(_monitor, available: bool) -> None:
+        if available and daemon.problem == "offline":  # the network came up: don't sit out the backoff
+            if timer:
+                GLib.source_remove(timer.pop("id"))
+            GLib.idle_add(poll_now, False)  # not inside the signal: a poll can block for up to 20 s
 
     def settings_changed() -> None:
         daemon.render()
         schedule()
 
     monitor = daemon.settings.watch(settings_changed)  # noqa: F841
+    network = Gio.NetworkMonitor.get_default()
+    network.connect("network-changed", network_changed)
     daemon.boot()
-    daemon.tick()
-    schedule()
+    poll_now()  # the first poll, guarded like every later one
     GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGTERM, lambda: loop.quit() or False)
     loop.run()
     return 0
