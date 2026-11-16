@@ -21,9 +21,7 @@ XML = f"""<node><interface name="{shell.NAME}">
 
 @pytest.fixture
 def bus(monkeypatch):
-    daemon = subprocess.Popen(
-        ["dbus-daemon", "--session", "--print-address", "--nofork"], stdout=subprocess.PIPE, text=True
-    )
+    daemon = subprocess.Popen(["dbus-daemon", "--session", "--print-address", "--nofork"], stdout=subprocess.PIPE, text=True)
     address = daemon.stdout.readline().strip()
     monkeypatch.setenv("DBUS_SESSION_BUS_ADDRESS", address)
     yield address

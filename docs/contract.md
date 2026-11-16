@@ -77,6 +77,10 @@ Added keys (all may be `null` when there is no data, e.g. signed out):
   "big": "30.1 / 42.5" (whole hours trimmed: "0 / 45"; "" hides it), "unit": "h", "fill": 0..1 | null (the 4 px bar),
   "lines": ["8.0 h/day to reach 42.5 h"]}`. Project lines: "10.3 h/day · 2 days left". On leave the week section is
   `{"label": "ON LEAVE", "word": "back Mon 16 Nov", "big": "", …}`.
+- Mini widget on GNOME: the extension draws it (St chrome: above windows, every workspace) and exports `io.github.xixas.Pace.Shell`
+  at `/io/github/xixas/Pace/Shell` with methods `ShowWidget()`, `HideWidget()`, `WidgetVisible() → b`. The app, tray and
+  `pace widget` call it first and open the GTK card only when the call fails. The extension keeps `{"visible", "x", "y"}` in
+  `$XDG_STATE_HOME/pace/shell-widget.json` so the widget returns after the shell disables the extension (lock screen).
 - Offline: paced already appends the fetch time to `text`; frontends add the stale suffix only when
   `state` is not `offline`.
 - `month.projects[]` order: projects with targets first, then by billed desc. Billable minutes only.

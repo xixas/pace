@@ -56,13 +56,28 @@ class MiniWidget(Gtk.ApplicationWindow):
     @staticmethod
     def _section(s: dict) -> Gtk.Box:
         """Label and state word, the big numbers, a thin bar, then the dim caption lines. s is one section of widget_view."""
-        parts = [box(label(s["label"], "pace-w-label", hexpand=True, ellipsize=Pango.EllipsizeMode.END), label(s["word"], "pace-w-word", s["colour"], margin_start=8), vertical=False)]
+        parts = [
+            box(
+                label(s["label"], "pace-w-label", hexpand=True, ellipsize=Pango.EllipsizeMode.END),
+                label(s["word"], "pace-w-word", s["colour"], margin_start=8),
+                vertical=False,
+            )
+        ]
         if s["big"]:
             parts.append(
-                box(label(s["big"], "big"), label(s["unit"], "pace-w-unit", valign=Gtk.Align.BASELINE_FILL), vertical=False, spacing=4, margin_top=6, baseline_position=Gtk.BaselinePosition.BOTTOM)
+                box(
+                    label(s["big"], "big"),
+                    label(s["unit"], "pace-w-unit", valign=Gtk.Align.BASELINE_FILL),
+                    vertical=False,
+                    spacing=4,
+                    margin_top=6,
+                    baseline_position=Gtk.BaselinePosition.BOTTOM,
+                )
             )
         if s["fill"] is not None:
             bar = Gtk.ProgressBar(fraction=s["fill"], css_classes=["pace-w-bar", s["colour"]], margin_top=8)
             parts.append(bar)
-        parts += [label(line, "caption", "dim-label", wrap=True, margin_top=6 if i == 0 else 0) for i, line in enumerate(s["lines"])]
+        parts += [
+            label(line, "caption", "dim-label", wrap=True, margin_top=6 if i == 0 else 0) for i, line in enumerate(s["lines"])
+        ]
         return box(*parts)

@@ -96,6 +96,55 @@ def contact_sheet(pngs, dest):
     print("ok   " + str(dest))
 
 
+def widget_shots(a, bus, state):
+    """The shell widget, asked for over D-Bus exactly as the Pace app does, in light and dark for the three states of the brief."""
+    fx = lambda n: json.loads((a.fixtures / f"{n}.json").read_text())  # noqa: E731
+    under = fx("01-on-track")
+    under["widget"]["project"] |= {
+        "word": "17.4 h under pace",
+        "colour": "grey",
+        "big": "33 / 112",
+        "fill": 0.29,
+        "lines": ["7.2 h/day · 11 days left"],
+    }
+    cases = {"on-track-under-pace": under, "pay-risk-behind": fx("05-pay-risk"), "on-leave": fx("11-on-leave")}
+    shell_call = lambda m: bus.call_sync(  # noqa: E731
+        "io.github.xixas.Pace.Shell",
+        "/io/github/xixas/Pace/Shell",
+        "io.github.xixas.Pace.Shell",
+        m,
+        None,
+        None,
+        Gio.DBusCallFlags.NONE,
+        5000,
+        None,
+    )
+    print("ok   WidgetVisible before show: " + str(shell_call("WidgetVisible").unpack()))
+    (state / "menu-cmd").write_text("overview-hide")  # a headless shell starts in the overview, which hides the widget
+    time.sleep(1.5)
+    shell_call("ShowWidget")
+    print("ok   WidgetVisible after show: " + str(shell_call("WidgetVisible").unpack()))
+    print("ok   saved: " + (state / "shell-widget.json").read_text())
+    for scheme in ("light", "dark"):
+        (state / "menu-cmd").write_text(f"scheme-{scheme}")
+        time.sleep(0.5)
+        for name, s in cases.items():
+            s["as_of"] = (
+                datetime.now().isoformat(timespec="seconds") if s.get("as_of") and s["state"] != "offline" else s["as_of"]
+            )
+            if s.get("stale_after"):
+                s["stale_after"] = (datetime.now() + timedelta(minutes=41)).isoformat(timespec="seconds")
+            tmp = state / ".status.json.tmp"
+            tmp.write_text(json.dumps(s, ensure_ascii=False))
+            tmp.replace(state / "status.json")
+            time.sleep(1.0)
+            png = a.out / f"widget-{name}-{scheme}.png"
+            ok, _ = call(bus, "ScreenshotArea", GLib.Variant("(iiiibs)", (W - 280, 30, 280, 290, False, str(png))), "(bs)")
+            print(("ok   " if ok else "FAIL ") + png.name)
+    shell_call("HideWidget")
+    print("ok   WidgetVisible after hide: " + str(shell_call("WidgetVisible").unpack()))
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", required=True, type=Path)
@@ -173,6 +222,7 @@ def main():
             menu_pngs.append(png)
             (state / "menu-cmd").write_text("close")
             time.sleep(0.5)
+        widget_shots(a, bus, state)
         if a.sheet and menu_pngs:
             contact_sheet(menu_pngs, a.sheet)
     finally:

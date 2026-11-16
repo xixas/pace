@@ -325,7 +325,10 @@ def widget_view(status: dict, rules=None) -> dict:
     if not w:
         from pace.status import widget_section
 
-        return {"week": widget_section("PACE", "", "grey", "–", None, [status.get("text") or "Sign in to see your week"]), "project": None}
+        return {
+            "week": widget_section("PACE", "", "grey", "–", None, [status.get("text") or "Sign in to see your week"]),
+            "project": None,
+        }
     return {k: v and {**v, "colour": colour_class(v["colour"])} for k, v in w.items()}
 
 

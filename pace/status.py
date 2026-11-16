@@ -348,7 +348,15 @@ def tray(s: dict, v: Verdict, base: str, labels: dict, as_of: datetime) -> dict:
 
 def widget_section(label: str, word: str, colour: str, big: str, fill: float | None, lines: list[str]) -> dict:
     """One block of the mini widget (the GTK card and the shell widget draw the same keys): header, big numbers, bar, captions."""
-    return {"label": label, "word": word, "colour": colour, "big": big, "unit": "h" if big and big[0].isdigit() else "", "fill": fill, "lines": lines}
+    return {
+        "label": label,
+        "word": word,
+        "colour": colour,
+        "big": big,
+        "unit": "h" if big and big[0].isdigit() else "",
+        "fill": fill,
+        "lines": lines,
+    }
 
 
 def week_caption(s: dict, v: Verdict, base: str, ctx: Ctx, as_of: datetime) -> list[str]:
@@ -370,18 +378,32 @@ def project_section(month: dict, p: dict) -> dict:
     colour = "amber" if p["at_risk"] else "grey" if p["gap_min"] < 0 else "green"
     word = p["text"].rsplit(" · ", 1)[1]
     left = month["working_days_left"]
-    caption = [f"{hours(p['need_per_day_min'])} h/day"] if p["need_per_day_min"] else ["target met"] if p["billed_min"] >= p["target_min"] else []
+    caption = (
+        [f"{hours(p['need_per_day_min'])} h/day"]
+        if p["need_per_day_min"]
+        else ["target met"]
+        if p["billed_min"] >= p["target_min"]
+        else []
+    )
     if left and p["billed_min"] < p["target_min"]:
         caption.append(f"{left} {'day' if left == 1 else 'days'} left")
     big = f"{hours(p['billed_min'], trim=True)} / {hours(p['target_min'], trim=True)}"
     fill = min(1, p["billed_min"] / p["target_min"]) if p["target_min"] else 0
-    return widget_section(f"{p['name']} · {month['name'][:3]}".upper(), word, colour, big, round(fill, 2), [" · ".join(caption)] if caption else [])
+    return widget_section(
+        f"{p['name']} · {month['name'][:3]}".upper(), word, colour, big, round(fill, 2), [" · ".join(caption)] if caption else []
+    )
 
 
 def widget(s: dict, v: Verdict, base: str, ctx: Ctx, as_of: datetime) -> dict:
     offline = s["state"] == "offline"
     word = "offline" if offline else WIDGET_WORD.get(base, s["title"].lower())
-    big = hours(v.logged, trim=True) if base == "done" else f"{hours(v.logged, trim=True)} / {hours(v.target, trim=True)}" if v.target else ""
+    big = (
+        hours(v.logged, trim=True)
+        if base == "done"
+        else f"{hours(v.logged, trim=True)} / {hours(v.target, trim=True)}"
+        if v.target
+        else ""
+    )
     fill = round(min(1, v.logged / v.target), 2) if v.target else None
     week = widget_section("THIS WEEK", word, s["colour"], big, fill, week_caption(s, v, base, ctx, as_of))
     p = first_project(s["month"])

@@ -42,7 +42,10 @@ def month(rows: list[dict], days: list[dict], targets: dict, at: date, today: da
     named = {t["name"] for t in targets["projects"]}
 
     def build(total_need):
-        got = [project(t["code"], t["name"], billed.get(t["name"], 0), t, avail, left, weekdays, daily, total_need) for t in targets["projects"]]
+        got = [
+            project(t["code"], t["name"], billed.get(t["name"], 0), t, avail, left, weekdays, daily, total_need)
+            for t in targets["projects"]
+        ]
         return got + [project(n[:3].upper(), n, m, None, avail, left, weekdays) for n, m in billed.items() if n not in named]
 
     # What every targeted project still needs per day, together, against one day's target: the month is at risk as a whole.
@@ -66,7 +69,14 @@ def month_block(rows: list[dict], days: list[dict], targets: dict, today: date) 
 
 
 def project(
-    code: str, name: str, billed: int, target: dict | None, avail: float, left: float, weekdays: int, daily_min: float = 510,
+    code: str,
+    name: str,
+    billed: int,
+    target: dict | None,
+    avail: float,
+    left: float,
+    weekdays: int,
+    daily_min: float = 510,
     total_need: float | None = None,
 ) -> dict:
     """One project's month. Below the even pace is only "behind" (at_risk, amber, nudged) when the days left at the daily
