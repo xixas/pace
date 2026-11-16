@@ -47,6 +47,7 @@ class Daemon:
         self.status: dict | None = None
         self.last_fresh: datetime | None = None
         self.offline_tries = 0
+        self.signing_in = False
 
     def boot(self) -> None:
         """First paint from the saved week, before any network call, so the panel has a number at login."""
@@ -160,7 +161,8 @@ class Daemon:
 
     def sign_in(self) -> None:
         """The browser flow blocks for up to five minutes, so it runs off the main loop; polling resumes when it ends."""
-        if self.sign_in_flow:
+        if self.sign_in_flow and not self.signing_in:  # a second click while the browser is open starts nothing
+            self.signing_in = True
             threading.Thread(target=self.run_sign_in, daemon=True).start()
 
     def run_sign_in(self) -> None:
@@ -168,6 +170,8 @@ class Daemon:
             self.sign_in_flow()
         except Exception:  # the person closed the tab or Microsoft said no: the signed-out notice stays
             return
+        finally:
+            self.signing_in = False
         self.on_signed_in()
 
 

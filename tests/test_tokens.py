@@ -45,3 +45,17 @@ def test_keyring_is_available_when_the_default_collection_exists():
 
 def test_keyring_is_not_available_without_a_default_wallet_so_kwallet_never_opens_its_create_wizard():
     assert not keyring_with(FakeSecret(default_collection=None)).available()
+
+
+def test_a_session_saved_to_the_file_while_there_was_no_wallet_is_still_found_once_a_wallet_exists(tmp_path, monkeypatch):
+    from pace.tokens import FileStore, KeyringFirst, MemoryStore
+
+    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path))
+    FileStore().save({"access": "A", "refresh": "R"})  # signed in from the tray before any KDE wallet existed
+    wallet = MemoryStore()  # the wallet that appeared later: empty
+    store = KeyringFirst(wallet, FileStore())
+    assert store.load() == {"access": "A", "refresh": "R"}
+    store.save({"access": "A2", "refresh": "R2"})  # the next refresh moves it into the wallet
+    assert wallet.load() == {"access": "A2", "refresh": "R2"} and FileStore().load() is None
+    store.clear()
+    assert store.load() is None
