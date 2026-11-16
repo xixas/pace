@@ -125,6 +125,12 @@ def widget_shots(a, bus, state):
     shell_call("ShowWidget")
     print("ok   WidgetVisible after show: " + str(shell_call("WidgetVisible").unpack()))
     print("ok   saved: " + (state / "shell-widget.json").read_text())
+    for want in (False, True):  # the top-bar menu's Mini widget switch drives the same widget
+        for cmd in ("open", "toggle-widget", "close"):  # 1.5 s apart: the file monitor merges closer writes
+            (state / "menu-cmd").write_text(cmd)
+            time.sleep(1.5)
+        got = shell_call("WidgetVisible").unpack()[0]
+        print(("ok  " if got == want else "FAIL") + f" menu switch -> WidgetVisible {got}, want {want}")
     for scheme in ("light", "dark"):
         (state / "menu-cmd").write_text(f"scheme-{scheme}")
         time.sleep(0.5)

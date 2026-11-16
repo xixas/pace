@@ -126,6 +126,9 @@ class PaceIndicator extends PanelMenu.Button {
             refresh: () => this._paced('Refresh'),
             snooze: () => this._paced('Snooze'),
             unsnooze: () => this._paced('Unsnooze'),
+            widgetVisible: () => this.widget?.WidgetVisible() ?? false,
+            showWidget: () => this.widget?.ShowWidget(),
+            hideWidget: () => this.widget?.HideWidget(),
         });
     }
 
@@ -192,6 +195,11 @@ export default class PaceExtension extends Extension {
         Main.panel.addToStatusArea(this.uuid, this._indicator);
         // The mini widget lives in the shell too; it shows what the indicator last read
         this._widget = new WidgetController({openDashboard: () => this._indicator?.openDashboard()});
+        this._indicator.widget = this._widget;
+        this._indicator.menu.connect('open-state-changed', (menu, open) => {
+            if (open)
+                menu._paceWidgetSwitch?.setToggleState(this._widget?.WidgetVisible() ?? false);
+        });
         this._indicator.onRender = (json, l) => this._widget?.setStatus(json, l.dim);
     }
 

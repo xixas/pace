@@ -166,7 +166,7 @@ function staticItem(menu, widget) {
     return it;
 }
 
-// menu: a PopupMenu; m: look.menuModel(); flash: transient footer message; act: {dashboard, settings, signIn, open, refresh, snooze, unsnooze}
+// menu: a PopupMenu; m: look.menuModel(); flash: transient footer message; act: {dashboard, settings, signIn, open, refresh, snooze, unsnooze, widgetVisible, showWidget, hideWidget}
 export function buildMenu(menu, m, flash, act) {
     const content = vbox('pace-content');
     content.style = `width: ${WIDTH}px;`;
@@ -231,6 +231,12 @@ export function buildMenu(menu, m, flash, act) {
     item(menu, 'Open dashboard', act.dashboard);
     item(menu, 'Settings…', act.settings);
     item(menu, 'Open PineStem', () => act.open(m.pinestemUrl));
+    // The mini widget can also be hidden from its own right-click menu: the indicator re-syncs this switch on open
+    const widget = new PopupMenu.PopupSwitchMenuItem('Mini widget', act.widgetVisible());
+    widget.activate = () => widget.toggle();  // stay open, like the snooze switch
+    widget.connect('toggled', (_i, on) => (on ? act.showWidget : act.hideWidget)());
+    menu.addMenuItem(widget);
+    menu._paceWidgetSwitch = widget;
     if (m.state === 'skew')
         return;
     // One switch both ways that flips in place like a quick-settings toggle: the menu stays open

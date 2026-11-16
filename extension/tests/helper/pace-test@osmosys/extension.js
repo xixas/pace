@@ -1,6 +1,6 @@
 // Test-only (never shipped): lets extension/tests/screenshots.py open and close the Pace menu in a headless Shell.
 // "overview-hide" leaves the overview a headless shell starts in. It also sets the desktop colour scheme for the widget shots: "scheme-light" / "scheme-dark".
-// The harness writes "open", "close" or "toggle-snooze" to $XDG_STATE_HOME/pace/menu-cmd.
+// The harness writes "open", "close", "toggle-snooze" or "toggle-widget" to $XDG_STATE_HOME/pace/menu-cmd.
 
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
@@ -36,8 +36,10 @@ export default class PaceTestHelper extends Extension {
                 Main.overview.hide();
             else if (cmd === 'scheme-light' || cmd === 'scheme-dark')
                 new Gio.Settings({schema_id: 'org.gnome.desktop.interface'}).set_string('color-scheme', cmd === 'scheme-dark' ? 'prefer-dark' : 'default');
-            else if (cmd === 'toggle-snooze')
-                menu?._getMenuItems().find(i => i._switch)?.activate(null);
+            else if (cmd === 'toggle-snooze' || cmd === 'toggle-widget') {
+                const want = cmd === 'toggle-snooze' ? /snooze/i : /mini widget/i;
+                menu?._getMenuItems().find(i => i._switch && want.test(i.label.text))?.activate(null);
+            }
         });
     }
 
