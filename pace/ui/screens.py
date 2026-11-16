@@ -272,7 +272,7 @@ class Onboarding(Adw.Bin):
             icon_name="system-lock-screen-symbolic",
             title="Pace can't reach a password keyring",
             vexpand=True,
-            description="Your desktop has no Secret Service (common on minimal KDE or COSMIC). Pace needs somewhere to keep your sign-in. You choose once.",
+            description="Your desktop has no Secret Service, or no default wallet yet (common on KDE and COSMIC). Pace needs somewhere to keep your sign-in. You choose once.",
         )
         sp.set_child(
             Adw.Clamp(

@@ -37,8 +37,8 @@ def test_grey_for_offline_colour():
 def test_unfilled_part_of_ring_is_dimmer_than_filled():
     # fill runs clockwise from 12 o'clock: at 40% the right side is filled, the left is track only
     w, h, data = trayicon.pixmaps("red", {"number": "", "fill": 0.4})[3]
-    assert ring_right(data, w, h)[0] == 255
-    assert 0 < ring_left(data, w, h)[0] < 255
+    assert ring_right(data, w, h) == (255, 0xFF, 0x7B, 0x63)
+    assert ring_left(data, w, h)[0] == 255 and ring_left(data, w, h)[1:] != (0xFF, 0x7B, 0x63)  # the track, dimmed over the disc
 
 
 def test_digits_drawn_in_centre():
@@ -49,6 +49,13 @@ def test_digits_drawn_in_centre():
 
 def test_unknown_colour_falls_back_to_grey():
     assert trayicon.pixmaps("nope", TRAY)[0][2] == trayicon.pixmaps("grey", TRAY)[0][2]
+
+
+def test_ring_sits_on_a_dark_disc_so_it_reads_on_a_light_panel_too():
+    # Breeze Light's tray is near-white and the pastel ring alone washes out on it
+    w, h, data = trayicon.pixmaps("green", {"number": "", "fill": 1.0})[3]
+    a, r, g, b = px(data, w, w // 2 - 14, h // 2 - 14)
+    assert a == 255 and r + g + b < 200
 
 
 def test_save_png(tmp_path):
