@@ -1,3 +1,11 @@
+pace (0.1.5) noble; urgency=medium
+
+  * KDE Plasma: no wallet wizard, readable tray ring, Sign in in the tray, task manager icon.
+  * Retry from 30 s when offline at login; poll when the network comes up.
+  * Mini widget and Snooze as quick-settings pills in the top-bar menu.
+
+ -- Vikas Kyatannawar <vikas.k@osmosys.co>  Mon, 16 Nov 2026 13:00:00 +0530
+
 pace (0.1.4) noble; urgency=medium
 
   * Mini widget drawn by GNOME Shell: above windows, on every workspace.
