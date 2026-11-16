@@ -41,13 +41,13 @@ def session_store():
     """Where the session lives, per the A9 choice: keyring (falling back to the mode 600 file when there is
     none, decision 8), the file, or nowhere ("sign in each login": memory only)."""
     from pace.settings import Settings
-    from pace.tokens import FileStore, KeyringStore, MemoryStore
+    from pace.tokens import FileStore, KeyringFirst, KeyringStore, MemoryStore
 
     choice = Settings().data["token_store"]
     if choice == "none":
         return MemoryStore()
     if choice == "keyring" and (keyring := KeyringStore()).available():
-        return keyring
+        return KeyringFirst(keyring, FileStore())
     return FileStore()
 
 

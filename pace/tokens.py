@@ -74,3 +74,22 @@ class MemoryStore:
 
     def clear(self):
         self.tokens = None
+
+
+class KeyringFirst:
+    """The keyring, still finding a session saved to the file while there was no keyring (a tray sign-in on a KDE profile
+    with no wallet yet). The next save moves it into the keyring."""
+
+    def __init__(self, keyring, file):
+        self.keyring, self.file = keyring, file
+
+    def load(self):
+        return self.keyring.load() or self.file.load()
+
+    def save(self, tokens):
+        self.keyring.save(tokens)
+        self.file.clear()
+
+    def clear(self):
+        self.keyring.clear()
+        self.file.clear()

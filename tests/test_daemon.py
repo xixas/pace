@@ -188,3 +188,14 @@ def test_a_poll_because_the_network_came_up_does_not_push_the_next_retry_out():
     for _ in range(5):  # the network flaps during login
         d.tick(backoff=False)
     assert d.next_poll_in() == 30
+
+
+def test_a_second_sign_in_click_while_the_browser_is_open_starts_nothing():
+    import threading
+
+    started, release = [], threading.Event()
+    d = Daemon(FakeApi(billed(MON)), Clock(datetime(2026, 11, 3, 9, 0)), sign_in=lambda: (started.append(1), release.wait(5)))
+    d.sign_in()
+    d.sign_in()
+    release.set()
+    assert started == [1]
