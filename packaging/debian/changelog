@@ -1,3 +1,11 @@
+pace (0.1.4) noble; urgency=medium
+
+  * Mini widget drawn by GNOME Shell: above windows, on every workspace.
+  * Redesigned widget; under pace is no longer shown as behind.
+  * KDE installs no longer pull in GNOME Shell.
+
+ -- Vikas Kyatannawar <vikas.k@osmosys.co>  Mon, 16 Nov 2026 12:00:00 +0530
+
 pace (0.1.3) noble; urgency=medium
 
   * Show Pace in the top bar keeps the dashboard open.
