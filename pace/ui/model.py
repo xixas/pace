@@ -295,6 +295,8 @@ def week_bounds(today: date) -> tuple[date, date]:
 
 def leave_widget(status: dict, rules=None) -> dict:
     """The card for a week of leave: when you are back, the month so far, what next week needs. Same data as leave_view."""
+    from pace.status import widget_section
+
     days = status["days"]
     back = back_date(status)
     lines = [f"Away {range_label(days)}"]
@@ -310,12 +312,8 @@ def leave_widget(status: dict, rules=None) -> dict:
             f"Next week needs {h_short(max(rules.target * 5, lop_line(5, rules)))} h, pay line {h_short(lop_line(5, rules))} h"
         )
     return {
-        "title": f"Back {back:%a} {back.day} {back:%b}",
-        "big": "On leave",
-        "side": "",
-        "lines": lines,
+        "week": widget_section("ON LEAVE", f"back {back:%a} {back.day} {back:%b}", "grey", "", None, lines),
         "project": None,
-        "colour": "grey",
     }
 
 
@@ -325,15 +323,10 @@ def widget_view(status: dict, rules=None) -> dict:
         return leave_widget(status, rules)
     w = status.get("widget")
     if not w:
-        return {
-            "title": "Pace",
-            "big": "–",
-            "side": "",
-            "lines": [status.get("text") or "Sign in to see your week"],
-            "project": None,
-            "colour": "grey",
-        }
-    return {**w, "colour": colour_class(status.get("colour"))}
+        from pace.status import widget_section
+
+        return {"week": widget_section("PACE", "", "grey", "–", None, [status.get("text") or "Sign in to see your week"]), "project": None}
+    return {k: v and {**v, "colour": colour_class(v["colour"])} for k, v in w.items()}
 
 
 def _is_working(row: dict) -> bool:

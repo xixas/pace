@@ -163,7 +163,7 @@ export function menuModel(json, now) {
             left: `${n} working day${n === 1 ? '' : 's'} left`,
             projects: (s.month.projects ?? []).map(p => ({
                 name: p.name, text: p.text, needText: p.need_text,
-                colour: p.gap_min === null ? null : p.gap_min < 0 ? HEX.amber : HEX.green,
+                colour: p.gap_min === null ? null : p.short ? HEX.amber : p.gap_min < 0 ? null : HEX.green,
                 fill: p.target_min ? Math.min(100, 100 * p.billed_min / p.target_min) : null,
             })),
         };

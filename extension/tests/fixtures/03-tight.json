@@ -69,8 +69,9 @@
         "billed_min": 6750,
         "target_min": 8400,
         "gap_min": -886,
+        "at_risk": true,
         "need_per_day_min": 825,
-        "text": "112.5 / 140 h · behind 14.8",
+        "text": "112.5 / 140 h · behind 14.8 h",
         "need_text": "needs 13.8 h/day on Tweelin",
         "short": "Tweelin −14.8 h"
       },
@@ -80,6 +81,7 @@
         "billed_min": 1104,
         "target_min": null,
         "gap_min": null,
+        "at_risk": false,
         "need_per_day_min": null,
         "text": "18.4 h · no target",
         "need_text": null,
@@ -112,14 +114,27 @@
     "fill": 0.54
   },
   "widget": {
-    "title": "Week tight",
-    "big": "23.0 / 42.5",
-    "side": "9.8/day",
-    "lines": [],
+    "week": {
+      "label": "THIS WEEK",
+      "word": "tight",
+      "colour": "amber",
+      "big": "23 / 42.5",
+      "unit": "h",
+      "fill": 0.54,
+      "lines": [
+        "9.8 h/day to reach 42.5 h"
+      ]
+    },
     "project": {
-      "title": "Tweelin −14.8 h",
+      "label": "TWEELIN · OCTOBER",
+      "word": "behind 14.8 h",
+      "colour": "amber",
       "big": "112.5 / 140",
-      "side": "13.8/day"
+      "unit": "h",
+      "fill": 0.8,
+      "lines": [
+        "13.8 h/day · 2 days left"
+      ]
     }
   }
 }

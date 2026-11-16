@@ -310,7 +310,7 @@ def first_project(month: dict | None) -> dict | None:
 
 
 def project_short(p: dict) -> str:
-    return p["short"] or f"{p['name']} on track"
+    return p["short"] or f"{p['name']} {'under pace' if p['gap_min'] < 0 else 'on pace'}"
 
 
 def short_days_line(s: dict) -> list[str]:
@@ -346,33 +346,46 @@ def tray(s: dict, v: Verdict, base: str, labels: dict, as_of: datetime) -> dict:
     }
 
 
+def widget_section(label: str, word: str, colour: str, big: str, fill: float | None, lines: list[str]) -> dict:
+    """One block of the mini widget (the GTK card and the shell widget draw the same keys): header, big numbers, bar, captions."""
+    return {"label": label, "word": word, "colour": colour, "big": big, "unit": "h" if big and big[0].isdigit() else "", "fill": fill, "lines": lines}
+
+
+def week_caption(s: dict, v: Verdict, base: str, ctx: Ctx, as_of: datetime) -> list[str]:
+    if s["state"] == "offline":
+        return [f"as of {as_of:%H:%M} · {OFFLINE_MESSAGE}, retrying"]
+    if base in NEEDY and v.need is not None:
+        return [f"{hours(v.need)} h/day to reach {hours(v.target, trim=True)} h"]
+    if base == "behind":
+        return [f"pay needs {hours(v.lop_need)} h/day"]
+    if base == "pay_risk":
+        needed = [f"{hours(pay_today(v, ctx))} h needed today"] if v.lop_need is not None and v.today_left is not None else []
+        return needed + short_days_line(s)
+    if base == "bill":
+        return [s["note"]]
+    return []
+
+
+def project_section(month: dict, p: dict) -> dict:
+    colour = "amber" if p["at_risk"] else "grey" if p["gap_min"] < 0 else "green"
+    word = p["text"].rsplit(" · ", 1)[1]
+    left = month["working_days_left"]
+    caption = [f"{hours(p['need_per_day_min'])} h/day"] if p["need_per_day_min"] else ["target met"] if p["billed_min"] >= p["target_min"] else []
+    if left and p["billed_min"] < p["target_min"]:
+        caption.append(f"{left} {'day' if left == 1 else 'days'} left")
+    big = f"{hours(p['billed_min'], trim=True)} / {hours(p['target_min'], trim=True)}"
+    fill = min(1, p["billed_min"] / p["target_min"]) if p["target_min"] else 0
+    return widget_section(f"{p['name']} · {month['name']}".upper(), word, colour, big, round(fill, 2), [" · ".join(caption)] if caption else [])
+
+
 def widget(s: dict, v: Verdict, base: str, ctx: Ctx, as_of: datetime) -> dict:
     offline = s["state"] == "offline"
-    word = WIDGET_WORD["offline"] if offline else WIDGET_WORD.get(base, s["title"].lower())
-    out = {"title": f"Week {word}", "big": f"{hours(v.logged)} / {hours(v.target)}" if v.target else "", "side": "", "lines": []}
-    if base == "done":
-        out["big"] = hours(v.logged)
-    if offline:
-        out["side"], out["lines"] = f"as of {as_of:%H:%M}", [f"{OFFLINE_MESSAGE} · retrying"]
-    elif base in NEEDY and v.need is not None:
-        out["side"] = f"{hours(v.need)}/day"
-    elif base == "behind":
-        out["side"] = f"pay {hours(v.lop_need)}/day"
-    elif base == "pay_risk":
-        out["side"] = f"{hours(pay_today(v, ctx))} today" if v.lop_need is not None and v.today_left is not None else ""
-        out["lines"] = short_days_line(s)
-    elif base == "bill":
-        out["side"] = s["note"]
+    word = "offline" if offline else WIDGET_WORD.get(base, s["title"].lower())
+    big = hours(v.logged, trim=True) if base == "done" else f"{hours(v.logged, trim=True)} / {hours(v.target, trim=True)}" if v.target else ""
+    fill = round(min(1, v.logged / v.target), 2) if v.target else None
+    week = widget_section("THIS WEEK", word, s["colour"], big, fill, week_caption(s, v, base, ctx, as_of))
     p = first_project(s["month"])
-    out["project"] = None
-    if p:
-        need = f"{hours(p['need_per_day_min'])}/day" if p["need_per_day_min"] else ""
-        out["project"] = {
-            "title": project_short(p),
-            "big": f"{hours(p['billed_min'])} / {hours(p['target_min'], trim=True)}",
-            "side": need,
-        }
-    return out
+    return {"week": week, "project": project_section(s["month"], p) if p else None}
 
 
 def bare_tray(text: str) -> dict:
@@ -380,7 +393,7 @@ def bare_tray(text: str) -> dict:
 
 
 def bare_widget(text: str) -> dict:
-    return {"title": text, "big": "", "side": "", "lines": [], "project": None}
+    return {"week": widget_section("PACE", "", "grey", "", None, [text]), "project": None}
 
 
 def panel_text(state: str, v: Verdict) -> str:

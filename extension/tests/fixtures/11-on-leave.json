@@ -64,8 +64,9 @@
         "billed_min": 6750,
         "target_min": 6491,
         "gap_min": 259,
+        "at_risk": false,
         "need_per_day_min": null,
-        "text": "112.5 / 108.2 h · ahead 4.3",
+        "text": "112.5 / 108.2 h · ahead 4.3 h",
         "need_text": null,
         "short": null
       },
@@ -75,6 +76,7 @@
         "billed_min": 1104,
         "target_min": null,
         "gap_min": null,
+        "at_risk": false,
         "need_per_day_min": null,
         "text": "18.4 h · no target",
         "need_text": null,
@@ -102,19 +104,30 @@
     "info_rows": [
       "Week · On leave — On leave",
       "No target this week",
-      "Tweelin on track (Oct)"
+      "Tweelin on pace (Oct)"
     ],
     "fill": 0
   },
   "widget": {
-    "title": "Week on leave",
-    "big": "",
-    "side": "",
-    "lines": [],
+    "week": {
+      "label": "THIS WEEK",
+      "word": "on leave",
+      "colour": "grey",
+      "big": "",
+      "unit": "",
+      "fill": null,
+      "lines": []
+    },
     "project": {
-      "title": "Tweelin on track",
+      "label": "TWEELIN · OCTOBER",
+      "word": "ahead 4.3 h",
+      "colour": "green",
       "big": "112.5 / 108.2",
-      "side": ""
+      "unit": "h",
+      "fill": 1,
+      "lines": [
+        "target met"
+      ]
     }
   }
 }

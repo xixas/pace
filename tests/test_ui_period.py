@@ -125,9 +125,10 @@ def test_month_projects_fallback_sums_when_other_month_and_no_core():
 
 
 def test_project_badge_and_sub():
-    p = {"code": "TWE", "name": "Tweelin", "billed_min": 6750, "target_min": 7980, "gap_min": -390}
+    p = {"code": "TWE", "name": "Tweelin", "billed_min": 6750, "target_min": 7980, "gap_min": -390, "at_risk": True}
     assert period.project_badge(p) == ("BEHIND 6.5 h", "amber")
-    assert period.project_badge({**p, "gap_min": 30}) == ("ON TRACK", "green")
+    assert period.project_badge({**p, "at_risk": False}) == ("UNDER PACE 6.5 h", "grey")
+    assert period.project_badge({**p, "gap_min": 30, "at_risk": False}) == ("ON PACE", "green")
     assert period.project_badge({**p, "target_min": None, "gap_min": None}) == ("no target", "grey")
     t = {"projects": [{"code": "TWE", "monthly_h": 140, "prorate": True, "source": "lead", "lead": "Anand"}]}
     assert period.target_note(t, "TWE") == "140 prorated · lead's choice"

@@ -120,10 +120,10 @@ def test_empty_state_kinds():
 
 def test_widget_view_from_status_and_without():
     v = model.widget_view(status_on_track())
-    assert v["title"] == "Week on track" and v["big"] == "30.1 / 42.5" and v["colour"] == "green"
-    assert v["project"]["title"] == "Tweelin −6.5 h"
+    assert (v["week"]["word"], v["week"]["big"], v["week"]["colour"]) == ("on track", "30.1 / 42.5", "green")
+    assert (v["project"]["word"], v["project"]["colour"]) == ("behind 6.5 h", "amber")
     out = model.widget_view({"state": "signed_out", "text": "Sign in again", "colour": "amber"})
-    assert out["title"] == "Pace" and out["lines"] == ["Sign in again"] and out["project"] is None
+    assert out["week"]["label"] == "PACE" and out["week"]["lines"] == ["Sign in again"] and out["project"] is None
 
 
 def test_ui_entry_point_is_importable_without_loading_gtk():
@@ -145,7 +145,8 @@ def test_colour_class_covers_every_status_colour_and_greys_unknowns():
         assert model.colour_class(c) == c
     assert model.colour_class(None) == "grey" and model.colour_class("purple") == "grey"
     bill = {**status_on_track(), "state": "bill", "colour": "blue"}
-    assert model.widget_view(bill)["colour"] == "blue"
+    bill["widget"]["week"]["colour"] = "purple"
+    assert model.widget_view(bill)["week"]["colour"] == "grey"
 
 
 def test_stale_week_is_grey():
@@ -266,8 +267,10 @@ def test_back_date_skips_a_holiday_after_the_leave():
 
 def test_widget_view_on_leave_has_content_not_an_empty_card():
     v = model.widget_view(status_on_leave(), rules())
-    assert v["title"] == "Back Mon 16 Nov" and v["big"] == "On leave" and v["side"] == "" and v["colour"] == "grey"
-    assert v["lines"][0] == "Away 9–13 Nov"
-    assert v["lines"][1] == "November: TWE 33.0 h · RES 12.0 h"
-    assert v["lines"][2] == "Next week needs 42.5 h, pay line 41 h"
-    assert len(model.widget_view(status_on_leave())["lines"]) == 2  # without rules there is no next-week line
+    w = v["week"]
+    assert (w["label"], w["word"], w["big"], w["colour"], w["fill"]) == ("ON LEAVE", "back Mon 16 Nov", "", "grey", None)
+    assert w["lines"][0] == "Away 9–13 Nov"
+    assert w["lines"][1] == "November: TWE 33.0 h · RES 12.0 h"
+    assert w["lines"][2] == "Next week needs 42.5 h, pay line 41 h"
+    assert v["project"] is None
+    assert len(model.widget_view(status_on_leave())["week"]["lines"]) == 2  # without rules there is no next-week line
