@@ -17,14 +17,20 @@ from pace.targets import month_block
 
 
 def poll(
-    api, state: dict, now: datetime, settings: dict | None = None, targets: dict | None = None, fresh: bool = False
+    api,
+    state: dict,
+    now: datetime,
+    settings: dict | None = None,
+    targets: dict | None = None,
+    fresh: bool = False,
+    retry_after: timedelta | None = None,
 ) -> tuple[dict, dict]:
     settings = settings or DEFAULTS
     monday = now.date() - timedelta(now.weekday())
     # last week too (its Friday stays open until Monday 12:00), and back to the 1st for the month's projects
     start, end = min(monday - timedelta(7), now.date().replace(day=1)), monday + timedelta(6)
     month_end = now.date().replace(day=calendar.monthrange(now.year, now.month)[1])  # the calendar runs on, for prorating
-    retry = now + timedelta(minutes=settings["refresh_minutes"])
+    retry = now + (retry_after or timedelta(minutes=settings["refresh_minutes"]))
     try:
         days = api.my_days(start, max(end, month_end))
         rows = api.my_hours(start, end, fresh=True) if fresh else api.my_hours(start, end)

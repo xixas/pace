@@ -19,6 +19,7 @@ from pace.status import PINESTEM_URL, write_status
 from pace.targets import load as load_targets
 
 FRESH_EVERY = timedelta(minutes=1)  # hrms-api allows one fresh fetch a minute
+FIRST_RETRY = 30  # seconds: offline at login usually means the network is still coming up
 
 
 class Daemon:
@@ -45,22 +46,39 @@ class Daemon:
         self.problem: str | None = None
         self.status: dict | None = None
         self.last_fresh: datetime | None = None
+        self.offline_tries = 0
 
     def boot(self) -> None:
         """First paint from the saved week, before any network call, so the panel has a number at login."""
         if self.state.get("as_of"):
             self.render()
 
-    def tick(self, fresh: bool = False) -> None:
+    def tick(self, fresh: bool = False, backoff: bool = True) -> None:
+        """backoff=False: an extra poll (the network came up) that must not push the next retry further out."""
         now = self.clock()
         if not profile.pinestem_mapped():
             self.publish(poll_unmapped(self.settings.data))
             return
-        s, self.state = poll(self.api, self.state, now, self.settings.data, load_targets(), fresh)
+        retry = timedelta(seconds=self.offline_delay(self.offline_tries))
+        s, self.state = poll(self.api, self.state, now, self.settings.data, load_targets(), fresh, retry)
         self.problem = (s["problem"] or {}).get("kind")
+        if self.problem != "offline":
+            self.offline_tries = 0
+        elif backoff or not self.offline_tries:
+            self.offline_tries += 1
         self.save()
         self.publish(s)
         self.nudge(s, now)
+
+    def offline_delay(self, tries: int) -> int:
+        """Seconds before retry number tries+1: 30 s doubling up to the refresh interval."""
+        return min(FIRST_RETRY * 2**tries, self.settings.data["refresh_minutes"] * 60)
+
+    def next_poll_in(self) -> int:
+        """Seconds to the next poll: backing off while offline, else the refresh interval."""
+        if self.offline_tries:
+            return self.offline_delay(self.offline_tries - 1)
+        return self.settings.data["refresh_minutes"] * 60
 
     def refresh(self) -> None:
         """The panel's Refresh: ask hrms-api to skip its cache, but only once a minute."""

@@ -163,3 +163,28 @@ def test_actions_from_buttons_and_the_tray():
     assert spawned == [["pace"], ["pace", "widget"]]
     assert calls == ["sign_in", "quit"]
     assert read_json(state_dir() / "status.json")["snoozed_until"] == "2026-11-04T00:00:00"
+
+
+def test_offline_retries_back_off_from_30_seconds_and_reset_once_back_online():
+    clock = Clock(datetime(2026, 11, 3, 9, 0))
+    d = Daemon(DownApi(Offline("no route")), clock)  # refresh_minutes defaults to 15
+    delays = []
+    for _ in range(7):
+        d.tick()
+        delays.append(d.next_poll_in())
+    assert delays == [30, 60, 120, 240, 480, 900, 900]
+    assert read_json(state_dir() / "status.json")["problem"]["retry_at"] == "2026-11-03T09:15:00"
+    d.api = FakeApi(billed(MON))
+    d.tick()
+    assert d.next_poll_in() == 900
+    d.api = DownApi(Offline("no route"))
+    d.tick()
+    assert d.next_poll_in() == 30
+
+
+def test_a_poll_because_the_network_came_up_does_not_push_the_next_retry_out():
+    d = Daemon(DownApi(Offline("no route")), Clock(datetime(2026, 11, 3, 9, 0)))
+    d.tick()
+    for _ in range(5):  # the network flaps during login
+        d.tick(backoff=False)
+    assert d.next_poll_in() == 30
