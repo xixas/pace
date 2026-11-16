@@ -103,7 +103,7 @@ MENU_XML = """
 # Fixed ids so a menu rebuild never renumbers the actions; info rows take 1..INFO_MAX.
 INFO_MAX = 9
 SEPARATOR_ID = 50
-ACTION_IDS = {"dashboard": 51, "pinestem": 52, "widget": 53, "snooze": 54, "refresh": 55, "quit": 56}
+ACTION_IDS = {"dashboard": 51, "pinestem": 52, "widget": 53, "snooze": 54, "refresh": 55, "quit": 56, "signin": 57}
 SNOOZE_LABEL = "Snooze nudges today"
 UNSNOOZE_LABEL = "Nudges snoozed until midnight · Undo"
 
@@ -120,7 +120,8 @@ def menu_items(status: dict | None) -> list[dict]:
     if items:
         items.append({"id": SEPARATOR_ID, "props": {"type": "separator", "enabled": True, "visible": True}})
     snoozed = bool(status.get("snoozed_until"))
-    rows = [
+    rows = [("signin", "Sign in")] if status.get("state") == "signed_out" else []
+    rows += [
         ("dashboard", "Open dashboard"),
         ("pinestem", "Open PineStem"),
         ("widget", "Show mini widget"),

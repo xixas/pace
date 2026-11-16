@@ -81,6 +81,13 @@ def test_action_for_menu_item(label, action):
     assert item["action"] == action
 
 
+def test_signed_out_menu_leads_with_a_working_sign_in():
+    items = tray.menu_items({"state": "signed_out", "tray": {"info_rows": ["Sign in again"]}})
+    first_action = next(i for i in items if i.get("action"))
+    assert (first_action["props"]["label"], first_action["action"]) == ("Sign in", "signin")
+    assert "Sign in" not in labels(tray.menu_items(B7))
+
+
 def test_unsnooze_action():
     item = next(i for i in tray.menu_items({**B7, "snoozed_until": "x"}) if i["props"].get("label", "").endswith("Undo"))
     assert item["action"] == "unsnooze"
