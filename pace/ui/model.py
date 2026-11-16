@@ -322,7 +322,7 @@ def widget_view(status: dict, rules=None) -> dict:
     if status.get("state") == "on_leave" and status.get("days"):
         return leave_widget(status, rules)
     w = status.get("widget")
-    if not w:
+    if not w or "week" not in w:  # also a paced from before 0.1.4 still running after an upgrade
         from pace.status import widget_section
 
         return {

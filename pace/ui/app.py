@@ -242,6 +242,8 @@ class PaceApp(Adw.Application):
     def show_widget(self) -> None:
         """On GNOME the shell extension draws the widget (above windows, on every workspace); else the GTK card."""
         if shell.show_widget():
+            if self.mini:  # opened while the extension was not on the bus yet (login race, lock screen)
+                self.mini.close()
             return
         if self.mini is None:
             self.mini = MiniWidget(self, self)

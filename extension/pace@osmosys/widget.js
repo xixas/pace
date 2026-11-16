@@ -84,9 +84,17 @@ export class WidgetController {
         ];
         this._exported = Gio.DBusExportedObject.wrapJSObject(BUS_XML, this);
         this._nameId = Gio.bus_own_name(Gio.BusType.SESSION, BUS_NAME, Gio.BusNameOwnerFlags.NONE,
-            conn => this._exported.export(conn, BUS_PATH), null, null);
-        if (this._saved.visible)
-            this._build();
+            conn => {
+                this._exported.export(conn, BUS_PATH);
+                this._onBus = true;
+            }, null, null);
+        if (this._saved.visible) {
+            try { // a failed card must not abort enable(): destroy() still has to release the signals and bus name
+                this._build();
+            } catch (e) {
+                logError(e, 'Pace: could not draw the mini widget');
+            }
+        }
     }
 
     // ---- D-Bus methods (the Pace app calls these) ----
@@ -122,7 +130,8 @@ export class WidgetController {
         this._ifaceSettings.disconnect(this._schemeId);
         Main.layoutManager.disconnect(this._monitorsId);
         this._overviewIds.forEach(id => Main.overview.disconnect(id));
-        this._exported.unexport();
+        if (this._onBus)
+            this._exported.unexport();
         Gio.bus_unown_name(this._nameId);
     }
 
@@ -198,6 +207,8 @@ export class WidgetController {
     // ---- position ----
     _areaFor(x, y, h) {
         const mon = monitorAt(x, y, CARD_W, h, Main.layoutManager.monitors) ?? Main.layoutManager.primaryMonitor;
+        if (!mon) // no monitor yet (headless start, hotplug): the whole stage, so nothing throws
+            return {x: 0, y: 0, width: global.stage.width, height: global.stage.height};
         return Main.layoutManager.getWorkAreaForMonitor(mon.index);
     }
 

@@ -158,3 +158,10 @@ def test_two_projects_each_doable_alone_but_not_together_are_both_at_risk():
     assert [p["at_risk"] for p in out] == [True, True] and all(p["short"] for p in out)
     alone = month(rows("Alpha", 3000), feb_days(), {"projects": [a], "dailyMinimum": 8.5}, FEB, today=date(2027, 2, 16))
     assert alone[0]["at_risk"] is False and "under pace" in alone[0]["text"]
+
+
+def test_a_blank_daily_minimum_falls_back_to_8_5(tmp_path, monkeypatch):
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
+    (tmp_path / "pace").mkdir()
+    (tmp_path / "pace" / "targets.json").write_text('{"dailyMinimum": null}')
+    assert load()["dailyMinimum"] == 8.5

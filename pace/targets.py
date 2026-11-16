@@ -14,7 +14,7 @@ MINUS = "−"
 def load() -> dict:
     raw = read_json(config_dir() / "targets.json")
     raw = raw if isinstance(raw, dict) else {}
-    return {"dailyMinimum": raw.get("dailyMinimum", 8.5), "projects": raw.get("projects") or []}
+    return {"dailyMinimum": raw.get("dailyMinimum") or 8.5, "projects": raw.get("projects") or []}
 
 
 def month(rows: list[dict], days: list[dict], targets: dict, at: date, today: date | None = None) -> list[dict]:
@@ -38,7 +38,7 @@ def month(rows: list[dict], days: list[dict], targets: dict, at: date, today: da
     for r in rows:
         if r["date"][:7] == f"{at:%Y-%m}":
             billed[r["project_name"]] = billed.get(r["project_name"], 0) + r["billable_min"]
-    daily = targets.get("dailyMinimum", 8.5) * 60
+    daily = (targets.get("dailyMinimum") or 8.5) * 60
     named = {t["name"] for t in targets["projects"]}
 
     def build(total_need):

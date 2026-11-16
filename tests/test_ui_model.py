@@ -274,3 +274,14 @@ def test_widget_view_on_leave_has_content_not_an_empty_card():
     assert w["lines"][2] == "Next week needs 42.5 h, pay line 41 h"
     assert v["project"] is None
     assert len(model.widget_view(status_on_leave())["week"]["lines"]) == 2  # without rules there is no next-week line
+
+
+def test_widget_view_survives_a_paced_from_before_the_sectioned_widget():
+    old = {
+        "state": "on_track",
+        "text": "0.0 / 45.0 h",
+        "colour": "green",
+        "widget": {"title": "Week on track", "big": "0.0 / 45.0"},
+    }
+    v = model.widget_view(old)
+    assert v["project"] is None and v["week"]["lines"] == ["0.0 / 45.0 h"]
