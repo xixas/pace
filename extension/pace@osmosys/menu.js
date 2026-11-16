@@ -159,6 +159,16 @@ function button(text, styleClass, fn) {
     return b;
 }
 
+function toggle(icon, text, on, fn) {
+    const box = new St.BoxLayout({x_expand: true, x_align: Clutter.ActorAlign.CENTER, style_class: 'pace-toggle-box'});
+    box.add_child(new St.Icon({icon_name: icon, style_class: 'pace-toggle-icon'}));
+    box.add_child(new St.Label({text, y_align: Clutter.ActorAlign.CENTER}));
+    const b = new St.Button({child: box, style_class: 'pace-toggle', toggle_mode: true, checked: on, can_focus: true,
+        x_expand: true, accessible_name: text});
+    b.connect('notify::checked', () => fn(b.checked));
+    return b;
+}
+
 function staticItem(menu, widget) {
     const it = new PopupMenu.PopupBaseMenuItem({reactive: false, can_focus: false, style_class: 'pace-static'});
     it.add_child(widget);
@@ -231,28 +241,16 @@ export function buildMenu(menu, m, flash, act) {
     item(menu, 'Open dashboard', act.dashboard);
     item(menu, 'Settings…', act.settings);
     item(menu, 'Open PineStem', () => act.open(m.pinestemUrl));
-    // The mini widget can also be hidden from its own right-click menu: the indicator re-syncs this switch on open
-    const widget = new PopupMenu.PopupSwitchMenuItem('Mini widget', act.widgetVisible());
-    widget.activate = () => widget.toggle();  // stay open, like the snooze switch
-    widget.connect('toggled', (_i, on) => (on ? act.showWidget : act.hideWidget)());
-    menu.addMenuItem(widget);
-    menu._paceWidgetSwitch = widget;
-    if (m.state === 'skew')
-        return;
-    // One switch both ways that flips in place like a quick-settings toggle: the menu stays open
-    const snoozeText = on => (on ? 'Nudges snoozed until midnight' : 'Snooze nudges today');
-    const snooze = new PopupMenu.PopupSwitchMenuItem(snoozeText(m.snoozed), m.snoozed);
-    snooze.activate = () => snooze.toggle();  // the Shell's activate() also closes the menu
-    const showSnooze = on => {
-        snooze.label.text = snoozeText(on);
-        snooze.label[on ? 'add_style_class_name' : 'remove_style_class_name']('pace-snoozed');
-    };
-    showSnooze(m.snoozed);
-    snooze.connect('toggled', (_i, on) => {
-        showSnooze(on);
-        (on ? act.snooze : act.unsnooze)();
-    });
-    menu.addMenuItem(snooze);
+    // Quick-settings style pills: they fill with the accent colour when on, and the menu stays open on click
+    const toggles = new St.BoxLayout({style_class: 'pace-toggles', x_expand: true});
+    const widget = toggle('view-pin-symbolic', 'Mini widget', act.widgetVisible(), on => (on ? act.showWidget : act.hideWidget)());
+    toggles.add_child(widget);
+    // The widget can also be hidden from its own right-click menu: the indicator re-syncs this pill on open
+    menu._paceWidgetToggle = on => (widget.checked = on);
+    if (m.state !== 'skew')
+        toggles.add_child(toggle('notifications-disabled-symbolic', 'Snooze today', m.snoozed, on => (on ? act.snooze : act.unsnooze)()));
+    menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+    staticItem(menu, toggles);
 
     menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
     const foot = new St.BoxLayout({x_expand: true});

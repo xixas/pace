@@ -93,7 +93,11 @@ class PaceIndicator extends PanelMenu.Button {
                 return;
         }
         this._json = json;
-        this._render();
+        try {
+            this._render();
+        } catch (e) {
+            logError(e, 'Pace: could not render the status');
+        }
     }
 
     _render() {
@@ -198,7 +202,7 @@ export default class PaceExtension extends Extension {
         this._indicator.widget = this._widget;
         this._indicator.menu.connect('open-state-changed', (menu, open) => {
             if (open)
-                menu._paceWidgetSwitch?.setToggleState(this._widget?.WidgetVisible() ?? false);
+                menu._paceWidgetToggle?.(this._widget?.WidgetVisible() ?? false);
         });
         this._indicator.onRender = (json, l) => this._widget?.setStatus(json, l.dim);
     }

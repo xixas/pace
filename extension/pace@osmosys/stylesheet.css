@@ -108,6 +108,14 @@
 .pace-link { color: #99c1f1; font-weight: 700; padding: 0 2px; }
 .pace-link:hover, .pace-link:focus { color: #c0d9f8; }
 .pace-snoozed { color: #ffbe6f; }
+/* Menu toggles, after GNOME's quick settings: grey pill when off, accent-filled when on */
+.pace-toggles { spacing: 8px; padding: 4px 0; }
+.pace-toggle { border-radius: 999px; padding: 10px 14px; background-color: rgba(127, 127, 127, 0.18); color: #ffffff; font-weight: 700; }
+.pace-toggle:hover, .pace-toggle:focus { background-color: rgba(127, 127, 127, 0.28); }
+.pace-toggle:checked { background-color: -st-accent-color; color: -st-accent-fg-color; }
+.pace-toggle:checked:hover, .pace-toggle:checked:focus { background-color: st-lighten(-st-accent-color, 5%); }
+.pace-toggle-box { spacing: 8px; }
+.pace-toggle-icon { icon-size: 16px; }
 
 /* The mini widget (widget.js): a rounded card in the shell. Dark like the shell's own popups, light when the desktop is light. */
 .pace-widget-card {
