@@ -42,10 +42,10 @@ Added keys (all may be `null` when there is no data, e.g. signed out):
     "name": "October", "working_days_left": 2,
     "projects": [
       {"code": "TWE", "name": "Tweelin", "billed_min": 6750, "target_min": 7980, "gap_min": -390,
-       "need_per_day_min": 618, "text": "112.5 / 133 h · behind 6.5", "need_text": "needs 10.3 h/day on Tweelin",
-       "short": "Tweelin −6.5 h"},
+       "need_per_day_min": 618, "text": "112.5 / 133 h · behind 6.5 h", "need_text": "needs 10.3 h/day on Tweelin",
+       "short": "Tweelin −6.5 h", "at_risk": true},
       {"code": "RES", "name": "R&D", "billed_min": 1104, "target_min": null, "gap_min": null,
-       "need_per_day_min": null, "text": "18.4 h · no target", "need_text": null, "short": null}
+       "need_per_day_min": null, "text": "18.4 h · no target", "need_text": null, "short": null, "at_risk": false}
     ]
   },
   "labels": {"hours": "30.1 / 42.5 h", "percent": "71%", "gap": "−6.5 h TWE", "left_today": "4.5 h left today"},
@@ -68,8 +68,19 @@ Added keys (all may be `null` when there is no data, e.g. signed out):
   `{"number": "30", "tooltip_title": "Pace — Week · On track", "tooltip_lines": ["30.1 / 42.5 h · needs 8.0 h/day",
   "Tweelin Oct 112.5 / 133 h (−6.5)"], "info_rows": ["Week · On track — 30.1 / 42.5 h", "Needs 8.0 h/day · 4.5 h left today",
   "Tweelin −6.5 h (Oct)"], "fill": 0.71}` (`fill` = logged ÷ target, capped at 1, for the ring).
-- `widget` (B10): `{"title": "Week on track", "big": "30.1 / 42.5", "side": "8.0/day", "lines": ["Wed 6.0 h · Thu 3.5 h"],
-  "project": {"title": "Tweelin −6.5 h", "big": "112.5 / 133", "side": "10.3/day"} | null}`.
+- `month.projects[]` words: gap ≥ 0 is "on pace" / "ahead X h". Below the even pace is "X h under pace" (neutral, `short` null)
+  unless the month is at risk, then "behind X h", `short` set and `at_risk` true. At risk = the days left at `dailyMinimum`
+  (targets.json, default 8.5 h) cannot cover the summed per-day need of every targeted project still below target, or a
+  project is short with no working day left. Amber colouring and the `project_behind` nudge key off `at_risk`/`short`, never the gap sign.
+- `widget` (B10, drawn by the shell extension on GNOME and by the GTK card elsewhere): `{"week": SECTION, "project": SECTION | null}`,
+  SECTION = `{"label": "THIS WEEK" | "TWEELIN · OCT", "word": "on track" | "pay risk" | "behind 6.5 h" | …, "colour": green|amber|red|blue|grey,
+  "big": "30.1 / 42.5" (whole hours trimmed: "0 / 45"; "" hides it), "unit": "h", "fill": 0..1 | null (the 4 px bar),
+  "lines": ["8.0 h/day to reach 42.5 h"]}`. Project lines: "10.3 h/day · 2 days left". On leave the week section is
+  `{"label": "ON LEAVE", "word": "back Mon 16 Nov", "big": "", …}`.
+- Mini widget on GNOME: the extension draws it (St chrome: above windows, every workspace) and exports `io.github.xixas.Pace.Shell`
+  at `/io/github/xixas/Pace/Shell` with methods `ShowWidget()`, `HideWidget()`, `WidgetVisible() → b`. The app, tray and
+  `pace widget` call it first and open the GTK card only when the call fails. The extension keeps `{"visible", "x", "y"}` in
+  `$XDG_STATE_HOME/pace/shell-widget.json` so the widget returns after the shell disables the extension (lock screen).
 - Offline: paced already appends the fetch time to `text`; frontends add the stale suffix only when
   `state` is not `offline`.
 - `month.projects[]` order: projects with targets first, then by billed desc. Billable minutes only.

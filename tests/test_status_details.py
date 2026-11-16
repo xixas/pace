@@ -135,18 +135,39 @@ def test_tray_and_widget_are_ready_made_for_every_frontend():
     assert t["tooltip_lines"][0] == "30.1 / 42.5 h · needs 8.0 h/day"
     assert t["tooltip_lines"][1].startswith("Tweelin Oct 112.5 / ")
     assert t["info_rows"][:2] == ["Week · On track — 30.1 / 42.5 h", "Needs 8.0 h/day · 4.5 h left today"]
-    w = s["widget"]
-    assert (w["title"], w["big"], w["side"]) == ("Week on track", "30.1 / 42.5", "8.0/day")
-    assert w["project"]["big"].startswith("112.5 / ")
+    w = s["widget"]["week"]
+    assert (w["label"], w["word"], w["colour"]) == ("THIS WEEK", "on track", "green")
+    assert (w["big"], w["unit"], w["fill"], w["lines"]) == ("30.1 / 42.5", "h", 0.71, ["8.0 h/day to reach 42.5 h"])
+    p = s["widget"]["project"]
+    assert p["label"] == "TWEELIN · OCT" and p["big"].startswith("112.5 / ") and p["unit"] == "h"
+    assert p["lines"] == ["13.8 h/day · 2 days left"]
+    assert p["word"] == "behind 14.8 h" and p["colour"] == "amber" and p["fill"] == 0.8
 
 
 def test_pay_risk_widget_shows_the_hours_needed_today_and_the_short_days():
     s = build([552, 504, 360, 210, 0], datetime(2026, 10, 30, 11, 0))
-    assert (s["widget"]["title"], s["widget"]["side"], s["widget"]["lines"]) == (
-        "Week pay risk",
-        "13.9 today",
-        ["Wed 6.0 h · Thu 3.5 h"],
-    )
+    w = s["widget"]["week"]
+    assert (w["word"], w["colour"], w["lines"]) == ("pay risk", "red", ["13.9 h needed today", "Wed 6.0 h · Thu 3.5 h"])
+
+
+def test_widget_trims_whole_hours_and_gives_the_other_states_their_words():
+    s = build([600, 600, 600, 750], datetime(2026, 10, 29, 18, 30))
+    w = s["widget"]["week"]
+    assert (w["word"], w["big"], w["fill"]) == ("done", "42.5", 1)
+    assert s["widget"]["project"] is None
+    s = build([552, 504, 540, 0], datetime(2026, 10, 29, 9, 40), problem="offline", retry_at=datetime(2026, 10, 29, 14, 12))
+    w = s["widget"]["week"]
+    assert (w["word"], w["colour"], w["lines"]) == ("offline", "grey", ["as of 09:40 · Can't reach DhiHRMS, retrying"])
+    s = build([510, 510, 510, 510, 0], datetime(2026, 10, 30, 20, 30))
+    assert (s["widget"]["week"]["word"], s["widget"]["week"]["lines"]) == ("bill", ["Fri not billed yet"])
+
+
+def test_widget_project_under_pace_is_neutral_and_met_is_green():
+    t = {**TWE, "monthly_h": 120, "prorate": False}
+    rows = [{"date": "2026-10-05", "project_id": 1, "project_name": "Tweelin", "billable_min": 6300, "non_billable_min": 0}]
+    s = build([552, 504, 540, 210], datetime(2026, 10, 29, 14, 10), now_day=3, targets={"projects": [t]}, rows=rows)
+    p = s["widget"]["project"]
+    assert p["word"].endswith("h under pace") and p["colour"] == "grey" and p["big"] == "105 / 120"
 
 
 def test_snoozed_until_shows_while_it_lasts():

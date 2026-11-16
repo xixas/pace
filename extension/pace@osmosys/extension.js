@@ -15,6 +15,7 @@ import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
 import {look, menuModel, NO_PACED} from './look.js';
 import {buildMenu} from './menu.js';
+import {WidgetController} from './widget.js';
 
 Gio._promisify(Gio.File.prototype, 'load_contents_async');
 
@@ -98,6 +99,7 @@ class PaceIndicator extends PanelMenu.Button {
     _render() {
         const now = Date.now();
         const l = look(this._json ?? null, now);
+        this.onRender?.(this._json ?? null, l);
         COLOURS.forEach(c => this._box.remove_style_class_name(`pace-${c}`));
         this._box.add_style_class_name(`pace-${COLOURS.includes(l.colour) ? l.colour : 'grey'}`);
         this._dot.visible = l.marker === 'dot';
@@ -162,6 +164,10 @@ class PaceIndicator extends PanelMenu.Button {
         }
     }
 
+    openDashboard() {
+        this._spawn([this._pace]);
+    }
+
     _spawn(argv) {
         try {
             Gio.Subprocess.new(argv, Gio.SubprocessFlags.NONE);
@@ -184,9 +190,14 @@ export default class PaceExtension extends Extension {
     enable() {
         this._indicator = new PaceIndicator();
         Main.panel.addToStatusArea(this.uuid, this._indicator);
+        // The mini widget lives in the shell too; it shows what the indicator last read
+        this._widget = new WidgetController({openDashboard: () => this._indicator?.openDashboard()});
+        this._indicator.onRender = (json, l) => this._widget?.setStatus(json, l.dim);
     }
 
     disable() {
+        this._widget?.destroy();
+        this._widget = null;
         this._indicator?.destroy();
         this._indicator = null;
     }

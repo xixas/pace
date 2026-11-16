@@ -11,7 +11,9 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Adw, Gdk, Gio, GLib, Gtk  # noqa: E402
 
+from pace import shell  # noqa: E402
 from pace.files import state_dir  # noqa: E402
+from pace.ui import onboarding  # noqa: E402
 from pace.ui.dashboard import Dashboard  # noqa: E402
 from pace.ui.miniwidget import MiniWidget  # noqa: E402
 from pace.ui.prefs_ui import Preferences  # noqa: E402
@@ -56,7 +58,7 @@ class MainWindow(Adw.ApplicationWindow):
             ("share", self.show_share),
             ("targets", self.show_targets),
             ("topbar", self.show_topbar),
-            ("widget", app.show_widget),
+            ("widget", app.toggle_widget),
             ("signout", self.confirm_sign_out),
             ("about", self.show_about),
         ):
@@ -121,7 +123,8 @@ class MainWindow(Adw.ApplicationWindow):
         top.append("Your targets", "win.targets")
         top.append("Share targets…", "win.share")
         top.append("Mini widget", "win.widget")
-        top.append("Show Pace in the top bar", "win.topbar")
+        if onboarding.topbar_kind(self.onboarding.desktop) == "gnome":  # elsewhere Pace is a tray icon
+            top.append("Show Pace in the top bar", "win.topbar")
         menu.append_section(None, top)
         bottom = Gio.Menu()
         bottom.append("Preferences", "win.prefs")
@@ -237,11 +240,27 @@ class PaceApp(Adw.Application):
         return False
 
     def show_widget(self) -> None:
+        """On GNOME the shell extension draws the widget (above windows, on every workspace); else the GTK card."""
+        if shell.show_widget():
+            if self.mini:  # opened while the extension was not on the bus yet (login race, lock screen)
+                self.mini.close()
+            return
         if self.mini is None:
             self.mini = MiniWidget(self, self)
             self.mini.connect("close-request", self._mini_closed)
             self.mini.set_status(self.services.status())
         self.mini.present()
+
+    def toggle_widget(self) -> None:
+        visible = shell.widget_visible()
+        if visible is None and self.mini:
+            self.mini.close()
+        elif visible is None:
+            self.show_widget()
+        elif visible:
+            shell.hide_widget()
+        else:
+            shell.show_widget()
 
     def show_dashboard(self) -> None:
         self.main().present()

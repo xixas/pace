@@ -38,10 +38,17 @@
     "fill": 0.0
   },
   "widget": {
-    "title": "Sign in again",
-    "big": "",
-    "side": "",
-    "lines": [],
+    "week": {
+      "label": "PACE",
+      "word": "",
+      "colour": "grey",
+      "big": "",
+      "unit": "",
+      "fill": null,
+      "lines": [
+        "Sign in again"
+      ]
+    },
     "project": null
   }
 }

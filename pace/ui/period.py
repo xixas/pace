@@ -248,9 +248,11 @@ def month_projects(rows, targets, month: date, status: dict, today: date, core="
 def project_badge(p: dict) -> tuple[str, str]:
     if p.get("target_min") is None or p.get("gap_min") is None:
         return "no target", "grey"
-    if p["gap_min"] < 0:
+    if p.get("at_risk"):
         return f"BEHIND {abs(p['gap_min']) / 60:.1f} h", "amber"
-    return "ON TRACK", "green"
+    if p["gap_min"] < 0:
+        return f"UNDER PACE {abs(p['gap_min']) / 60:.1f} h", "grey"
+    return "ON PACE", "green"
 
 
 def target_note(targets: dict, code: str) -> str:

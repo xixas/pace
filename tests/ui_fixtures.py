@@ -69,13 +69,14 @@ def status_on_track() -> dict:
         "pinestem_url": "https://pinestem.com/dashboard.html#/tasks",
         "last_week": None,
         "widget": {
-            "title": "Week on track",
-            "big": "30.1 / 42.5",
-            "side": "8.0/day",
-            "lines": [],
-            "project": {"title": "Tweelin −6.5 h", "big": "112.5 / 133", "side": "10.3/day"},
+            "week": section("THIS WEEK", "on track", "green", "30.1 / 42.5", 0.71, ["8.0 h/day to reach 42.5 h"]),
+            "project": section("TWEELIN · OCT", "behind 6.5 h", "amber", "112.5 / 133", 0.85, ["10.3 h/day · 2 days left"]),
         },
     }
+
+
+def section(label, word, colour, big, fill, lines) -> dict:
+    return {"label": label, "word": word, "colour": colour, "big": big, "unit": "h" if big else "", "fill": fill, "lines": lines}
 
 
 def status_pay_risk_half_leave() -> dict:
@@ -101,10 +102,7 @@ def status_pay_risk_half_leave() -> dict:
         ],
     )
     s["widget"] = {
-        "title": "Week pay risk",
-        "big": "27.1 / 42.5",
-        "side": "13.9 today",
-        "lines": ["Wed 6.0 h · Thu 3.5 h"],
+        "week": section("THIS WEEK", "pay risk", "red", "27.1 / 42.5", 0.64, ["13.9 h needed today", "Wed 6.0 h · Thu 3.5 h"]),
         "project": None,
     }
     return s
@@ -194,7 +192,7 @@ def status_on_leave() -> dict:
             ],
         },
         labels={"hours": "On leave", "percent": "On leave", "gap": "On leave", "left_today": "On leave"},
-        widget={"title": "Week on leave", "big": "", "side": "", "lines": [], "project": None},
+        widget={"week": section("THIS WEEK", "on leave", "grey", "", None, []), "project": None},
     )  # fmt: skip
     return s
 

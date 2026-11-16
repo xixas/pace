@@ -69,8 +69,9 @@
         "billed_min": 6750,
         "target_min": 8400,
         "gap_min": -1650,
+        "at_risk": true,
         "need_per_day_min": null,
-        "text": "112.5 / 140 h · behind 27.5",
+        "text": "112.5 / 140 h · behind 27.5 h",
         "need_text": null,
         "short": "Tweelin −27.5 h"
       },
@@ -80,6 +81,7 @@
         "billed_min": 1104,
         "target_min": null,
         "gap_min": null,
+        "at_risk": false,
         "need_per_day_min": null,
         "text": "18.4 h · no target",
         "need_text": null,
@@ -111,14 +113,23 @@
     "fill": 0.93
   },
   "widget": {
-    "title": "Week loss of pay",
-    "big": "39.5 / 42.5",
-    "side": "",
-    "lines": [],
+    "week": {
+      "label": "THIS WEEK",
+      "word": "loss of pay",
+      "colour": "red",
+      "big": "39.5 / 42.5",
+      "unit": "h",
+      "fill": 0.93,
+      "lines": []
+    },
     "project": {
-      "title": "Tweelin −27.5 h",
+      "label": "TWEELIN · OCT",
+      "word": "behind 27.5 h",
+      "colour": "amber",
       "big": "112.5 / 140",
-      "side": ""
+      "unit": "h",
+      "fill": 0.8,
+      "lines": []
     }
   }
 }
