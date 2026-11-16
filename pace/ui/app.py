@@ -13,6 +13,7 @@ from gi.repository import Adw, Gdk, Gio, GLib, Gtk  # noqa: E402
 
 from pace import shell  # noqa: E402
 from pace.files import state_dir  # noqa: E402
+from pace.ui import onboarding  # noqa: E402
 from pace.ui.dashboard import Dashboard  # noqa: E402
 from pace.ui.miniwidget import MiniWidget  # noqa: E402
 from pace.ui.prefs_ui import Preferences  # noqa: E402
@@ -122,7 +123,8 @@ class MainWindow(Adw.ApplicationWindow):
         top.append("Your targets", "win.targets")
         top.append("Share targets…", "win.share")
         top.append("Mini widget", "win.widget")
-        top.append("Show Pace in the top bar", "win.topbar")
+        if onboarding.topbar_kind(self.onboarding.desktop) == "gnome":  # elsewhere Pace is a tray icon
+            top.append("Show Pace in the top bar", "win.topbar")
         menu.append_section(None, top)
         bottom = Gio.Menu()
         bottom.append("Preferences", "win.prefs")
