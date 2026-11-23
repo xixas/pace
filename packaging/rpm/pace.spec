@@ -1,5 +1,5 @@
 Name:           pace
-Version:        0.1.6
+Version:        0.1.7
 Release:        1%{?dist}
 Summary:        PineStem billed hours against the weekly target, on the panel
 License:        MIT
@@ -41,6 +41,7 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/*.desktop
 %{_bindir}/paced
 %{_prefix}/lib/pace/
 %{_datadir}/gnome-shell/extensions/pace@osmosys/
+%{_datadir}/plasma/plasmoids/io.github.xixas.Pace/
 %{_datadir}/applications/io.github.xixas.Pace.desktop
 %{_datadir}/applications/io.github.xixas.Pace.widget.desktop
 %config(noreplace) %{_sysconfdir}/xdg/autostart/io.github.xixas.Pace.daemon.desktop
@@ -49,6 +50,11 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/*.desktop
 %{_datadir}/metainfo/io.github.xixas.Pace.metainfo.xml
 
 %changelog
+* Mon Nov 23 2026 Vishnu Kyatannawar <vishnu.k@osmosys.co> - 0.1.7-1
+- KDE Plasma 6 panel widget with the GNOME indicator and menu; the tray steps aside while it's on a panel
+- KDE: the mini widget stays above other windows on every desktop (a KWin rule)
+- A locked KWallet at login no longer blocks paced ("Waiting for the wallet")
+
 * Mon Nov 16 2026 Vikas Kyatannawar <vikas.k@osmosys.co> - 0.1.6-1
 - Arch / CachyOS package (.pkg.tar.zst) on every release
 

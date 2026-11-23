@@ -1,3 +1,11 @@
+pace (0.1.7) noble; urgency=medium
+
+  * KDE Plasma 6 panel widget with the GNOME indicator and menu; the tray steps aside while it's on a panel.
+  * KDE: the mini widget stays above other windows on every desktop (a KWin rule).
+  * A locked KWallet at login no longer blocks paced ("Waiting for the wallet").
+
+ -- Vishnu Kyatannawar <vishnu.k@osmosys.co>  Mon, 23 Nov 2026 19:00:00 +0530
+
 pace (0.1.6) noble; urgency=medium
 
   * Arch / CachyOS package (.pkg.tar.zst) on every release.

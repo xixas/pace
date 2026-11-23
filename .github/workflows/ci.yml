@@ -49,3 +49,17 @@ jobs:
           persist-credentials: false
       - run: sudo apt-get update && sudo apt-get install -y desktop-file-utils appstream
       - run: make check
+
+  plasma:
+    runs-on: ubuntu-24.04
+    container: archlinux:latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - run: pacman -Syu --noconfirm --needed nodejs qt6-declarative >/dev/null
+      # The KDE model against the GNOME extension's own fixtures, so look.js and model.js can't drift apart
+      - run: TZ=Asia/Kolkata node --test plasma/tests/model.test.mjs
+      # Qt's engine must parse every applet file (it rejects syntax gjs accepts)
+      - run: /usr/lib/qt6/bin/qmllint plasma/io.github.xixas.Pace/contents/ui/*.qml
+      - run: QT_QPA_PLATFORM=offscreen QT_FORCE_STDERR_LOGGING=1 /usr/lib/qt6/bin/qml plasma/tests/model-loads.qml

@@ -10,7 +10,8 @@ It signs in with your Osmosys Microsoft (Entra) account. It reads hours and leav
 | Desktop | What you get |
 |---|---|
 | GNOME | A top-bar indicator and menu, plus a mini widget drawn by GNOME Shell (always on top, on every workspace) |
-| KDE Plasma, COSMIC, XFCE, Cinnamon | A tray ring icon with a menu, plus the mini widget as a GTK window |
+| KDE Plasma 6 | A panel widget with the same indicator and drawn menu as GNOME, plus the mini widget kept above other windows on every desktop (a KWin rule) |
+| COSMIC, XFCE, Cinnamon (and Plasma without the widget) | A tray ring icon with a menu, plus the mini widget as a GTK window |
 | Any desktop | The `pace` app: dashboard, targets, preferences, onboarding |
 
 ## Install
@@ -25,7 +26,8 @@ package. It ships an AppImage too when that best-effort build succeeds.
 | Arch / CachyOS / Manjaro | `sudo pacman -U pace-X.Y.Z-1-any.pkg.tar.zst` |
 
 **After installing, log out and back in.** GNOME on Wayland loads extension code only at login. The
-autostart entry starts `paced` at login too. Then run `pace` to sign in.
+autostart entry starts `paced` at login too. Then run `pace` to sign in. On KDE Plasma, onboarding offers
+**Add to panel** (or right-click the panel → Add Widgets… → Pace).
 
 The packages pull in `python3` (3.11 or newer), PyGObject, pycairo, GTK 4, libadwaita and libsecret. KDE
 installs deliberately do not pull in GNOME Shell. The AppImage is best-effort: it has no autostart and it
@@ -57,6 +59,7 @@ uv run pytest -q
 uvx ruff check . && uvx ruff format --check .
 gjs -m extension/tests/look.test.js
 gjs -m extension/tests/widget.test.js
+TZ=Asia/Kolkata node --test plasma/tests/model.test.mjs   # the KDE model, same fixtures
 make check          # desktop-file and AppStream validation
 ```
 
@@ -76,6 +79,8 @@ Broadway, the KDE container and the package smoke tests, see [`docs/testing.md`]
 | `pace/ui/` | The GTK 4 / libadwaita app and the GTK mini widget |
 | `extension/pace@osmosys/` | The GNOME Shell extension: indicator, menu, shell-drawn widget |
 | `extension/tests/` | gjs unit tests, panel and menu fixtures, the headless-shell screenshot harness |
+| `plasma/io.github.xixas.Pace/` | The KDE Plasma 6 panel widget: indicator, drawn menu. `contents/code/model.js` is the KDE copy of `look.js` |
+| `plasma/tests/` | The KDE model run against `extension/tests` fixtures (node), and a Qt load check |
 | `tests/` | pytest suite |
 | `packaging/` | rpm spec, Debian files, PKGBUILD, AppImage, build and smoke-test scripts |
 | `data/` | `.desktop` files, icons, AppStream metainfo |

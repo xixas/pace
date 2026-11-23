@@ -13,6 +13,11 @@ DEST=${XDG_DATA_HOME:-$HOME/.local/share}/gnome-shell/extensions/$EXT
 if [ ! -d "$DEST" ] && [ -d "$HERE/usr/share/gnome-shell/extensions/$EXT" ]; then
     mkdir -p "$DEST" && cp -r "$HERE/usr/share/gnome-shell/extensions/$EXT/." "$DEST/"
 fi
+# KDE Plasma: the Pace panel applet, likewise copied once to the user's plasmoids folder
+PLASMOID=${XDG_DATA_HOME:-$HOME/.local/share}/plasma/plasmoids/io.github.xixas.Pace
+if [ ! -d "$PLASMOID" ] && [ -d "$HERE/usr/share/plasma/plasmoids/io.github.xixas.Pace" ]; then
+    mkdir -p "$PLASMOID" && cp -r "$HERE/usr/share/plasma/plasmoids/io.github.xixas.Pace/." "$PLASMOID/"
+fi
 export PYTHONPATH="$HERE/usr/lib/pace${PYTHONPATH:+:$PYTHONPATH}"
 case "$(basename "${ARGV0:-$0}")" in
     paced) exec "$PY" -c 'import sys; from pace.cli import paced; sys.exit(paced())' "$@" ;;

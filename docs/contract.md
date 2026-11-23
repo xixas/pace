@@ -84,9 +84,11 @@ Added keys (all may be `null` when there is no data, e.g. signed out):
 - Offline: paced already appends the fetch time to `text`; frontends add the stale suffix only when
   `state` is not `offline`.
 - `month.projects[]` order: projects with targets first, then by billed desc. Billable minutes only.
-- `problem.kind` ∈ offline, signed_out, no_mapping. `null` when healthy. Version skew (C10) is
+- `problem.kind` ∈ offline, signed_out, no_mapping. `null` when healthy. An offline problem caused by a locked keyring
+  (KWallet, GNOME Keyring) has the message "Waiting for the wallet". Version skew (C10) is
   detected by each frontend itself (`version` ≠ the one it knows), never by paced.
-- B2–B6/B12 menus, B7–B9 tray tooltip/menu and B10 widget are all rendered from these keys.
+- B2–B6/B12 menus, B7–B9 tray tooltip/menu and B10 widget are all rendered from these keys, on GNOME by the
+  extension and on KDE Plasma by the applet (`plasma/io.github.xixas.Pace`).
 
 ## 2. `$XDG_CONFIG_HOME/pace/settings.json` (written by the GTK app, read by paced)
 
@@ -165,8 +167,12 @@ class Tray:
 ```
 
 `on_action` strings: refresh, snooze, unsnooze, dashboard, pinestem, widget, quit. Core creates a
-`Tray` only when `XDG_CURRENT_DESKTOP` does not contain GNOME and an SNI watcher
-(`org.kde.StatusNotifierWatcher`) is on the bus. No GTK in paced: draw the icon with pycairo
+`Tray` only when `XDG_CURRENT_DESKTOP` does not contain GNOME, an SNI watcher
+(`org.kde.StatusNotifierWatcher`) is on the bus, and on KDE the Pace applet is not on a panel
+(`plugin=io.github.xixas.Pace` in `plasma-org.kde.plasma.desktop-appletsrc`). paced watches that file and
+starts or stops the tray when the applet is added or removed (`TraySwitch` in `pace/cli.py`).
+
+The KDE applet calls this D-Bus API with `gdbus`; its Mini widget pill runs `pace widget --toggle`. No GTK in paced: draw the icon with pycairo
 into ARGB32 pixmaps, and build the menu as a hand-written `com.canonical.dbusmenu` object.
 
 ## 4. D-Bus: paced on the session bus

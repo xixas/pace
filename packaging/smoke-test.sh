@@ -24,6 +24,8 @@ print('gi stack ok')"
 /usr/bin/python3 -c "import sys; sys.path.insert(0, '/usr/lib/pace'); from pace._version import VERSION; print('version', VERSION); assert VERSION[0].isdigit()"
 test -f /etc/xdg/autostart/io.github.xixas.Pace.daemon.desktop
 test -f /usr/share/gnome-shell/extensions/pace@osmosys/metadata.json
+test -f /usr/share/plasma/plasmoids/io.github.xixas.Pace/metadata.json
+test -f /usr/share/plasma/plasmoids/io.github.xixas.Pace/contents/code/model.js
 echo "files ok"
 case $kind in
     rpm) dnf -y -q remove pace >/dev/null ;;

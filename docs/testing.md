@@ -37,6 +37,18 @@ and screenshot `http://127.0.0.1:808N` with Playwright
 - Cap memory with
   `systemd-run --user --scope -p MemoryMax=4G -- docker run --memory=4g ...`.
 
+## KDE Plasma applet (your own session)
+
+- `TZ=Asia/Kolkata node --test plasma/tests/model.test.mjs`: the KDE model against the GNOME fixtures.
+- `QT_QPA_PLATFORM=offscreen QT_FORCE_STDERR_LOGGING=1 /usr/lib/qt6/bin/qml plasma/tests/model-loads.qml`: Qt's engine
+  parses the model (it rejects syntax gjs and node accept, such as `catch {}` and object spread).
+- Install for yourself with `kpackagetool6 -t Plasma/Applet -i plasma/io.github.xixas.Pace` (`-u` to update), then
+  `plasmawindowed io.github.xixas.Pace` shows the menu in a window. Remove the per-user copy afterwards
+  (`kpackagetool6 -t Plasma/Applet -r io.github.xixas.Pace`), or it hides the packaged one.
+- Tray swap: with paced running, add and remove the applet; the tray ring must leave and come back.
+- Mini widget: `pace widget`, then check KWin keeps it above on every desktop (a KWin script printing
+  `keepAbove` and `onAllDesktops` for the caption "Pace mini widget").
+
 ## Packages
 
 The release workflow builds and smoke-tests every package with

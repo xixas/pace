@@ -10,6 +10,8 @@ VERSION    ?= $(shell sed -n 's/^Version:[[:space:]]*//p' packaging/rpm/pace.spe
 APPID      := io.github.xixas.Pace
 EXT        := pace@osmosys
 EXTDIR     := $(DESTDIR)$(DATADIR)/gnome-shell/extensions/$(EXT)
+PLASMOID   := $(APPID)
+PLASMADIR  := $(DESTDIR)$(DATADIR)/plasma/plasmoids/$(PLASMOID)
 VERSION    ?= $(shell sed -n 's/^version = "\(.*\)"/\1/p' pyproject.toml)
 
 .PHONY: dist installuninstall check lint test
@@ -20,13 +22,14 @@ dist:
 	git archive --format=tar.gz --prefix=pace-$(VERSION)/ -o dist/pace-$(VERSION).tar.gz HEAD
 
 install:
-	install -d $(DESTDIR)$(LIBDIR) $(DESTDIR)$(BINDIR) $(EXTDIR)
+	install -d $(DESTDIR)$(LIBDIR) $(DESTDIR)$(BINDIR) $(EXTDIR) $(PLASMADIR)
 	cp -r pace $(DESTDIR)$(LIBDIR)/
 	find $(DESTDIR)$(LIBDIR) -name __pycache__ -type d -prune -exec rm -rf {} +
 	printf 'VERSION = "%s"\n' "$(VERSION)" > $(DESTDIR)$(LIBDIR)/pace/_version.py
 	cp -r extension/$(EXT)/. $(EXTDIR)/
-	find $(DESTDIR)$(LIBDIR) $(EXTDIR) -type d -exec chmod 755 {} +
-	find $(DESTDIR)$(LIBDIR) $(EXTDIR) -type f -exec chmod 644 {} +
+	cp -r plasma/$(PLASMOID)/. $(PLASMADIR)/
+	find $(DESTDIR)$(LIBDIR) $(EXTDIR) $(PLASMADIR) -type d -exec chmod 755 {} +
+	find $(DESTDIR)$(LIBDIR) $(EXTDIR) $(PLASMADIR) -type f -exec chmod 644 {} +
 	printf '#!$(PYTHON)\nimport sys\nsys.path.insert(0, "$(LIBDIR)")\nfrom pace.cli import main\nsys.exit(main())\n' > $(DESTDIR)$(BINDIR)/pace
 	printf '#!$(PYTHON)\nimport sys\nsys.path.insert(0, "$(LIBDIR)")\nfrom pace.cli import paced\nsys.exit(paced())\n' > $(DESTDIR)$(BINDIR)/paced
 	chmod 755 $(DESTDIR)$(BINDIR)/pace $(DESTDIR)$(BINDIR)/paced
@@ -38,7 +41,7 @@ install:
 	install -Dm644 data/$(APPID).metainfo.xml $(DESTDIR)$(DATADIR)/metainfo/$(APPID).metainfo.xml
 
 uninstall:
-	rm -rf $(DESTDIR)$(LIBDIR) $(EXTDIR)
+	rm -rf $(DESTDIR)$(LIBDIR) $(EXTDIR) $(PLASMADIR)
 	rm -f $(DESTDIR)$(BINDIR)/pace $(DESTDIR)$(BINDIR)/paced \
 	  $(DESTDIR)$(DATADIR)/applications/$(APPID).desktop $(DESTDIR)$(DATADIR)/applications/$(APPID).widget.desktop \
 	  $(DESTDIR)$(SYSCONFDIR)/xdg/autostart/$(APPID).daemon.desktop \

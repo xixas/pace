@@ -7,7 +7,8 @@ how they fit together.
 
 ```
  Entra (browser, PKCE) ──► hrms-api ──► paced ──► $XDG_STATE_HOME/pace/status.json ──► GNOME extension (panel, menu)
-                           my-hours      │                                        ├─► tray (KDE and others, inside paced)
+                           my-hours      │                                        ├─► KDE Plasma applet (panel, menu)
+                                         │                                        ├─► tray (COSMIC, XFCE…, inside paced)
                            my-days       │                                        ├─► GTK app / GTK mini widget
                                          │                                        └─► nudges (org.freedesktop.Notifications)
                                          └── D-Bus io.github.xixas.Pace ◄── frontends call Refresh, Snooze, SignIn, …
@@ -41,9 +42,10 @@ its keys.
 |---|---|---|
 | GNOME panel indicator and menu | `extension/pace@osmosys/extension.js`, `look.js`, `menu.js` | Watches the state **directory**, since a rename replaces the file, and re-reads once a minute so it can tell when paced has stopped |
 | GNOME mini widget | `extension/pace@osmosys/widget.js`, `widgetModel.js` | Drawn by the shell, so it stays on top and on every workspace. It owns the bus name `io.github.xixas.Pace.Shell`, and `pace/shell.py` toggles it |
+| KDE Plasma panel widget and menu | `plasma/io.github.xixas.Pace/` (QML), `contents/code/model.js` (the KDE copy of `look.js`, kept separate so the GNOME extension never changes for KDE) | Re-reads `status.json` every 10 s and after each action; actions call paced's D-Bus API (`gdbus`), falling back to `pace <cmd>` |
 | Tray ring and menu | `pace/tray.py` (StatusNotifierItem plus a hand-written dbusmenu), `pace/trayicon.py` (pycairo) | Runs inside paced on desktops other than GNOME that have a StatusNotifier watcher (`tray_wanted` in `pace/cli.py`) |
 | GTK app | `pace/ui/` | Reads the status, profile, settings and targets files. It writes `settings.json` and `targets.json` |
-| GTK mini widget | `pace/ui/miniwidget.py` | The fallback when the shell extension is not running, which `pace/shell.py` reports by returning `None` or `False` |
+| GTK mini widget | `pace/ui/miniwidget.py` | The fallback when the shell extension is not running, which `pace/shell.py` reports by returning `None` or `False`. On KDE, `pace/kwin.py` adds one KWin rule (`pace-mini-widget` in `kwinrulesrc`) so it stays above other windows on every desktop |
 
 Frontends never recompute verdicts. They format nothing beyond what `status.json` already carries.
 `look.js` maps the keys to colours and icons.
@@ -70,7 +72,9 @@ HRMS session (`access`, `refresh`) is stored according to the `token_store` sett
 - `file`: always the file.
 - `none`: memory only, so you sign in at each login.
 
-A locked KWallet at login currently blocks paced's main loop, because the keyring read happens on it.
+paced opens the session store on a worker thread (`BackgroundStore` in `pace/tokens.py`). A locked KWallet at login
+no longer blocks the main loop: until it answers, polls raise `WalletLocked` (an `Offline`), the last numbers stay
+on screen and the problem reads "Waiting for the wallet".
 
 ## Upstream limits
 

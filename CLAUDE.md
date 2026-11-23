@@ -12,14 +12,17 @@ PineStem task. Start with `README.md`, which covers what Pace is, install, comma
 | Tests | `uv run pytest -q` (a single test: `uv run pytest -q tests/test_engine.py::test_name`) |
 | Lint | `uvx ruff check . && uvx ruff format --check .` |
 | Extension tests | `gjs -m extension/tests/look.test.js` and `gjs -m extension/tests/widget.test.js` |
+| KDE applet tests | `TZ=Asia/Kolkata node --test plasma/tests/model.test.mjs` and `qmllint plasma/io.github.xixas.Pace/contents/ui/*.qml` |
 | Desktop and AppStream files | `make check` |
 
-CI runs all four on every push to `main`.
+CI runs all of these on every push to `main`.
 
 ## Architecture
 
 paced (`pace/daemon.py`) does all the maths and wording and writes `$XDG_STATE_HOME/pace/status.json`. The
-GNOME extension, the tray, the GTK app and the nudges only draw that file. Put verdict logic in
+GNOME extension, the KDE Plasma applet, the tray, the GTK app and the nudges only draw that file. KDE code lives
+under `plasma/` and `pace/kwin.py` / `pace/plasma.py`, so the GNOME extension never changes for KDE; when
+`extension/pace@osmosys/look.js` changes, change `plasma/.../contents/code/model.js` the same way (CI compares them). Put verdict logic in
 `pace/engine.py`, `pace/targets.py` and `pace/status.py`, never in a frontend. The core never imports GTK;
 only `pace/ui/` does.
 
