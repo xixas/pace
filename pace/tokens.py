@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import threading
 
 from pace.files import data_dir, read_json, write_json
 
@@ -93,3 +94,49 @@ class KeyringFirst:
     def clear(self):
         self.keyring.clear()
         self.file.clear()
+
+
+class BackgroundStore:
+    """paced's session store, opened on a worker thread. A locked KWallet answers only once the person unlocks it, and a
+    keyring read on paced's main loop froze the tray and the panel until then. Until the store answers, load() raises
+    WalletLocked, which polls treat like offline (keep the numbers, retry). make() builds the real store (cli.session_store)."""
+
+    def __init__(self, make, wait: float = 0.5):
+        self.wait = wait
+        self._done = threading.Event()
+        self._store = None
+        self._tokens = None
+        self._error: BaseException | None = None
+
+        def open_store():
+            try:
+                self._store = make()
+                self._tokens = self._store.load() if self._store is not None else None
+            except BaseException as e:  # reported to the next load(), never lost
+                self._error = e
+            finally:
+                self._done.set()
+
+        threading.Thread(target=open_store, name="pace-session-store", daemon=True).start()
+
+    def _ready(self):
+        from pace.client import WalletLocked
+
+        if not self._done.wait(self.wait):
+            raise WalletLocked("Waiting for the wallet")
+        if self._error is not None:
+            raise self._error
+        return self._store
+
+    def load(self):
+        store = self._ready()
+        if self._tokens is not None:  # the first read, made on the worker thread
+            tokens, self._tokens = self._tokens, None
+            return tokens
+        return store.load() if store is not None else None
+
+    def save(self, tokens):
+        self._ready().save(tokens)
+
+    def clear(self):
+        self._ready().clear()

@@ -93,8 +93,11 @@ def cancel_url(redirect: str) -> str:
 
 
 def topbar_kind(xdg_current_desktop: str) -> str:
-    """A10: GNOME needs its panel extension switched on; everywhere else Pace is a tray icon."""
-    return "gnome" if "GNOME" in xdg_current_desktop.upper().split(":") else "tray"
+    """A10: GNOME needs its panel extension switched on, KDE Plasma its panel applet added; elsewhere Pace is a tray icon."""
+    parts = xdg_current_desktop.upper().split(":")
+    if "GNOME" in parts:
+        return "gnome"
+    return "plasma" if "KDE" in parts else "tray"
 
 
 def _days(n: float) -> str:

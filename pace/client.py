@@ -14,6 +14,10 @@ class Offline(Exception):
     """hrms-api or the network is unreachable: keep the last good numbers."""
 
 
+class WalletLocked(Offline):
+    """The keyring (KWallet, GNOME Keyring) hasn't answered yet, usually locked at login: keep the numbers, retry like offline."""
+
+
 class SignedOut(Exception):
     """The HRMS session is gone and can't be refreshed: the person signs in again."""
 

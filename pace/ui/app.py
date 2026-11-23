@@ -3,6 +3,7 @@ widget, `pace settings` the C7 preferences. A second `pace ...` forwards to the 
 
 from __future__ import annotations
 
+import os
 from datetime import datetime
 
 import gi
@@ -11,7 +12,7 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Adw, Gdk, Gio, GLib, Gtk  # noqa: E402
 
-from pace import shell  # noqa: E402
+from pace import kwin, plasma, shell  # noqa: E402
 from pace.files import state_dir  # noqa: E402
 from pace.ui import onboarding  # noqa: E402
 from pace.ui.dashboard import Dashboard  # noqa: E402
@@ -123,8 +124,11 @@ class MainWindow(Adw.ApplicationWindow):
         top.append("Your targets", "win.targets")
         top.append("Share targets…", "win.share")
         top.append("Mini widget", "win.widget")
-        if onboarding.topbar_kind(self.onboarding.desktop) == "gnome":  # elsewhere Pace is a tray icon
+        kind = onboarding.topbar_kind(self.onboarding.desktop)
+        if kind == "gnome":  # elsewhere Pace is a tray icon
             top.append("Show Pace in the top bar", "win.topbar")
+        elif kind == "plasma":
+            top.append("Show Pace in the panel", "win.topbar")
         menu.append_section(None, top)
         bottom = Gio.Menu()
         bottom.append("Preferences", "win.prefs")
@@ -147,6 +151,10 @@ class MainWindow(Adw.ApplicationWindow):
         self.prefs.present(self)
 
     def show_topbar(self) -> None:
+        if onboarding.topbar_kind(self.onboarding.desktop) == "plasma":
+            if not plasma.add_to_panel():
+                self.alert("Couldn't reach Plasma", "Right-click the panel, choose Add Widgets…, and drag Pace onto it.")
+            return
         ask_topbar(self, self.services)
 
     def show_about(self) -> None:
@@ -224,6 +232,8 @@ class PaceApp(Adw.Application):
     def open_view(self, args: list[str]) -> None:
         if args == ["widget"]:
             self.show_widget()
+        elif args == ["widget", "--toggle"]:  # the Plasma applet's Mini widget pill
+            self.toggle_widget()
         else:
             self.main().present()
             if args == ["settings"]:
@@ -246,6 +256,8 @@ class PaceApp(Adw.Application):
                 self.mini.close()
             return
         if self.mini is None:
+            # KDE: KWin keeps the card above windows on every desktop, as GNOME Shell does for its own widget
+            kwin.ensure_widget_rule(self.desktop or os.environ.get("XDG_CURRENT_DESKTOP", ""))
             self.mini = MiniWidget(self, self)
             self.mini.connect("close-request", self._mini_closed)
             self.mini.set_status(self.services.status())

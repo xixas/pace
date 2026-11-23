@@ -12,6 +12,7 @@ gi.require_version("Adw", "1")
 gi.require_version("GdkPixbuf", "2.0")
 from gi.repository import Adw, Gdk, GdkPixbuf, Gio, GLib, Gtk  # noqa: E402
 
+from pace import plasma  # noqa: E402
 from pace.ui import config, onboarding  # noqa: E402
 from pace.ui.widgets import action_row, box, label, pill, run_async  # noqa: E402
 
@@ -332,7 +333,22 @@ class Onboarding(Adw.Bin):
     def show_topbar(self) -> None:
         if config.load_ui_state().get("topbar_seen"):
             return self.host.go_dashboard()
-        if onboarding.topbar_kind(self.desktop) != "gnome":
+        kind = onboarding.topbar_kind(self.desktop)
+        if kind == "plasma" and not plasma.applet_on_panel():
+            add, skip = pill_button("Add to panel"), pill_button("Skip, use the tray icon", suggested=False)
+            add.connect("clicked", lambda *_: (plasma.add_to_panel(), self._finish_topbar()))
+            skip.connect("clicked", lambda *_: self._finish_topbar())
+            return self._put(
+                "topbar",
+                page(
+                    "view-pin-symbolic",
+                    "Add Pace to your panel",
+                    "On KDE Plasma, Pace sits in the panel like the clock: your week's hours, and a click opens the details.",
+                    add,
+                    skip,
+                ),
+            )
+        if kind != "gnome":
             got = pill_button("Got it")
             got.connect("clicked", lambda *_: self._finish_topbar())
             return self._put(

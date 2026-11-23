@@ -8,12 +8,14 @@ from __future__ import annotations
 import calendar
 from datetime import date, datetime, timedelta
 
-from pace.client import Offline, SignedOut
+from pace.client import Offline, SignedOut, WalletLocked
 from pace.engine import DAYS, DEFAULT, Rules, hours, lop_count, week_verdict
 from pace.hrms import day_minutes, day_types, entries, record, work_days
 from pace.settings import DEFAULTS, rules_from
 from pace.status import PINESTEM_URL, Ctx, Week, lop_text, status
 from pace.targets import month_block
+
+WALLET_MESSAGE = "Waiting for the wallet"  # a locked KWallet / GNOME Keyring at login (contract section 1)
 
 
 def poll(
@@ -36,11 +38,14 @@ def poll(
         rows = api.my_hours(start, end, fresh=True) if fresh else api.my_hours(start, end)
     except SignedOut:
         return status(None, None, problem="signed_out", ctx=Ctx(refresh_minutes=settings["refresh_minutes"])), state
-    except Offline:
+    except Offline as e:
         if not state.get("as_of"):
-            return status(None, None, problem="offline", ctx=Ctx(retry_at=retry)), state
-        as_of = datetime.fromisoformat(state["as_of"])
-        return verdict_status(state, as_of, "offline", settings, targets, retry), state
+            s = status(None, None, problem="offline", ctx=Ctx(retry_at=retry))
+        else:
+            s = verdict_status(state, datetime.fromisoformat(state["as_of"]), "offline", settings, targets, retry)
+        if isinstance(e, WalletLocked) and s.get("problem"):
+            s["problem"]["message"] = WALLET_MESSAGE
+        return s, state
     ledger = record(state.get("ledger", {}), rows, now, polled=(start, end))
     state = {**state, "ledger": ledger, "days": days, "rows": rows, "as_of": now.isoformat()}
     return verdict_status(state, now, settings=settings, targets=targets), state

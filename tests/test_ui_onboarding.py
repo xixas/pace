@@ -61,7 +61,7 @@ def test_cancel_url_unblocks_the_loopback():
 def test_desktop_step_by_xdg_current_desktop():
     assert onboarding.topbar_kind("GNOME") == "gnome"
     assert onboarding.topbar_kind("ubuntu:GNOME") == "gnome"
-    assert onboarding.topbar_kind("KDE") == "tray"
+    assert onboarding.topbar_kind("KDE") == "plasma"  # the Pace applet (pace/plasma.py)
     assert onboarding.topbar_kind("COSMIC") == "tray"
     assert onboarding.topbar_kind("X-Cinnamon") == "tray"
     assert onboarding.topbar_kind("") == "tray"

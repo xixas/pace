@@ -8,6 +8,7 @@ import signal
 import sys
 import traceback
 
+from pace import plasma
 from pace.files import config_dir, read_json, state_dir
 
 # Osmosys Entra tenant, hrms-api's registration (MS_SSO_CLIENT_ID; dev and prod share them, hrms-portal 2026-10-30)
@@ -51,10 +52,10 @@ def session_store():
     return FileStore()
 
 
-def client(cfg):
+def client(cfg, store=None):
     from pace.client import Client, urllib_transport
 
-    return Client(cfg.base_url, session_store(), urllib_transport)
+    return Client(cfg.base_url, store if store is not None else session_store(), urllib_transport)
 
 
 def sign_in(api=None) -> None:
@@ -96,16 +97,20 @@ def open_app(args: list[str]) -> int:
     return ui_main(args)
 
 
-def tray_wanted(desktop: str, watcher_present: bool) -> bool:
-    """GNOME shows the panel extension instead; every other desktop with a StatusNotifier watcher gets the tray."""
-    return "GNOME" not in desktop.upper() and watcher_present
+def tray_wanted(desktop: str, watcher_present: bool, applet_on_panel: bool = False) -> bool:
+    """GNOME shows the panel extension instead, and KDE Plasma the Pace applet when it's on a panel; every other desktop
+    with a StatusNotifier watcher gets the tray."""
+    if "GNOME" in desktop.upper():
+        return False
+    if "KDE" in desktop.upper() and applet_on_panel:
+        return False
+    return watcher_present
 
 
-def start_tray(bus, daemon):
-    """pace.tray.Tray when this desktop wants one and the module exists; None otherwise."""
+def watcher_present(bus) -> bool:
     from gi.repository import Gio, GLib
 
-    watcher = bus.call_sync(
+    return bus.call_sync(
         "org.freedesktop.DBus",
         "/org/freedesktop/DBus",
         "org.freedesktop.DBus",
@@ -116,7 +121,11 @@ def start_tray(bus, daemon):
         -1,
         None,
     ).unpack()[0]
-    if not tray_wanted(os.environ.get("XDG_CURRENT_DESKTOP", ""), watcher):
+
+
+def start_tray(bus, daemon):
+    """pace.tray.Tray when this desktop wants one and the module exists; None otherwise."""
+    if not tray_wanted(os.environ.get("XDG_CURRENT_DESKTOP", ""), watcher_present(bus), plasma.applet_on_panel()):
         return None
     try:
         from pace.tray import Tray
@@ -129,12 +138,37 @@ def start_tray(bus, daemon):
     return tray
 
 
+class TraySwitch:
+    """The tray, swapped live on KDE: Plasma rewrites its applet config when the Pace applet is added to or removed from a
+    panel, and the tray ring steps aside for the applet (or comes back) without restarting paced."""
+
+    def __init__(self, bus, daemon):
+        from gi.repository import Gio
+
+        self.bus, self.daemon = bus, daemon
+        self.tray = start_tray(bus, daemon)
+        self.monitor = Gio.File.new_for_path(str(plasma.appletsrc())).monitor_file(Gio.FileMonitorFlags.NONE, None)
+        self.monitor.connect("changed", lambda *_: self.sync())
+
+    def sync(self) -> None:
+        wanted = tray_wanted(os.environ.get("XDG_CURRENT_DESKTOP", ""), watcher_present(self.bus), plasma.applet_on_panel())
+        if self.tray and not wanted:
+            if self.tray.update in self.daemon.listeners:
+                self.daemon.listeners.remove(self.tray.update)
+            self.tray.close()
+            self.tray = None
+        elif self.tray is None and wanted:
+            self.tray = start_tray(self.bus, self.daemon)
+
+
 def paced(argv=None) -> int:
     """Paint the saved week, poll now, then on the settings' interval on a GLib main loop. --once polls once and exits."""
     from pace.daemon import Daemon
+    from pace.tokens import BackgroundStore
 
     try:
-        api = client(load_config())
+        # The keyring opens on a worker thread: a locked KWallet at login must not freeze paced's main loop
+        api = client(load_config(), BackgroundStore(session_store))
         daemon = Daemon(api, sign_in=lambda: sign_in(api))
     except ConfigError as e:
         print(f"paced: {e}", file=sys.stderr)
@@ -155,7 +189,7 @@ def paced(argv=None) -> int:
     daemon.send = Notifier(bus, daemon.action).send
     service = Service(bus, daemon)
     daemon.listeners.append(service.status_changed)
-    tray = start_tray(bus, daemon)  # noqa: F841  (kept alive for the loop's lifetime)
+    trays = TraySwitch(bus, daemon)  # noqa: F841  (kept alive for the loop's lifetime)
     timer = {}
 
     def schedule() -> None:
