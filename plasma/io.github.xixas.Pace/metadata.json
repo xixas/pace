@@ -1,0 +1,15 @@
+{
+    "KPlugin": {
+        "Authors": [{"Name": "Vikas Kyatannawar"}, {"Name": "Vishnu Kyatannawar"}],
+        "Category": "Utilities",
+        "Description": "Your PineStem billed hours against the weekly target and the loss-of-pay line, in the panel.",
+        "Icon": "io.github.xixas.Pace",
+        "Id": "io.github.xixas.Pace",
+        "License": "MIT",
+        "Name": "Pace",
+        "Version": "0.1.7",
+        "Website": "https://github.com/xixas/pace"
+    },
+    "KPackageStructure": "Plasma/Applet",
+    "X-Plasma-API-Minimum-Version": "6.0"
+}
