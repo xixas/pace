@@ -1,5 +1,5 @@
 Name:           pace
-Version:        0.1.7
+Version:        0.1.8
 Release:        1%{?dist}
 Summary:        PineStem billed hours against the weekly target, on the panel
 License:        MIT
@@ -50,6 +50,9 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/*.desktop
 %{_datadir}/metainfo/io.github.xixas.Pace.metainfo.xml
 
 %changelog
+* Thu Nov 26 2026 Vishnu Kyatannawar <vishnu.k@osmosys.co> - 0.1.8-1
+- GNOME: dropdown titles and project names are full white again, not the Shell's greyed-out text
+
 * Mon Nov 23 2026 Vishnu Kyatannawar <vishnu.k@osmosys.co> - 0.1.7-1
 - KDE Plasma 6 panel widget with the GNOME indicator and menu; the tray steps aside while it's on a panel
 - KDE: the mini widget stays above other windows on every desktop (a KWin rule)

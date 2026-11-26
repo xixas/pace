@@ -1,3 +1,9 @@
+pace (0.1.8) noble; urgency=medium
+
+  * GNOME: dropdown titles and project names are full white again, not the Shell's greyed-out text.
+
+ -- Vishnu Kyatannawar <vishnu.k@osmosys.co>  Thu, 26 Nov 2026 15:30:00 +0530
+
 pace (0.1.7) noble; urgency=medium
 
   * KDE Plasma 6 panel widget with the GNOME indicator and menu; the tray steps aside while it's on a panel.
