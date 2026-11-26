@@ -167,3 +167,6 @@
 .pace-widget-light .pace-w-bar-red { background-color: #e01b24; }
 .pace-widget-light .pace-w-bar-blue { background-color: #3584e4; }
 .pace-widget-light .pace-w-bar-grey { background-color: rgba(36, 31, 49, 0.4); }
+
+/* Static dropdown rows are non-reactive, so the Shell marks them :insensitive and greys their text to 50%. Keep it full white. */
+.popup-menu-item.pace-static:insensitive { color: #ffffff; }
