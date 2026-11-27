@@ -6,6 +6,7 @@ import GLib from 'gi://GLib';
 import Gio from 'gi://Gio';
 import St from 'gi://St';
 import Clutter from 'gi://Clutter';
+import Pango from 'gi://Pango';
 import 'gi://cairo';
 
 import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
@@ -51,6 +52,8 @@ class PaceIndicator extends PanelMenu.Button {
         this._circle = new St.DrawingArea({style_class: 'pace-circle', y_align: Clutter.ActorAlign.CENTER});
         this._circle.connect('repaint', area => drawRing(area, false));
         this._label = new St.Label({style_class: 'pace-label', y_align: Clutter.ActorAlign.CENTER});
+        // Without this a crowded top bar shrinks the label and cuts it to "37.9 / 45.0..."
+        this._label.clutter_text.ellipsize = Pango.EllipsizeMode.NONE;
         for (const a of [this._snoozed, this._dot, this._ring, this._circle, this._glyph, this._label])
             this._box.add_child(a);
         this.add_child(this._box);
