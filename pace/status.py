@@ -170,8 +170,8 @@ def day_rows(v: Verdict, wk: Week, rules: Rules = DEFAULT) -> list[dict]:
             "kind": kind,
             "text": text,
         }
-        if m and kind in ("holiday", "leave"):
-            row["tag"] = kind  # worked on a day off: the chip shows the hours, the tag says why the day is off
+        if m and kind in ("holiday", "leave", "half_leave"):
+            row["tag"] = "½ leave" if kind == "half_leave" else kind  # billed on a day off: hours shown, tag says why
         out.append(row)
     return out
 

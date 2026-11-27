@@ -187,3 +187,12 @@ def test_billed_holiday_and_leave_show_their_hours_with_a_tag():
     s = build([552, 120, 180, 0, 0], datetime(2026, 10, 29, 10, 0), now_day=3, off=off)
     got = [(d["kind"], d["text"], d.get("tag")) for d in s["days"][:3]]
     assert got == [("billed", "9.2", None), ("leave", "2.0", "leave"), ("holiday", "3.0", "holiday")]
+
+
+def test_billed_half_leave_carries_a_tag_so_its_hours_are_not_dimmed():
+    cal = calendar(off=[(MON + timedelta(1), "half_leave")])
+    next(d for d in cal if d["date"] == (MON + timedelta(1)).isoformat())["working"] = 0.5
+    at = datetime(2026, 10, 29, 10, 0)
+    state = {"ledger": week([552, 270, 0], now_day=3), "days": cal, "rows": [], "as_of": at.isoformat(), "snoozed_until": None}
+    s = verdict_status(state, at, None, settings=DEFAULTS)
+    assert (s["days"][1]["kind"], s["days"][1]["text"], s["days"][1].get("tag")) == ("half_leave", "4.5", "½ leave")
