@@ -1,3 +1,9 @@
+pace (0.1.9) noble; urgency=medium
+
+  * GNOME: the panel label is never cut to "…" when the top bar is crowded.
+
+ -- Vishnu Kyatannawar <vishnu.k@osmosys.co>  Fri, 27 Nov 2026 12:25:00 +0530
+
 pace (0.1.8) noble; urgency=medium
 
   * GNOME: dropdown titles and project names are full white again, not the Shell's greyed-out text.
