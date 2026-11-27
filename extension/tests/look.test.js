@@ -214,5 +214,12 @@ test('the panel shows a snoozed bell-off only until the snooze runs out', () => 
     eq(look(JSON.stringify({...s, snoozed_until: null}), before).snoozed, false, 'not snoozed');
 });
 
+test('a billed holiday keeps its hours and carries a tag', () => {
+    const s = JSON.parse(menu('b2-on-track'));
+    s.days[2] = {...s.days[2], kind: 'holiday', text: '3.0', tag: 'holiday'};
+    const m = menuModel(JSON.stringify(s), M);
+    eq([m.days[2].text, m.days[2].tag, m.days[1].tag], ['3.0', 'holiday', null], 'tag');
+});
+
 if (failed)
     System.exit(1);

@@ -151,7 +151,7 @@ export function menuModel(json, now) {
     if (s.lines?.expected_min > 0)
         m.bar = runway(s, l.dim);
     if (s.days?.length)
-        m.days = s.days.map(d => ({dow: d.dow, text: d.text, kind: d.kind}));
+        m.days = s.days.map(d => ({dow: d.dow, text: d.text, kind: d.kind, tag: d.tag ?? null}));
     m.warning = s.warning ?? null;
     m.warningDetail = s.warning_detail ?? null;
     m.action = s.action ?? null;

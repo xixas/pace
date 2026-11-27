@@ -392,7 +392,10 @@ class Dashboard(Adw.BreakpointBin):
             inner.append(label(f"{code} {h}", "caption", "dim-label", "numeric", xalign=0.5))
         if c["foot"]:
             inner.append(label(c["foot"], "caption", "dim-label", xalign=0.5, margin_top=2))
-        btn = Gtk.Button(child=inner, css_classes=["card", "pace-day", c["kind"]] + (["today"] if c["today"] else []))
+        btn = Gtk.Button(
+            child=inner,
+            css_classes=["card", "pace-day", c["kind"]] + (["today"] if c["today"] else []) + (["worked"] if c["worked"] else []),
+        )
         btn.set_tooltip_text("Open PineStem")
         btn.connect("clicked", lambda *_: open_uri(self, self.status.get("pinestem_url") or PINESTEM))
         return btn

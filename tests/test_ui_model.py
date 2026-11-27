@@ -285,3 +285,11 @@ def test_widget_view_survives_a_paced_from_before_the_sectioned_widget():
     }
     v = model.widget_view(old)
     assert v["project"] is None and v["week"]["lines"] == ["0.0 / 45.0 h"]
+
+
+def test_a_billed_holiday_card_shows_hours_and_names_the_day_off():
+    s = status_on_track()
+    s["days"][2] = {**s["days"][2], "kind": "holiday", "text": "3.0", "min": 180, "tag": "holiday"}
+    c = model.week_view(s, 9.0)["cards"][2]
+    assert (c["text"], c["foot"], c["worked"]) == ("3.0", "Holiday", True)
+    assert model.week_view(status_on_track(), 9.0)["cards"][0]["worked"] is False

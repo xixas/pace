@@ -163,15 +163,16 @@ def day_rows(v: Verdict, wk: Week, rules: Rules = DEFAULT) -> list[dict]:
         if i > 4 and not m:
             continue
         kind, text = day_kind(i, m, wk, v, today, past_today, rules)
-        out.append(
-            {
-                "date": (wk.monday + timedelta(i)).isoformat(),
-                "dow": DAYS[i],
-                "min": None if kind in ("future", "pending") else m,
-                "kind": kind,
-                "text": text,
-            }
-        )
+        row = {
+            "date": (wk.monday + timedelta(i)).isoformat(),
+            "dow": DAYS[i],
+            "min": None if kind in ("future", "pending") else m,
+            "kind": kind,
+            "text": text,
+        }
+        if m and kind in ("holiday", "leave"):
+            row["tag"] = kind  # worked on a day off: the chip shows the hours, the tag says why the day is off
+        out.append(row)
     return out
 
 
@@ -179,7 +180,7 @@ def day_kind(i: int, m: int, wk: Week, v: Verdict, today: int, past_today: bool,
     w = wk.work[i]
     if not w:
         kind = wk.types[i] if wk.types[i] in ("holiday", "leave") else "weekend" if i > 4 else "holiday"
-        return kind, hours(m) if kind == "weekend" else kind
+        return kind, hours(m) if kind == "weekend" or m else kind  # a billed holiday shows its hours
     if i == today and not past_today:
         return "today", hours(m)
     if i > today:

@@ -84,13 +84,13 @@
 .pace-chip-dow { font-size: 11px; color: rgba(255, 255, 255, 0.8); text-align: center; x-align: center; }
 .pace-chip-val { font-size: 14px; font-weight: 700; text-align: center; x-align: center; }
 .pace-chip-today { border: 1.5px solid #78aeed; }
-.pace-chip-future, .pace-chip-weekend, .pace-chip-holiday, .pace-chip-leave, .pace-chip-half_leave { color: rgba(255, 255, 255, 0.5); }
+.pace-chip-future, .pace-chip-holiday, .pace-chip-leave, .pace-chip-half_leave { color: rgba(255, 255, 255, 0.5); }
 .pace-chip-future .pace-chip-dow, .pace-chip-future .pace-chip-val,
-.pace-chip-weekend .pace-chip-dow, .pace-chip-weekend .pace-chip-val,
 .pace-chip-holiday .pace-chip-dow, .pace-chip-holiday .pace-chip-val,
 .pace-chip-leave .pace-chip-dow, .pace-chip-leave .pace-chip-val,
 .pace-chip-half_leave .pace-chip-dow, .pace-chip-half_leave .pace-chip-val { color: rgba(255, 255, 255, 0.5); }
 .pace-chip-short .pace-chip-val { color: #ff7b63; }
+.pace-chip-tag { font-size: 9px; font-weight: 700; color: #e9b44c; text-align: center; x-align: center; }
 .pace-chip-pending { background-color: rgba(120, 174, 237, 0.18); }
 .pace-chip-pending .pace-chip-val { color: #99c1f1; font-size: 12px; }
 

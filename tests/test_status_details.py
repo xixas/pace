@@ -180,3 +180,10 @@ def test_leave_and_holiday_days_are_named():
     off = [(MON + timedelta(1), "leave"), (MON + timedelta(2), "holiday")]
     s = build([552, 0, 0, 0, 0], datetime(2026, 10, 27, 10, 0), off=off)
     assert [(d["kind"], d["text"]) for d in s["days"][:3]] == [("billed", "9.2"), ("leave", "leave"), ("holiday", "holiday")]
+
+
+def test_billed_holiday_and_leave_show_their_hours_with_a_tag():
+    off = [(MON + timedelta(1), "leave"), (MON + timedelta(2), "holiday")]
+    s = build([552, 120, 180, 0, 0], datetime(2026, 10, 29, 10, 0), now_day=3, off=off)
+    got = [(d["kind"], d["text"], d.get("tag")) for d in s["days"][:3]]
+    assert got == [("billed", "9.2", None), ("leave", "2.0", "leave"), ("holiday", "3.0", "holiday")]

@@ -133,8 +133,11 @@ function days(list) {
     const r = new St.BoxLayout({x_expand: true, style_class: 'pace-days'});
     const w = Math.floor((WIDTH - 4 * (list.length - 1)) / list.length);
     for (const d of list) {
-        const chip = vbox(`pace-chip pace-chip-${d.kind}`, [d.dow, d.text].map((t, i) => {
-            const l = label(t, i === 0 ? 'pace-chip-dow' : 'pace-chip-val');
+        // A day off you billed on: full-brightness hours, with a small tag naming the day off
+        const lines = d.tag ? [[d.dow, 'pace-chip-dow'], [d.text, 'pace-chip-val'], [d.tag.toUpperCase(), 'pace-chip-tag']]
+            : [[d.dow, 'pace-chip-dow'], [d.text, 'pace-chip-val']];
+        const chip = vbox(d.tag ? 'pace-chip pace-chip-worked' : `pace-chip pace-chip-${d.kind}`, lines.map(([t, cls]) => {
+            const l = label(t, cls);
             l.x_align = Clutter.ActorAlign.CENTER;
             return l;
         }));

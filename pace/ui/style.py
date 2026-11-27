@@ -45,7 +45,8 @@ CSS = """
 .pace-day.short { background: alpha(var(--warning-color), .14); }
 .pace-day.half_leave { background-image: repeating-linear-gradient(135deg, alpha(var(--warning-color), .18) 0 6px, transparent 6px 12px); }
 .pace-day.future .pace-day-text, .pace-day.pending .pace-day-text { opacity: .4; }
-.pace-day.holiday, .pace-day.leave, .pace-day.weekend { opacity: .55; }
+.pace-day.holiday, .pace-day.leave { opacity: .55; }  /* a weekend card only exists when billed */
+.pace-day.worked { opacity: 1; }
 
 /* ---- month: table ------------------------------------------------------------------------------------------------------ */
 .pace-table { padding: 6px 0 4px; }

@@ -172,6 +172,8 @@ def day_cards(status: dict, split: dict | None = None) -> list[dict]:
         text = hours(d["min"]) if d["kind"] == "half_leave" and d["min"] else d["text"]  # the tag says "½ leave"
         if d["kind"] in ("holiday", "leave"):
             text = text.capitalize()  # the chip says it once, in its big text
+        if d.get("tag"):
+            foot = d["tag"].capitalize()  # a day off you billed on: hours in the big text, the day off underneath
         cards.append(
             {
                 "date": d["date"],
@@ -180,6 +182,7 @@ def day_cards(status: dict, split: dict | None = None) -> list[dict]:
                 "kind": d["kind"],
                 "foot": foot,
                 "today": d["kind"] == "today",
+                "worked": bool(d.get("tag")),
                 "split": (split or {}).get(d["date"], []),
             }
         )
