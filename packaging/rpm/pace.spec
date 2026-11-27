@@ -1,5 +1,5 @@
 Name:           pace
-Version:        0.1.9
+Version:        0.1.10
 Release:        1%{?dist}
 Summary:        PineStem billed hours against the weekly target, on the panel
 License:        MIT
@@ -50,6 +50,9 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/*.desktop
 %{_datadir}/metainfo/io.github.xixas.Pace.metainfo.xml
 
 %changelog
+* Fri Nov 27 2026 Vishnu Kyatannawar <vishnu.k@osmosys.co> - 0.1.10-1
+- A holiday or leave day you billed on shows its hours with a HOLIDAY/LEAVE tag; billed weekends are no longer dimmed
+
 * Fri Nov 27 2026 Vishnu Kyatannawar <vishnu.k@osmosys.co> - 0.1.9-1
 - GNOME: the panel label is never cut to "…" when the top bar is crowded
 

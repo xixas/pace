@@ -1,3 +1,9 @@
+pace (0.1.10) noble; urgency=medium
+
+  * A holiday or leave day you billed on shows its hours with a HOLIDAY/LEAVE tag; billed weekends are no longer dimmed.
+
+ -- Vishnu Kyatannawar <vishnu.k@osmosys.co>  Fri, 27 Nov 2026 16:30:00 +0530
+
 pace (0.1.9) noble; urgency=medium
 
   * GNOME: the panel label is never cut to "…" when the top bar is crowded.
